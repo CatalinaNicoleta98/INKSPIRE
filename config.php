@@ -1,14 +1,20 @@
 <?php
-declare(strict_types=1);
+class Database {
+    private $host = "localhost";
+    private $db_name = "InkspireDB";
+    private $username = "catalina"; // change if needed
+    private $password = "356911";     // change if needed
+    public $conn;
 
-ini_set('display_errors', '1');
-error_reporting(E_ALL);
-
-// Database credentials
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'InkspireDB');
-define('DB_USER', 'catalina');
-define('DB_PASS', '356911');
-
-// Start session at the very beginning
-session_start();
+    public function connect() {
+        $this->conn = null;
+        try {
+            $this->conn = new PDO("mysql:host={$this->host};dbname={$this->db_name};charset=utf8", $this->username, $this->password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            die("Connection error: " . $e->getMessage());
+        }
+        return $this->conn;
+    }
+}
+?>
