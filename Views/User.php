@@ -1,5 +1,5 @@
 <?php
-Session::start();
+require_once __DIR__ . '/../helpers/Session.php';
 $action = $_GET['action'] ?? 'login';
 ?>
 
@@ -30,14 +30,14 @@ $action = $_GET['action'] ?? 'login';
     </form>
     <p>No account? <a href="index.php?action=register">Register here</a></p>
 
-<?php elseif ($action === 'home' && Session::isLoggedIn()): ?>
-    <h2>Welcome, <?= htmlspecialchars(Session::get('user')['username']) ?>!</h2>
+<?php elseif ($action === 'home' && isset($user)): ?>
+    <h2>Welcome, <?= htmlspecialchars($user['username']) ?>!</h2>
     <form method="POST" action="index.php?action=logout">
         <button type="submit">Logout</button>
     </form>
 
-<?php elseif ($action === 'admin' && Session::isLoggedIn() && Session::get('user')['is_admin']): ?>
-    <h2>Welcome, Admin <?= htmlspecialchars(Session::get('user')['username']) ?>!</h2>
+<?php elseif ($action === 'admin' && isset($user) && !empty($user['is_admin'])): ?>
+    <h2>Welcome, Admin <?= htmlspecialchars($user['username']) ?>!</h2>
     <p>Admin dashboard coming soon...</p>
     <form method="POST" action="index.php?action=logout">
         <button type="submit">Logout</button>

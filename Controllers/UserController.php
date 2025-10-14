@@ -7,7 +7,7 @@ class UserController {
 
     public function __construct() {
         $this->userModel = new UserModel();
-        Session::start();
+        
     }
 
     public function register() {
@@ -17,19 +17,12 @@ class UserController {
             $email = $_POST['email'] ?? '';
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
-            $dob = $_POST['dob'] ?? '';
 
-            $result = $this->userModel->register($firstName, $lastName, $email, $username, $password, $dob);
-
-            if ($result === true) {
+            if ($this->userModel->register($firstName, $lastName, $email, $username, $password)) {
                 header("Location: index.php?action=login");
                 exit;
-            } elseif ($result === "too_young") {
-                $error = "You must be at least 14 years old to register.";
-            } elseif ($result === "exists") {
-                $error = "Username or email already exists.";
             } else {
-                $error = "Error: could not register user.";
+                echo "Error: could not register user.";
             }
         }
         include __DIR__ . '/../views/User.php';
@@ -41,19 +34,18 @@ class UserController {
             $password = $_POST['password'] ?? '';
 
             $user = $this->userModel->login($username, $password);
-
-            if (is_array($user)) {
+            if ($user) {
                 Session::set('user', $user);
-                if ($user['is_admin']) {
+
+                // ✅ Optional: redirect admins differently
+                if (!empty($user['is_admin'])) {
                     header("Location: index.php?action=admin");
                 } else {
                     header("Location: index.php?action=home");
                 }
                 exit;
-            } elseif ($user === "blocked") {
-                $error = "Your account has been blocked by an admin.";
             } else {
-                $error = "Invalid username or password.";
+                echo "<p>Invalid username or password.</p>";
             }
         }
         include __DIR__ . '/../views/User.php';
