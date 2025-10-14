@@ -7,31 +7,6 @@ class UserModel {
     public function __construct() {
         $database = new Database();
         $this->conn = $database->connect();
-
-        // Ensure hardcoded admin exists
-        $this->createHardcodedAdmin();
-    }
-
-    private function createHardcodedAdmin() {
-        $username = "catalina12";
-        $email = "catalina12@example.com";
-        $password = "112233";
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-
-        $check = $this->conn->prepare("SELECT user_id FROM User WHERE username = :username");
-        $check->execute([':username' => $username]);
-
-        if ($check->rowCount() === 0) {
-            $stmt = $this->conn->prepare("
-                INSERT INTO User (first_name, last_name, email, username, password, is_admin, is_active)
-                VALUES ('Catalina', 'Admin', :email, :username, :password, 1, 1)
-            ");
-            $stmt->execute([
-                ':email' => $email,
-                ':username' => $username,
-                ':password' => $hashedPassword
-            ]);
-        }
     }
 
     public function register($firstName, $lastName, $email, $username, $password, $dob) {
