@@ -24,6 +24,13 @@ switch ($action) {
             header("Location: index.php?action=login");
         }
         break;
+    case 'admin':
+        if (Session::isLoggedIn() && Session::get('user')['is_admin']) {
+            include __DIR__ . '/views/User.php';
+        } else {
+            header("Location: index.php?action=login");
+        }
+        break;
     default:
         $controller->login();
         break;

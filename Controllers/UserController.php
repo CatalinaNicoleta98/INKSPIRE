@@ -17,12 +17,19 @@ class UserController {
             $email = $_POST['email'] ?? '';
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
+            $dob = $_POST['dob'] ?? '';
 
-            if ($this->userModel->register($firstName, $lastName, $email, $username, $password)) {
+            $result = $this->userModel->register($firstName, $lastName, $email, $username, $password, $dob);
+
+            if ($result === true) {
                 header("Location: index.php?action=login");
                 exit;
+            } elseif ($result === "too_young") {
+                $error = "You must be at least 14 years old to register.";
+            } elseif ($result === "exists") {
+                $error = "Username or email already exists.";
             } else {
-                echo "Error: could not register user.";
+                $error = "Error: could not register user.";
             }
         }
         include __DIR__ . '/../views/User.php';
@@ -34,12 +41,19 @@ class UserController {
             $password = $_POST['password'] ?? '';
 
             $user = $this->userModel->login($username, $password);
-            if ($user) {
+
+            if (is_array($user)) {
                 Session::set('user', $user);
-                header("Location: index.php?action=home");
+                if ($user['is_admin']) {
+                    header("Location: index.php?action=admin");
+                } else {
+                    header("Location: index.php?action=home");
+                }
                 exit;
+            } elseif ($user === "blocked") {
+                $error = "Your account has been blocked by an admin.";
             } else {
-                echo "<p>Invalid username or password.</p>";
+                $error = "Invalid username or password.";
             }
         }
         include __DIR__ . '/../views/User.php';
