@@ -3,6 +3,8 @@ require_once __DIR__ . '/../models/LoginModel.php';
 
 class LoginController {
     public function showForm(): void {
+        $error   = $_GET['error'] ?? null;
+        $success = $_GET['success'] ?? null;
         require __DIR__ . '/../views/loginView.php';
     }
 
@@ -19,30 +21,36 @@ class LoginController {
         $user = $model->findUser($usernameOrEmail);
 
         if (!$user || !password_verify($password, $user['password'])) {
-            $error = "Invalid username/email or password.";
-            require __DIR__ . '/../views/loginView.php';
-            return;
+            header('Location: index.php?route=login&error=Invalid+username+or+password');
+            exit;
         }
 
-        // Save login in session
+        // ✅ Secure session setup
+        session_regenerate_id(true); // prevents session fixation
         $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['username'] = $user['username'];
-
-        // Optional: keep logged in for 7 days
-        setcookie('username', $user['username'], time() + (86400 * 7), "/");
 
         header('Location: index.php');
         exit;
     }
 
     public function logout(): void {
-        session_unset();
+        // ✅ Clear all session data
+        $_SESSION = [];
+
+        // ✅ Delete session cookie properly
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+
+        // ✅ Finally, destroy the session
         session_destroy();
 
-        // clear cookie
-        setcookie('username', '', time() - 3600, "/");
-
-        header('Location: index.php?route=login');
+        header('Location: index.php?route=login&success=You+have+been+logged+out');
         exit;
     }
 }

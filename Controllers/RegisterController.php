@@ -49,8 +49,8 @@ class RegisterController {
             'dob'        => $dob
         ]);
 
-        $_SESSION['username'] = $user;
-        header('Location: index.php');
-        exit;
+        // ✅ Don’t auto-login; show confirmation instead
+        $success = "Registration successful! You can now log in.";
+        require __DIR__ . '/../views/loginView.php';
     }
 }
