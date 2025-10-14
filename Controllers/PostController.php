@@ -1,0 +1,108 @@
+<?php
+require_once __DIR__ . "/../Models/PostModel.php";
+require_once __DIR__ . "/../helpers/Session.php";
+
+class PostController {
+    private $postModel;
+
+    public function __construct() {
+        $this->postModel = new PostModel();
+    }
+
+    // Show all posts (feed)
+    public function index() {
+        global $user;
+        if (!isset($user)) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        $posts = $this->postModel->getAllPosts();
+        include __DIR__ . '/../views/Post.php';
+    }
+
+    // Handle new post submission
+    public function create() {
+        global $user;
+        if (!isset($user)) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $title = $_POST['title'] ?? '';
+            $description = $_POST['description'] ?? '';
+            $tags = $_POST['tags'] ?? '';
+
+            // Handle image upload
+            $imagePath = null;
+            if (!empty($_FILES['image']['name'])) {
+                $uploadDir = __DIR__ . '/../uploads/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+
+                $fileName = time() . '_' . basename($_FILES['image']['name']);
+                $targetFile = $uploadDir . $fileName;
+
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                    // Resize image after upload
+                    $this->resizeImage($targetFile);
+                    $imagePath = 'uploads/' . $fileName;
+                }
+            }
+
+            $this->postModel->createPost($title, $description, $imagePath, $user['user_id'], $tags);
+            header("Location: index.php?action=feed");
+            exit;
+        }
+    }
+
+    private function resizeImage($filePath, $maxWidth = 1200, $maxHeight = 1200) {
+        list($width, $height, $type) = getimagesize($filePath);
+        if ($width <= $maxWidth && $height <= $maxHeight) {
+            return; // No resizing needed
+        }
+
+        $ratio = $width / $height;
+        if ($maxWidth / $maxHeight > $ratio) {
+            $maxWidth = $maxHeight * $ratio;
+        } else {
+            $maxHeight = $maxWidth / $ratio;
+        }
+
+        $src = null;
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                $src = imagecreatefromjpeg($filePath);
+                break;
+            case IMAGETYPE_PNG:
+                $src = imagecreatefrompng($filePath);
+                break;
+            case IMAGETYPE_GIF:
+                $src = imagecreatefromgif($filePath);
+                break;
+            default:
+                return;
+        }
+
+        $dst = imagecreatetruecolor($maxWidth, $maxHeight);
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $maxWidth, $maxHeight, $width, $height);
+
+        switch ($type) {
+            case IMAGETYPE_JPEG:
+                imagejpeg($dst, $filePath, 85);
+                break;
+            case IMAGETYPE_PNG:
+                imagepng($dst, $filePath);
+                break;
+            case IMAGETYPE_GIF:
+                imagegif($dst, $filePath);
+                break;
+        }
+
+        imagedestroy($src);
+        imagedestroy($dst);
+    }
+}
+?>

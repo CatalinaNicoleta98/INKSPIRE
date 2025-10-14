@@ -2,6 +2,7 @@
 // Always load sessions first (they start automatically now)
 require_once __DIR__ . '/helpers/Session.php';
 require_once __DIR__ . '/controllers/UserController.php';
+require_once __DIR__ . '/controllers/PostController.php';
 
 // Create controller
 $controller = new UserController();
@@ -23,10 +24,10 @@ switch ($action) {
         $controller->logout();
         break;
 
-    case 'home':
-        // Only logged-in users can access home
+    case 'feed':
+        // Only logged-in users can access feed
         if (isset($user)) {
-            include __DIR__ . '/views/User.php';
+            include __DIR__ . '/views/Post.php';
         } else {
             header("Location: index.php?action=login");
         }
@@ -42,7 +43,15 @@ switch ($action) {
         break;
 
     default:
-        $controller->login();
+        if (isset($user)) {
+            if (!empty($user['is_admin'])) {
+                header("Location: index.php?action=admin");
+            } else {
+                header("Location: index.php?action=feed");
+            }
+        } else {
+            $controller->login();
+        }
         break;
 }
 ?>
