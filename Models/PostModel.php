@@ -9,31 +9,44 @@ class PostModel {
         $this->conn = $database->connect();
     }
 
-    // Create new post
-    public function createPost($title, $description, $imagePath, $userId, $tags = null) {
-        $query = "INSERT INTO Post (title, description, image_url, user_id) VALUES (:title, :description, :image_url, :user_id)";
+  public function createPost($title, $description, $imagePath, $userId, $tags = null) {
+    try {
+        $query = "INSERT INTO Post (title, description, image_url, user_id, tags)
+                  VALUES (:title, :description, :image_url, :user_id, :tags)";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([
-            ':title' => htmlspecialchars($title),
-            ':description' => htmlspecialchars($description),
-            ':image_url' => htmlspecialchars($imagePath),
-            ':user_id' => $userId
+            ':title' => $title,
+            ':description' => $description,
+            ':image_url' => $imagePath,
+            ':user_id' => $userId,
+            ':tags' => $tags
         ]);
-
-        $postId = $this->conn->lastInsertId();
-
-        // Optional: store tags later when we add them
-        return $postId;
+        return true;
+    } catch (PDOException $e) {
+        file_put_contents(__DIR__ . '/../debug_sql.txt', $e->getMessage());
+        return false;
     }
+}
 
-    // Fetch all posts (for feed)
     public function getAllPosts() {
         $query = "SELECT p.*, u.username 
-                  FROM Post p 
-                  JOIN User u ON p.user_id = u.user_id 
+                  FROM Post p
+                  JOIN User u ON p.user_id = u.user_id
                   ORDER BY p.created_at DESC";
         $stmt = $this->conn->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    
+    public function getPostById($postId) {
+        $query = "SELECT p.*, u.username 
+                FROM Post p
+                JOIN User u ON p.user_id = u.user_id
+                WHERE p.post_id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':id' => $postId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
 }
 ?>

@@ -18,8 +18,21 @@ class PostController {
         }
 
         $posts = $this->postModel->getAllPosts();
-        include __DIR__ . '/../views/Post.php';
+        include __DIR__ . '/../Views/Post.php';
     }
+
+    public function view($postId) {
+    global $user;
+    if (!isset($user)) {
+        header("Location: index.php?action=login");
+        exit;
+    }
+
+    $post = $this->postModel->getPostById($postId);
+    header('Content-Type: application/json');
+    echo json_encode($post);
+    exit;
+}
 
     // Handle new post submission
     public function create() {
@@ -30,29 +43,42 @@ class PostController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = $_POST['title'] ?? '';
-            $description = $_POST['description'] ?? '';
-            $tags = $_POST['tags'] ?? '';
+    $title = trim($_POST['title'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $tags = trim($_POST['tags'] ?? '');
+    if (empty($title) || empty($description)) {
+        echo "All fields are required.";
+        exit;
+    }
 
-            // Handle image upload
-            $imagePath = null;
-            if (!empty($_FILES['image']['name'])) {
-                $uploadDir = __DIR__ . '/../uploads/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
+    $imagePath = null;
+    if (!empty($_FILES['image']['name'])) {
+        $uploadDir = __DIR__ . '/../uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
 
-                $fileName = time() . '_' . basename($_FILES['image']['name']);
-                $targetFile = $uploadDir . $fileName;
+        $fileName = time() . '_' . basename($_FILES['image']['name']);
+        $targetFile = $uploadDir . $fileName;
 
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-                    // Resize image after upload
-                    $this->resizeImage($targetFile);
-                    $imagePath = 'uploads/' . $fileName;
-                }
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+            $this->resizeImage($targetFile);
+            $imagePath = 'uploads/' . $fileName;
+        } else {
+            echo "Image upload failed.";
+            exit;
+        }
+    }
+
+    $success = $this->postModel->createPost($title, $description, $imagePath, $user['user_id'], $tags);
+
+            if ($success) {
+                header("Location: index.php?action=feed");
+                exit;
+            } else {
+                echo "Database error — check debug_sql.txt";
             }
-
-            $this->postModel->createPost($title, $description, $imagePath, $user['user_id'], $tags);
+        } else {
             header("Location: index.php?action=feed");
             exit;
         }
@@ -61,7 +87,7 @@ class PostController {
     private function resizeImage($filePath, $maxWidth = 1200, $maxHeight = 1200) {
         list($width, $height, $type) = getimagesize($filePath);
         if ($width <= $maxWidth && $height <= $maxHeight) {
-            return; // No resizing needed
+            return;
         }
 
         $ratio = $width / $height;
@@ -71,7 +97,6 @@ class PostController {
             $maxHeight = $maxWidth / $ratio;
         }
 
-        $src = null;
         switch ($type) {
             case IMAGETYPE_JPEG:
                 $src = imagecreatefromjpeg($filePath);

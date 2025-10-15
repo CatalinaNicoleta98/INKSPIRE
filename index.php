@@ -1,46 +1,50 @@
 <?php
+
 // Always load sessions first (they start automatically now)
 require_once __DIR__ . '/helpers/Session.php';
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/PostController.php';
 
-// Create controller
-$controller = new UserController();
+// Create controllers
+$userController = new UserController();
+$postController = new PostController();
 
-// Determine which action to take (default: login)
 $action = $_GET['action'] ?? 'login';
 
-// Simple router
 switch ($action) {
     case 'register':
-        $controller->register();
+        $userController->register();
         break;
 
     case 'login':
-        $controller->login();
+        $userController->login();
         break;
 
     case 'logout':
-        $controller->logout();
+        $userController->logout();
         break;
 
     case 'feed':
-        // Only logged-in users can access feed
-        if (isset($user)) {
-            include __DIR__ . '/views/Post.php';
-        } else {
-            header("Location: index.php?action=login");
-        }
+        $postController->index();
+        break;
+
+    case 'createPost':
+        $postController->create();
         break;
 
     case 'admin':
-        // Only admins can access admin area
         if (isset($user) && !empty($user['is_admin'])) {
             include __DIR__ . '/views/User.php';
         } else {
             header("Location: index.php?action=login");
         }
         break;
+
+        case 'viewPost':
+    if (isset($_GET['id'])) {
+        $postController->view($_GET['id']);
+    }
+    break;
 
     default:
         if (isset($user)) {
@@ -50,7 +54,7 @@ switch ($action) {
                 header("Location: index.php?action=feed");
             }
         } else {
-            $controller->login();
+            $userController->login();
         }
         break;
 }
