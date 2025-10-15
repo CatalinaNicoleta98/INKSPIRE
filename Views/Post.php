@@ -1,4 +1,6 @@
 <?php require_once __DIR__ . '/../helpers/Session.php'; ?>
+<?php include __DIR__ . '/layout/Header.php'; ?>
+<?php include __DIR__ . '/layout/Sidebar.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -116,6 +118,6 @@ document.querySelectorAll('.post').forEach(post => {
 
 closeView.onclick = () => viewModal.style.display = "none";
 </script>
-
+</div> <!-- closes .main-content -->
 </body>
 </html>
