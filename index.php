@@ -4,10 +4,12 @@
 require_once __DIR__ . '/helpers/Session.php';
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/PostController.php';
+require_once __DIR__ . '/controllers/LikeController.php';
 
 // Create controllers
 $userController = new UserController();
 $postController = new PostController();
+$likeController = new LikeController();
 
 $action = $_GET['action'] ?? 'login';
 
@@ -44,6 +46,10 @@ switch ($action) {
     if (isset($_GET['id'])) {
         $postController->view($_GET['id']);
     }
+    break;
+    
+    case 'toggleLike':
+    $likeController->toggle();
     break;
 
     default:

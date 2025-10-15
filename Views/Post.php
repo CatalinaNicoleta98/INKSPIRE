@@ -33,6 +33,18 @@
                     <h3><?= htmlspecialchars($post['title']) ?></h3>
                     <p><?= htmlspecialchars($post['description']) ?></p>
                     <small>By <?= htmlspecialchars($post['username']) ?></small>
+                    <?php if (!empty($post['tags'])): ?>
+                        <p style="color:#666;font-size:14px;">Tags: <?= htmlspecialchars($post['tags']) ?></p>
+                    <?php endif; ?>
+                    <div class="like-section" style="margin-top:8px;">
+                        <button 
+                            class="like-btn" 
+                            data-id="<?= $post['post_id'] ?>" 
+                            style="background:none;border:none;cursor:pointer;font-size:18px;<?= !empty($post['liked']) ? 'color:red;' : 'color:black;' ?>">
+                            ❤️
+                        </button>
+                        <span class="like-count" id="likes-<?= $post['post_id'] ?>"><?= htmlspecialchars($post['likes']) ?></span>
+                    </div>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -70,7 +82,8 @@
       <small id="viewAuthor"></small>
       <p id="viewTags" style="color:#666;"></p>
       <div id="viewExtras" style="margin-top:10px;">
-        <span>❤️ Likes: <span id="likeCount">0</span></span> |
+        <button id="modalLikeBtn" style="background:none;border:none;cursor:pointer;font-size:20px;">❤️</button>
+        <span>Likes: <span id="modalLikeCount">0</span></span> |
         <span>💬 Comments: <span id="commentCount">0</span></span>
       </div>
     </div>
@@ -95,28 +108,77 @@ window.onclick = e => {
     if (e.target === viewModal) viewModal.style.display = "none";
 };
 
-// Open post detail modal
+
+// Post detail modal with like button sync
+let currentModalPostId = null;
+const modalLikeBtn = document.getElementById("modalLikeBtn");
+
 document.querySelectorAll('.post').forEach(post => {
-    post.addEventListener('click', () => {
-        const postId = post.getAttribute('data-id');
-        fetch(`index.php?action=viewPost&id=${postId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data) {
-                    document.getElementById("viewImage").src = data.image_url || '';
-                    document.getElementById("viewTitle").innerText = data.title || '';
-                    document.getElementById("viewDescription").innerText = data.description || '';
-                    document.getElementById("viewAuthor").innerText = data.username ? `By ${data.username} — ${data.created_at || ''}` : '';
-                    document.getElementById("viewTags").innerText = data.tags ? `Tags: ${data.tags}` : '';
-                    document.getElementById("likeCount").innerText = data.likes || 0;
-                    document.getElementById("commentCount").innerText = data.comments || 0;
-                    viewModal.style.display = "block";
-                }
-            });
-    });
+  post.addEventListener('click', () => {
+    const postId = post.getAttribute('data-id');
+    currentModalPostId = postId;
+    fetch(`index.php?action=viewPost&id=${postId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data) {
+          document.getElementById("viewImage").src = data.image_url || '';
+          document.getElementById("viewTitle").innerText = data.title || '';
+          document.getElementById("viewDescription").innerText = data.description || '';
+          document.getElementById("viewAuthor").innerText = data.username ? `By ${data.username} — ${data.created_at || ''}` : '';
+          document.getElementById("viewTags").innerText = data.tags ? `Tags: ${data.tags}` : '';
+          document.getElementById("modalLikeCount").innerText = data.likes || 0;
+          modalLikeBtn.style.color = data.liked ? 'red' : 'black';
+          document.getElementById("commentCount").innerText = data.comments || 0;
+          viewModal.style.display = "block";
+        }
+      });
+  });
 });
 
 closeView.onclick = () => viewModal.style.display = "none";
+
+// Unified Like Functionality (Feed + Modal)
+async function toggleLike(postId, btnElement, updateModal = false) {
+  try {
+    const response = await fetch(`index.php?action=toggleLike&post_id=${postId}&t=${Date.now()}`, { cache: 'no-store' });
+    const data = await response.json();
+
+    if (data.success) {
+      // Update feed button + count
+      const feedCount = document.getElementById(`likes-${postId}`);
+      if (feedCount) feedCount.textContent = data.likes;
+
+      if (btnElement) btnElement.style.color = data.liked ? 'red' : 'black';
+
+      // Update modal if open for same post
+      if (updateModal && currentModalPostId == postId) {
+        const modalLikeCount = document.getElementById('modalLikeCount');
+        const modalLikeBtn = document.getElementById('modalLikeBtn');
+        if (modalLikeCount) modalLikeCount.textContent = data.likes;
+        if (modalLikeBtn) modalLikeBtn.style.color = data.liked ? 'red' : 'black';
+      }
+    }
+  } catch (error) {
+    console.error('Error toggling like:', error);
+  }
+}
+
+// Modal Like Handling
+modalLikeBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (currentModalPostId) {
+    toggleLike(currentModalPostId, modalLikeBtn, true);
+  }
+});
+
+// Feed Like Handling
+document.querySelectorAll('.like-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const postId = btn.getAttribute('data-id');
+    toggleLike(postId, btn, false);
+  });
+});
 </script>
 </div> <!-- closes .main-content -->
 </body>

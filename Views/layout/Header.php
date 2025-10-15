@@ -8,14 +8,14 @@ if (!isset($user)) {
 .header {
   position: fixed;
   top: 0; left: 0;
-  width: 100%;
+  width: 99vw;
   height: 60px;
   background: #ffffff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 20px 0 10px;
   z-index: 100;
 }
 .logo {
