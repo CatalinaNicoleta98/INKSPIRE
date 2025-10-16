@@ -5,101 +5,62 @@
 <?php include __DIR__ . '/layout/Header.php'; ?>
 <?php include __DIR__ . '/layout/Sidebar.php'; ?>
 <?php include __DIR__ . '/layout/Rightbar.php'; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Inkspire | Profile</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
-    .profile-container {
-      margin-left: 260px;
-      margin-right: 260px;
-      padding-top: 80px;
-    }
-    .profile-header {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .profile-header img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .profile-header h2 {
-      margin: 10px 0 5px 0;
-    }
-    .profile-header p {
-      color: #555;
-      font-size: 14px;
-    }
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      margin-top: 10px;
-    }
-    .stats div {
-      text-align: center;
-    }
-    .profile-posts {
-      margin-top: 30px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 15px;
-    }
-    .profile-posts .post {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      overflow: hidden;
-      text-align: center;
-    }
-    .profile-posts img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      cursor: pointer;
-    }
-    .profile-posts h4 {
-      margin: 10px 0;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
 
-<div class="profile-container">
-  <div class="profile-header">
-    <img src="<?= htmlspecialchars($profile['profile_picture'] ?? 'uploads/default.png') ?>" alt="Profile Picture">
-    <h2><?= htmlspecialchars($profile['username']) ?></h2>
-    <p><?= htmlspecialchars($profile['bio'] ?? 'No bio yet.') ?></p>
+  <div class="flex justify-center items-start w-full lg:px-[300px] md:px-[200px] sm:px-4 pt-[70px]">
+    <div class="w-full max-w-[700px] mx-auto space-y-8">
 
-    <div class="stats">
-      <div><strong><?= htmlspecialchars($profile['followers'] ?? 0) ?></strong><br>Followers</div>
-      <div><strong><?= htmlspecialchars($profile['following'] ?? 0) ?></strong><br>Following</div>
-      <div><strong><?= count($posts ?? []) ?></strong><br>Posts</div>
+      <!-- Profile Header -->
+      <div class="bg-white rounded-xl shadow-md p-6 text-center">
+        <img src="<?= htmlspecialchars($profile['profile_picture'] ?? 'uploads/default.png') ?>" alt="Profile Picture"
+             class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-indigo-200 shadow-sm">
+        <h2 class="text-2xl font-semibold text-gray-800 mt-3"><?= htmlspecialchars($profile['username']) ?></h2>
+        <p class="text-gray-600 text-sm italic mt-1"><?= htmlspecialchars($profile['bio'] ?? 'No bio yet.') ?></p>
+
+        <div class="flex justify-center gap-10 mt-5 text-gray-700">
+          <div><strong class="text-indigo-600"><?= htmlspecialchars($profile['followers'] ?? 0) ?></strong><br><span class="text-sm">Followers</span></div>
+          <div><strong class="text-indigo-600"><?= htmlspecialchars($profile['following'] ?? 0) ?></strong><br><span class="text-sm">Following</span></div>
+          <div><strong class="text-indigo-600"><?= count($posts ?? []) ?></strong><br><span class="text-sm">Posts</span></div>
+        </div>
+      </div>
+
+      <!-- Posts Feed -->
+      <div class="space-y-6">
+        <?php if (!empty($posts)): ?>
+          <?php foreach ($posts as $post): ?>
+            <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition relative">
+              <?php if (!empty($post['image_url'])): ?>
+                <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post Image" class="w-full rounded-lg mb-4 object-cover shadow-sm">
+              <?php endif; ?>
+              <h3 class="text-lg font-semibold text-gray-800"><?= htmlspecialchars($post['title'] ?? 'Untitled') ?></h3>
+              <?php if (!empty($post['description'])): ?>
+                <p class="text-gray-600 text-sm mt-1"><?= htmlspecialchars($post['description']) ?></p>
+              <?php endif; ?>
+
+              <?php if (!empty($post['tags'])): ?>
+                <div class="mt-2 text-sm text-indigo-500">#<?= str_replace(',', ' #', htmlspecialchars($post['tags'])) ?></div>
+              <?php endif; ?>
+
+              <div class="flex items-center gap-6 mt-3 text-lg text-gray-600">
+                <span class="cursor-pointer transition hover:scale-110">❤️ <?= htmlspecialchars($post['likes'] ?? 0) ?></span>
+                <span class="cursor-pointer transition hover:scale-110">💬 <?= htmlspecialchars($post['comments'] ?? 0) ?></span>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <p class="text-center text-gray-500 italic">No posts yet.</p>
+        <?php endif; ?>
+      </div>
     </div>
   </div>
-
-  <div class="profile-posts">
-    <?php if (!empty($posts)): ?>
-      <?php foreach ($posts as $post): ?>
-        <div class="post" data-id="<?= $post['post_id'] ?>">
-          <?php if (!empty($post['image_url'])): ?>
-            <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post Image">
-          <?php endif; ?>
-          <h4><?= htmlspecialchars($post['title'] ?? 'Untitled') ?></h4>
-        </div>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <p style="text-align:center;">No posts yet.</p>
-    <?php endif; ?>
-  </div>
-</div>
 
 </body>
 </html>
