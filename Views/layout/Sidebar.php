@@ -1,48 +1,55 @@
-<style>
-.sidebar {
-  position: fixed;
-  top: 60px; /* below header */
-  left: 0;
-  width: 220px;
-  height: calc(100% - 60px);
-  background: #ffffff;
-  border-right: 1px solid #ddd;
-  box-shadow: 1px 0 5px rgba(0,0,0,0.05);
-  padding: 15px;
-}
-.sidebar input[type="text"] {
-  width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin-bottom: 15px;
-}
-.sidebar button {
-  display: block;
-  width: 100%;
-  margin: 8px 0;
-  padding: 10px;
-  background: #007BFF;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: left;
-}
-.sidebar button:hover {
-  background: #0056b3;
-}
-.main-content {
-  margin-left: 240px; /* push content right */
-  padding-top: 70px;  /* space for header */
-}
-</style>
-
-<div class="sidebar">
-  <input type="text" id="search" placeholder="Search posts...">
-  <button onclick="window.location='index.php?action=feed&type=new'">🆕 New Posts</button>
-  <button onclick="window.location='index.php?action=feed&type=hot'">🔥 Hot Posts</button>
-  <button onclick="window.location='index.php?action=feed&type=following'">👥 Following</button>
+<div class="hidden md:flex flex-col fixed top-[70px] left-0 w-[220px] h-[calc(100%-70px)] bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 border-r border-purple-100 shadow-md p-4 z-20">
+  <h3 class="text-lg font-semibold text-indigo-500 mb-4">Navigation</h3>
+  <button onclick="window.location='index.php?action=home'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🏠 Home</button>
+  <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
+  <button onclick="window.location='index.php?action=profile'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">👤 Profile</button>
+  <button onclick="window.location='index.php?action=settings'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">⚙️ Settings</button>
+  <button onclick="window.location='index.php?action=logout'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🚪 Logout</button>
+  
+  <button id="createPostBtn" class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">➕ Create Post</button>
 </div>
 
-<div class="main-content">
+<script>
+  const currentUrl = window.location.href;
+  document.querySelectorAll('.sidebar button').forEach(btn => {
+    if (currentUrl.includes(btn.getAttribute('onclick').match(/'(.*?)'/)[1])) {
+      btn.classList.add('bg-indigo-400', 'text-white');
+    }
+  });
+</script>
+
+<script>
+  const createPostBtn = document.getElementById('createPostBtn');
+  if (createPostBtn) {
+    createPostBtn.addEventListener('click', () => {
+      let modal = document.getElementById('postModal');
+      
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'postModal';
+        modal.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
+        modal.innerHTML = `
+          <div class="bg-white rounded-lg w-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-lg">
+            <span id="closeModal" class="float-right text-gray-500 cursor-pointer text-2xl">&times;</span>
+            <h3 class="text-xl font-semibold text-indigo-500 mb-4">Create New Post</h3>
+            <form method="POST" action="index.php?action=createPost" enctype="multipart/form-data" class="space-y-3">
+              <input type="text" name="title" placeholder="Title" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+              <textarea name="description" placeholder="Description" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"></textarea>
+              <input type="text" name="tags" placeholder="Tags (comma-separated)" class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+              <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-600">
+              <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-md py-2 hover:from-indigo-500 hover:to-purple-500 transition">Post</button>
+            </form>
+          </div>
+        `;
+        document.body.appendChild(modal);
+      }
+
+      modal.style.display = 'flex';
+      const closeBtn = modal.querySelector('#closeModal');
+      if (closeBtn) closeBtn.addEventListener('click', () => modal.style.display = 'none');
+      window.onclick = function(e) {
+        if (e.target === modal) modal.style.display = 'none';
+      };
+    });
+  }
+</script>

@@ -1,6 +1,5 @@
 <?php
 
-// Always load sessions first (they start automatically now)
 require_once __DIR__ . '/helpers/Session.php';
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/PostController.php';
@@ -11,9 +10,47 @@ $userController = new UserController();
 $postController = new PostController();
 $likeController = new LikeController();
 
-$action = $_GET['action'] ?? 'login';
+// If no action specified, redirect based on login state
+if (!isset($_GET['action'])) {
+    if (isset($_SESSION['user_id'])) {
+        header("Location: index.php?action=home");
+    } else {
+        header("Location: index.php?action=explore");
+    }
+    exit;
+}
+
+$action = $_GET['action'];
 
 switch ($action) {
+    case 'home':
+        require_once __DIR__ . '/controllers/HomeController.php';
+        $controller = new HomeController();
+        $controller->index();
+        break;
+
+    case 'explore':
+        require_once 'Controllers/ExploreController.php';
+        $controller = new ExploreController();
+        $controller->index();
+        break;
+
+    case 'profile':
+        require_once __DIR__ . '/controllers/ProfileController.php';
+        $controller = new ProfileController();
+        $controller->view();
+        break;
+
+    case 'settings':
+        require_once __DIR__ . '/controllers/SettingsController.php';
+        $controller = new SettingsController();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            include __DIR__ . '/views/Settings.php';
+        }
+        break;
+
     case 'register':
         $userController->register();
         break;
@@ -26,13 +63,11 @@ switch ($action) {
         $userController->logout();
         break;
 
-    case 'feed':
-        $postController->index();
-        break;
-
     case 'createPost':
         $postController->create();
-        break;
+        // After creating a post, go to Explore
+        header("Location: index.php?action=explore");
+        exit;
 
     case 'admin':
         if (isset($user) && !empty($user['is_admin'])) {
@@ -42,25 +77,21 @@ switch ($action) {
         }
         break;
 
-        case 'viewPost':
-    if (isset($_GET['id'])) {
-        $postController->view($_GET['id']);
-    }
-    break;
+    case 'viewPost':
+        if (isset($_GET['id'])) {
+            $postController->view($_GET['id']);
+        }
+        break;
     
     case 'toggleLike':
-    $likeController->toggle();
-    break;
+        $likeController->toggle();
+        break;
 
     default:
-        if (isset($user)) {
-            if (!empty($user['is_admin'])) {
-                header("Location: index.php?action=admin");
-            } else {
-                header("Location: index.php?action=feed");
-            }
+        if (isset($_SESSION['user_id'])) {
+            header("Location: index.php?action=home");
         } else {
-            $userController->login();
+            header("Location: index.php?action=explore");
         }
         break;
 }

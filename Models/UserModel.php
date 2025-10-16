@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../config.php";
 
+if (!class_exists('UserModel')) {
 class UserModel {
     private $conn;
 
@@ -35,13 +36,11 @@ class UserModel {
     }
 
     public function register($firstName, $lastName, $email, $username, $password, $dob) {
-        // Calculate age
         $age = $this->calculateAge($dob);
         if ($age < 14) {
             return "too_young";
         }
 
-        // Check if username or email already exists
         $check = $this->conn->prepare("SELECT user_id FROM User WHERE username = :username OR email = :email");
         $check->execute([':username' => $username, ':email' => $email]);
         if ($check->rowCount() > 0) {
@@ -87,5 +86,14 @@ class UserModel {
         $age = $today->diff($dobDate)->y;
         return $age;
     }
+
+    public function updateUserInfo($userId, $username, $email) {
+        $query = "UPDATE User SET username = :username, email = :email WHERE user_id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':username', $username);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':user_id', $userId);
+        return $stmt->execute();
+    }
 }
-?>
+}

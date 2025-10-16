@@ -1,31 +1,23 @@
 <?php require_once __DIR__ . '/../helpers/Session.php'; ?>
 <?php include __DIR__ . '/layout/Header.php'; ?>
-<?php include __DIR__ . '/layout/Sidebar.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Inkspire | Posts</title>
+  <title>Inkspire | Explore</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
-
-  <h2 class="text-center text-2xl font-semibold text-indigo-600 pt-[80px] mb-6">
-    Welcome, <?= htmlspecialchars($user['username']) ?>!
-  </h2>
-
-  <div class="flex justify-center items-start w-full lg:px-[300px] md:px-[200px] sm:px-4">
-    <div class="feed w-full max-w-[1000px] mx-auto space-y-6">
-
+<body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen pt-[70px]">
+  <div class="flex justify-center items-center  w-full lg:pr-[250px] md:px-[200px] sm:px-4 box-border">
+    <main class="feed w-full max-w-[900px] mx-auto px-2 space-y-6">
       <?php if (!empty($posts)): ?>
         <div class="columns-3 md:columns-2 sm:columns-1 gap-6 [column-fill:_balance]">
           <?php foreach ($posts as $post): ?>
-            <div class="post inline-block w-full mb-6 bg-white rounded-xl shadow-md overflow-hidden break-inside-avoid transition transform hover:-translate-y-1 hover:shadow-lg relative">
+            <div class="post inline-block w-full mb-6 bg-white rounded-xl shadow-md overflow-hidden break-inside-avoid transition transform hover:-translate-y-1 hover:shadow-lg">
               <?php if (!empty($post['image_url'])): ?>
                 <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post image" class="w-full object-cover cursor-pointer transition-transform duration-300 hover:scale-[1.03]">
               <?php endif; ?>
-
               <div class="absolute bottom-3 right-3 bg-black/50 text-white rounded-full px-3 py-1 text-sm flex items-center gap-3">
                 <span class="like-btn cursor-pointer transition" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#f87171;' : '' ?>">❤️ <?= $post['likes'] ?></span>
                 <span class="comment-btn cursor-pointer" data-id="<?= $post['post_id'] ?>">💬 <?= $post['comments'] ?? 0 ?></span>
@@ -36,7 +28,25 @@
       <?php else: ?>
         <p class="text-center text-gray-500 italic mt-10">No posts yet. Be the first to create one!</p>
       <?php endif; ?>
+    </main>
 
+    <?php include __DIR__ . '/layout/Sidebar.php'; ?>
+    <?php include __DIR__ . '/layout/Rightbar.php'; ?>
+  </div>
+
+
+  <!-- Post Modal -->
+  <div id="postModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+    <div class="bg-white rounded-lg w-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-lg">
+      <span id="closeModal" class="float-right text-gray-500 cursor-pointer text-2xl">&times;</span>
+      <h3 class="text-xl font-semibold text-indigo-500 mb-4">Create New Post</h3>
+      <form method="POST" action="index.php?action=createPost" enctype="multipart/form-data" class="space-y-3">
+        <input type="text" name="title" placeholder="Title" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <textarea name="description" placeholder="Description" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"></textarea>
+        <input type="text" name="tags" placeholder="Tags (comma-separated)" class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-600">
+        <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-md py-2 hover:from-indigo-500 hover:to-purple-500 transition">Post</button>
+      </form>
     </div>
   </div>
 
@@ -55,6 +65,11 @@
   </div>
 
   <script>
+    const postModal = document.getElementById('postModal');
+    const closeModal = document.getElementById('closeModal');
+    closeModal.onclick = () => postModal.classList.add('hidden');
+    window.onclick = e => { if (e.target === postModal) postModal.classList.add('hidden'); };
+
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     document.querySelectorAll('.post img').forEach(img => {
