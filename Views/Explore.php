@@ -57,10 +57,22 @@
 
   <!-- Comments Modal -->
   <div id="commentsModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[1001]">
-    <div class="bg-white rounded-lg w-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-lg">
-      <span id="closeComments" class="float-right text-gray-500 cursor-pointer text-2xl">&times;</span>
-      <h3 class="text-xl font-semibold text-indigo-500 mb-4">Comments</h3>
-      <div id="commentsList" class="text-gray-600 text-sm"><p class="text-center text-gray-400 italic">Loading...</p></div>
+    <div class="bg-white rounded-lg w-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-lg relative">
+      <span id="closeComments" class="absolute top-3 right-4 text-gray-500 cursor-pointer text-2xl">&times;</span>
+      <h3 class="text-xl font-semibold text-indigo-500 mb-4 text-center">Comments</h3>
+
+      <div id="commentsList" class="text-gray-600 text-sm mb-4">
+        <p class="text-center text-gray-400 italic">Loading...</p>
+      </div>
+
+      <div class="border-t border-indigo-100 pt-3 mt-3">
+        <input id="newCommentInput" type="text" placeholder="Add a comment..." 
+               class="w-full border border-indigo-200 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none mb-2">
+        <button id="submitComment" 
+                class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-md py-2 hover:from-indigo-500 hover:to-purple-500 transition text-sm">
+          Post Comment
+        </button>
+      </div>
     </div>
   </div>
 
@@ -81,14 +93,64 @@
     lightbox.addEventListener('click', () => lightbox.classList.add('hidden'));
 
     const commentsModal = document.getElementById('commentsModal');
+    const commentsList = document.getElementById('commentsList');
     const closeComments = document.getElementById('closeComments');
-    closeComments.onclick = () => commentsModal.classList.add('hidden');
+    const newCommentInput = document.getElementById('newCommentInput');
+    const submitComment = document.getElementById('submitComment');
+
+    let currentPostId = null;
+
+    // Open comments modal
     document.querySelectorAll('.comment-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const postId = btn.getAttribute('data-id');
+      btn.addEventListener('click', async () => {
+        currentPostId = btn.getAttribute('data-id');
         commentsModal.classList.remove('hidden');
-        document.getElementById('commentsList').innerHTML = `<p class='text-center text-gray-400 italic'>Loading comments for post #${postId}...</p>`;
+        commentsList.innerHTML = `<p class='text-center text-gray-400 italic'>Loading comments...</p>`;
+        await loadComments(currentPostId);
       });
+    });
+
+    closeComments.onclick = () => commentsModal.classList.add('hidden');
+
+    // Load comments
+    async function loadComments(postId) {
+      try {
+        const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
+        const comments = await res.json();
+
+        if (comments.length > 0) {
+          commentsList.innerHTML = comments.map(c => `
+            <div class="bg-indigo-50 p-3 rounded-md shadow-sm mb-2">
+              <p class="text-gray-700 text-sm">${c.text}</p>
+              <p class="text-xs text-gray-500 mt-1">@${c.username} • ${c.created_at}</p>
+            </div>
+          `).join('');
+        } else {
+          commentsList.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet. Be the first!</p>";
+        }
+      } catch (err) {
+        commentsList.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
+      }
+    }
+
+    // Submit comment
+    submitComment.addEventListener('click', async () => {
+      const content = newCommentInput.value.trim();
+      if (!content || !currentPostId) return;
+
+      const formData = new FormData();
+      formData.append('post_id', currentPostId);
+      formData.append('content', content);
+
+      const res = await fetch('index.php?action=addComment', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.success) {
+        newCommentInput.value = '';
+        await loadComments(currentPostId);
+      } else {
+        alert(data.message || 'Error posting comment.');
+      }
     });
 
     document.querySelectorAll('.like-btn').forEach(btn => {

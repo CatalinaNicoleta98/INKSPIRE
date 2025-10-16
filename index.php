@@ -4,15 +4,17 @@ require_once __DIR__ . '/helpers/Session.php';
 require_once __DIR__ . '/controllers/UserController.php';
 require_once __DIR__ . '/controllers/PostController.php';
 require_once __DIR__ . '/controllers/LikeController.php';
+require_once __DIR__ . '/controllers/CommentController.php';
 
 // Create controllers
 $userController = new UserController();
 $postController = new PostController();
 $likeController = new LikeController();
+$commentController = new CommentController();
 
 // If no action specified, redirect based on login state
 if (!isset($_GET['action'])) {
-    if (isset($_SESSION['user_id'])) {
+    if (isset($_SESSION['user']['user_id'])) {
         header("Location: index.php?action=home");
     } else {
         header("Location: index.php?action=explore");
@@ -87,8 +89,18 @@ switch ($action) {
         $likeController->toggle();
         break;
 
+    case 'addComment':
+        $commentController->addComment();
+        break;
+
+    case 'getCommentsByPost':
+        if (isset($_GET['post_id'])) {
+            $commentController->getCommentsByPost($_GET['post_id']);
+        }
+        break;
+
     default:
-        if (isset($_SESSION['user_id'])) {
+        if (isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=home");
         } else {
             header("Location: index.php?action=explore");

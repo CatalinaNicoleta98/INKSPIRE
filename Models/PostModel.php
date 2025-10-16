@@ -32,10 +32,10 @@ class PostModel {
     // Get all posts (used for Explore)
     public function getAllPosts() {
         $query = "SELECT p.*, u.username,
-                         (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM Comment c WHERE c.post_id = p.post_id) AS comments
-                  FROM Post p
-                  JOIN User u ON p.user_id = u.user_id
+                         (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
+                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comments
+                  FROM post p
+                  JOIN user u ON p.user_id = u.user_id
                   ORDER BY p.created_at DESC";
         $stmt = $this->conn->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -58,10 +58,10 @@ class PostModel {
 
         $placeholders = implode(',', array_fill(0, count($userIds), '?'));
         $sql = "SELECT p.*, u.username,
-                       (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                       (SELECT COUNT(*) FROM Comment c WHERE c.post_id = p.post_id) AS comments
-                FROM Post p
-                JOIN User u ON p.user_id = u.user_id
+                       (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
+                       (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comments
+                FROM post p
+                JOIN user u ON p.user_id = u.user_id
                 WHERE p.user_id IN ($placeholders)
                 ORDER BY p.created_at DESC";
         $stmt = $this->conn->prepare($sql);
@@ -72,10 +72,10 @@ class PostModel {
     // Get posts by a specific user (Profile)
     public function getPostsByUser($userId) {
         $query = "SELECT p.*, u.username,
-                         (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM Comment c WHERE c.post_id = p.post_id) AS comments
-                  FROM Post p
-                  JOIN User u ON p.user_id = u.user_id
+                         (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
+                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comments
+                  FROM post p
+                  JOIN user u ON p.user_id = u.user_id
                   WHERE p.user_id = :user_id
                   ORDER BY p.created_at DESC";
         $stmt = $this->conn->prepare($query);

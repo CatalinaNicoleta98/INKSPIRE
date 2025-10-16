@@ -18,20 +18,27 @@
       <?php if (!empty($posts)): ?>
         <?php foreach ($posts as $post): ?>
           <div class="post bg-white rounded-xl shadow-md p-6 mb-6 w-full max-w-[700px] hover:shadow-lg transition relative">
-            <h3 class="text-lg font-semibold text-gray-800"><?= htmlspecialchars($post['title']) ?></h3>
-            <p class="text-gray-600 text-sm mt-1"><?= htmlspecialchars($post['description']) ?></p>
+            <h3 class="text-lg font-semibold text-gray-800">
+              <?= htmlspecialchars(is_array($post['title']) ? implode(', ', $post['title']) : $post['title']) ?>
+            </h3>
+
+            <p class="text-gray-600 text-sm mt-1">
+              <?= htmlspecialchars(is_array($post['description']) ? implode(', ', $post['description']) : $post['description']) ?>
+            </p>
 
             <?php if (!empty($post['image_url'])): ?>
               <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post image" class="w-full rounded-lg mt-4 shadow-sm">
             <?php endif; ?>
 
             <?php if (!empty($post['tags'])): ?>
-              <div class="mt-2 text-sm text-indigo-500">#<?= str_replace(',', ' #', htmlspecialchars($post['tags'])) ?></div>
+              <div class="mt-2 text-sm text-indigo-500">
+                #<?= htmlspecialchars(is_array($post['tags']) ? implode(' #', $post['tags']) : str_replace(',', ' #', $post['tags'])) ?>
+              </div>
             <?php endif; ?>
 
             <div class="flex items-center gap-6 mt-3 text-lg text-gray-600">
               <span class="like-btn cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#ef4444;' : '' ?>">❤️ <?= $post['likes'] ?></span>
-              <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= $post['comments'] ?? 0 ?></span>
+              <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= is_array($post['comments']) ? count($post['comments']) : ($post['comments'] ?? 0) ?></span>
             </div>
 
             <div class="comments-section mt-4 border-t border-indigo-100 pt-3 hidden" id="comments-<?= $post['post_id'] ?>">
@@ -51,13 +58,6 @@
   </div>
 
   <script>
-  document.querySelectorAll('.comment-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-id');
-      const section = document.getElementById(`comments-${id}`);
-      section.classList.toggle('hidden');
-    });
-  });
 
   document.querySelectorAll('.like-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -67,6 +67,62 @@
       if (data.success) {
         btn.innerHTML = `❤️ ${data.likes}`;
         btn.style.color = data.liked ? '#ef4444' : '#6b7280';
+      }
+    });
+  });
+
+  // Load comments dynamically
+  document.querySelectorAll('.comment-toggle').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      const section = document.getElementById(`comments-${id}`);
+      const list = section.querySelector('.comments-list');
+      section.classList.toggle('hidden');
+
+      if (!section.classList.contains('hidden')) {
+        list.innerHTML = "<p class='text-gray-400 italic'>Loading comments...</p>";
+        const res = await fetch(`index.php?action=getCommentsByPost&post_id=${id}`);
+        const comments = await res.json();
+
+        if (comments.length > 0) {
+          list.innerHTML = comments.map(c => `
+            <div class="bg-indigo-50 p-2 rounded-md shadow-sm">
+              <p class="text-gray-700 text-sm">${c.text}</p>
+              <p class="text-xs text-gray-500 mt-1">@${c.username} • ${c.created_at}</p>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = "<p class='text-gray-400 italic'>No comments yet.</p>";
+        }
+      }
+    });
+  });
+
+  // Add comment
+  document.querySelectorAll('.comment-submit').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const postId = btn.getAttribute('data-id');
+      const input = document.querySelector(`.comment-input[data-id='${postId}']`);
+      const content = input.value.trim();
+      if (!content) return;
+
+      const formData = new FormData();
+      formData.append('post_id', postId);
+      formData.append('content', content);
+
+      const res = await fetch('index.php?action=addComment', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        input.value = '';
+        const toggle = document.querySelector(`.comment-toggle[data-id='${postId}']`);
+        toggle.click(); // close
+        toggle.click(); // reopen to refresh comments
+      } else {
+        alert(data.message || 'Error adding comment.');
       }
     });
   });

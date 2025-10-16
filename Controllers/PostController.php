@@ -12,29 +12,37 @@ class PostController {
 
     // Show all posts (feed)
     public function index() {
-    global $user;
-    if (!isset($user)) {
-        header("Location: index.php?action=login");
-        exit;
+        global $user;
+        if (!isset($user)) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        require_once __DIR__ . '/../Models/LikeModel.php';
+        $likeModel = new LikeModel();
+
+        $posts = $this->postModel->getAllPosts();
+
+        // Get liked posts for current user
+        $likedPosts = $likeModel->getUserLikes($user['user_id']);
+        $likedSet = array_flip($likedPosts); // for quick lookup
+
+        // Add like info to each post
+        foreach ($posts as &$post) {
+            $post['likes'] = $likeModel->countLikes($post['post_id']);
+            $post['liked'] = isset($likedSet[$post['post_id']]);
+        }
+
+        // Load comments for each post
+        require_once __DIR__ . '/../Models/CommentModel.php';
+        $commentModel = new CommentModel();
+        // Fetch comments for each post
+        foreach ($posts as &$post) {
+            $post['comments'] = $commentModel->getCommentsByPost($post['post_id']);
+        }
+
+        include __DIR__ . '/../Views/Post.php';
     }
-
-    require_once __DIR__ . '/../Models/LikeModel.php';
-    $likeModel = new LikeModel();
-
-    $posts = $this->postModel->getAllPosts();
-
-    // Get liked posts for current user
-    $likedPosts = $likeModel->getUserLikes($user['user_id']);
-    $likedSet = array_flip($likedPosts); // for quick lookup
-
-    // Add like info to each post
-    foreach ($posts as &$post) {
-        $post['likes'] = $likeModel->countLikes($post['post_id']);
-        $post['liked'] = isset($likedSet[$post['post_id']]);
-    }
-
-    include __DIR__ . '/../Views/Post.php';
-}
 
     public function view($postId) {
     global $user;

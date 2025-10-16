@@ -33,6 +33,13 @@ class HomeController {
         // Fetch posts for home feed
         $posts = $this->postModel->getPostsForUsers($ids);
 
+        require_once __DIR__ . '/../Models/CommentModel.php';
+        $commentModel = new CommentModel();
+
+        foreach ($posts as &$post) {
+            $post['comments'] = $commentModel->getCommentsByPost($post['post_id']);
+        }
+
         include __DIR__ . '/../Views/Home.php';
     }
 }
