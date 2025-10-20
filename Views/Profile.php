@@ -1,6 +1,3 @@
-
-
-
 <?php require_once __DIR__ . '/../helpers/Session.php'; ?>
 <?php include __DIR__ . '/layout/Header.php'; ?>
 <?php include __DIR__ . '/layout/Sidebar.php'; ?>
@@ -66,42 +63,20 @@
     </div>
   </div>
 
-</body>
 <script>
-document.querySelectorAll('.comment-toggle').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const postId = btn.dataset.id;
-    const commentSection = document.getElementById(`comments-${postId}`);
-    const commentsList = document.getElementById(`commentsList-${postId}`);
-
-    if (!commentSection) return;
-    commentSection.classList.toggle('hidden');
-
-    // Only load comments once per post
-    if (!commentSection.dataset.loaded) {
-      commentsList.innerHTML = "<p class='text-center text-gray-400 italic'>Loading...</p>";
-
-      try {
-        const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
-        const comments = await res.json();
-
-        if (comments.length > 0) {
-          commentsList.innerHTML = comments.map(c => `
-            <div class="bg-indigo-50 p-2 rounded-md shadow-sm mb-1">
-              <p class="text-gray-700 text-sm">${c.text}</p>
-              <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
-            </div>
-          `).join('');
-        } else {
-          commentsList.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
-        }
-
-        commentSection.dataset.loaded = "true";
-      } catch (error) {
-        commentsList.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
-      }
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.comment-toggle');
+  if (!toggle) return;
+  const postId = toggle.dataset.id;
+  const section = document.getElementById(`comments-${postId}`);
+  if (section) {
+    section.classList.toggle('hidden');
+    if (!section.dataset.loaded) {
+      loadComments(postId); // function defined in Comments.php
+      section.dataset.loaded = "true";
     }
-  });
+  }
 });
 </script>
+</body>
 </html>

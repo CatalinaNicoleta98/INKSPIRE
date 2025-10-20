@@ -36,5 +36,25 @@ class CommentController {
         header('Content-Type: application/json');
         echo json_encode($comments);
     }
+
+    // Delete a comment
+    public function deleteComment() {
+        global $user;
+
+        if (!isset($user)) {
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            exit;
+        }
+
+        $comment_id = $_POST['comment_id'] ?? null;
+
+        if ($comment_id) {
+            $user_id = $user['user_id'];
+            $success = $this->model->deleteComment($comment_id, $user_id);
+            echo json_encode(['success' => $success]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid comment ID']);
+        }
+    }
 }
 ?>

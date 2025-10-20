@@ -68,62 +68,23 @@
     });
   });
 
-  // Load comments dynamically
-  document.querySelectorAll('.comment-toggle').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.getAttribute('data-id');
-      const section = document.getElementById(`comments-${id}`);
-      const list = section.querySelector('.comments-list');
-      section.classList.toggle('hidden');
-
-      if (!section.classList.contains('hidden')) {
-        list.innerHTML = "<p class='text-gray-400 italic'>Loading comments...</p>";
-        const res = await fetch(`index.php?action=getCommentsByPost&post_id=${id}`);
-        const comments = await res.json();
-
-        if (comments.length > 0) {
-          list.innerHTML = comments.map(c => `
-            <div class="bg-indigo-50 p-2 rounded-md shadow-sm">
-              <p class="text-gray-700 text-sm">${c.text}</p>
-              <p class="text-xs text-gray-500 mt-1">@${c.username} • ${c.created_at}</p>
-            </div>
-          `).join('');
-        } else {
-          list.innerHTML = "<p class='text-gray-400 italic'>No comments yet.</p>";
-        }
-      }
-    });
-  });
-
-  // Add comment
-  document.querySelectorAll('.comment-submit').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const postId = btn.getAttribute('data-id');
-      const input = document.querySelector(`.comment-input[data-id='${postId}']`);
-      const content = input.value.trim();
-      if (!content) return;
-
-      const formData = new FormData();
-      formData.append('post_id', postId);
-      formData.append('content', content);
-
-      const res = await fetch('index.php?action=addComment', {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        input.value = '';
-        const toggle = document.querySelector(`.comment-toggle[data-id='${postId}']`);
-        toggle.click(); // close
-        toggle.click(); // reopen to refresh comments
-      } else {
-        alert(data.message || 'Error adding comment.');
-      }
-    });
-  });
   </script>
+
+<script>
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.comment-toggle');
+  if (!toggle) return;
+  const postId = toggle.dataset.id;
+  const section = document.getElementById(`comments-${postId}`);
+  if (section) {
+    section.classList.toggle('hidden');
+    if (!section.dataset.loaded) {
+      loadComments(postId); // function defined in Comments.php
+      section.dataset.loaded = "true";
+    }
+  }
+});
+</script>
 
 </body>
 </html>

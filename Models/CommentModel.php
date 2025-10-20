@@ -27,5 +27,11 @@ class CommentModel {
         $stmt->execute([$post_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // Delete a comment (only if it belongs to the current user)
+    public function deleteComment($comment_id, $user_id) {
+        $stmt = $this->conn->prepare("DELETE FROM `comment` WHERE comment_id = ? AND user_id = ?");
+        return $stmt->execute([$comment_id, $user_id]);
+    }
 }
 ?>

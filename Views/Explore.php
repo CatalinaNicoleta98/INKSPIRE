@@ -84,67 +84,6 @@
     });
     lightbox.addEventListener('click', () => lightbox.classList.add('hidden'));
 
-    const commentsModal = document.getElementById('commentsModal');
-    const commentsList = document.getElementById('commentsList');
-    const closeComments = document.getElementById('closeComments');
-    const newCommentInput = document.getElementById('newCommentInput');
-    const submitComment = document.getElementById('submitComment');
-
-    let currentPostId = null;
-
-    // Open comments modal
-    document.querySelectorAll('.comment-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        currentPostId = btn.getAttribute('data-id');
-        commentsModal.classList.remove('hidden');
-        commentsList.innerHTML = `<p class='text-center text-gray-400 italic'>Loading comments...</p>`;
-        await loadComments(currentPostId);
-      });
-    });
-
-    closeComments.onclick = () => commentsModal.classList.add('hidden');
-
-    // Load comments
-    async function loadComments(postId) {
-      try {
-        const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
-        const comments = await res.json();
-
-        if (comments.length > 0) {
-          commentsList.innerHTML = comments.map(c => `
-            <div class="bg-indigo-50 p-3 rounded-md shadow-sm mb-2">
-              <p class="text-gray-700 text-sm">${c.text}</p>
-              <p class="text-xs text-gray-500 mt-1">@${c.username} • ${c.created_at}</p>
-            </div>
-          `).join('');
-        } else {
-          commentsList.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet. Be the first!</p>";
-        }
-      } catch (err) {
-        commentsList.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
-      }
-    }
-
-    // Submit comment
-    submitComment.addEventListener('click', async () => {
-      const content = newCommentInput.value.trim();
-      if (!content || !currentPostId) return;
-
-      const formData = new FormData();
-      formData.append('post_id', currentPostId);
-      formData.append('content', content);
-
-      const res = await fetch('index.php?action=addComment', { method: 'POST', body: formData });
-      const data = await res.json();
-
-      if (data.success) {
-        newCommentInput.value = '';
-        await loadComments(currentPostId);
-      } else {
-        alert(data.message || 'Error posting comment.');
-      }
-    });
-
     document.querySelectorAll('.like-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -162,5 +101,24 @@
       });
     });
   </script>
+<script>
+document.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.comment-btn');
+  if (!toggle) return;
+  const postId = toggle.dataset.id;
+  const commentsModal = document.getElementById('commentsModal');
+  const commentsList = document.getElementById('commentsList');
+  if (commentsModal && commentsList) {
+    commentsModal.classList.remove('hidden');
+    loadComments(postId, 'modal'); // function defined in Comments.php
+  }
+
+  // Close comments modal when clicking the close button
+  const closeComments = document.getElementById('closeComments');
+  if (closeComments) {
+    closeComments.onclick = () => commentsModal.classList.add('hidden');
+  }
+});
+</script>
 </body>
 </html>
