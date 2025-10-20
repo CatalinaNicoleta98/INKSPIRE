@@ -41,20 +41,10 @@
               <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= is_array($post['comments']) ? count($post['comments']) : ($post['comments'] ?? 0) ?></span>
             </div>
 
-            <div class="comments-section mt-4 border-t border-indigo-100 pt-3 hidden" id="comments-<?= $post['post_id'] ?>">
-              <div class="comments-list space-y-2 text-sm text-gray-700"></div>
-              <div class="add-comment flex items-center gap-2 mt-3 bg-white border-t border-indigo-100 pt-2 pb-2 px-2 rounded-b-md sticky bottom-0 z-10">
-                <input type="text" placeholder="Add a comment..." 
-                       class="comment-input flex-1 border border-indigo-200 rounded-full px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none" 
-                       data-id="<?= $post['post_id'] ?>">
-                <button class="comment-submit bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-full p-2 hover:from-indigo-500 hover:to-purple-500 transition" 
-                        data-id="<?= $post['post_id'] ?>">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-6 9 6-9 6-9-6zM3 10v10l9-6 9 6V10" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <?php 
+              $context = 'inline';
+              include __DIR__ . '/Comments.php';
+            ?>
           </div>
         <?php endforeach; ?>
       <?php else: ?>

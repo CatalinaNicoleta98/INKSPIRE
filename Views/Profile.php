@@ -51,8 +51,12 @@
 
               <div class="flex items-center gap-6 mt-3 text-lg text-gray-600">
                 <span class="cursor-pointer transition hover:scale-110">❤️ <?= htmlspecialchars($post['likes'] ?? 0) ?></span>
-                <span class="cursor-pointer transition hover:scale-110">💬 <?= htmlspecialchars($post['comments'] ?? 0) ?></span>
+                <span class="cursor-pointer transition hover:scale-110 comment-toggle" data-id="<?= $post['post_id'] ?>">💬 <?= htmlspecialchars($post['comments'] ?? 0) ?></span>
               </div>
+              <?php 
+                $context = 'inline';
+                include __DIR__ . '/Comments.php';
+              ?>
             </div>
           <?php endforeach; ?>
         <?php else: ?>
@@ -63,4 +67,41 @@
   </div>
 
 </body>
+<script>
+document.querySelectorAll('.comment-toggle').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const postId = btn.dataset.id;
+    const commentSection = document.getElementById(`comments-${postId}`);
+    const commentsList = document.getElementById(`commentsList-${postId}`);
+
+    if (!commentSection) return;
+    commentSection.classList.toggle('hidden');
+
+    // Only load comments once per post
+    if (!commentSection.dataset.loaded) {
+      commentsList.innerHTML = "<p class='text-center text-gray-400 italic'>Loading...</p>";
+
+      try {
+        const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
+        const comments = await res.json();
+
+        if (comments.length > 0) {
+          commentsList.innerHTML = comments.map(c => `
+            <div class="bg-indigo-50 p-2 rounded-md shadow-sm mb-1">
+              <p class="text-gray-700 text-sm">${c.text}</p>
+              <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+            </div>
+          `).join('');
+        } else {
+          commentsList.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
+        }
+
+        commentSection.dataset.loaded = "true";
+      } catch (error) {
+        commentsList.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
+      }
+    }
+  });
+});
+</script>
 </html>
