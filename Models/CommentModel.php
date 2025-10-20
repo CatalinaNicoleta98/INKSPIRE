@@ -15,16 +15,24 @@ class CommentModel {
         return $stmt->execute([$post_id, $user_id, htmlspecialchars(trim($content))]);
     }
 
-    // Get all comments for a specific post
-    public function getCommentsByPost($post_id) {
+    // Get all comments for a specific post, include ownership flag
+    public function getCommentsByPost($post_id, $current_user_id = null) {
         $stmt = $this->conn->prepare("
-            SELECT c.comment_id, c.text, c.created_at, u.username 
+            SELECT 
+                c.comment_id, 
+                c.text, 
+                c.created_at, 
+                u.username,
+                (c.user_id = :current_user_id) AS owned
             FROM `comment` c
             JOIN `user` u ON c.user_id = u.user_id
-            WHERE c.post_id = ?
+            WHERE c.post_id = :post_id
             ORDER BY c.created_at ASC
         ");
-        $stmt->execute([$post_id]);
+        $stmt->execute([
+            ':post_id' => $post_id,
+            ':current_user_id' => $current_user_id ?? 0
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

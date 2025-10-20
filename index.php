@@ -99,6 +99,10 @@ switch ($action) {
         }
         break;
 
+    case 'deleteComment':
+        $commentController->deleteComment();
+        break;
+
     default:
         if (isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=home");

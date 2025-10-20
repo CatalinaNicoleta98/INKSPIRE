@@ -109,29 +109,36 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// DELETE COMMENT
-document.addEventListener('click', async (e) => {
-  const deleteBtn = e.target.closest('.delete-comment');
-  if (!deleteBtn) return;
+// DELETE COMMENT (delegated safely)
+if (!window.commentDeleteBound) {
+  document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-comment');
+    if (!deleteBtn) return;
 
-  const commentId = deleteBtn.dataset.commentId;
-  const commentItem = deleteBtn.closest('.comment-item');
-  if (!confirm('Are you sure you want to delete this comment?')) return;
+    const commentId = deleteBtn.dataset.commentId;
+    const commentItem = deleteBtn.closest('.comment-item');
+    if (!confirm('Are you sure you want to delete this comment?')) return;
 
-  try {
-    const res = await fetch('index.php?action=deleteComment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `comment_id=${commentId}`
-    });
-    const data = await res.json();
-    if (data.success) {
-      commentItem.remove();
-    } else {
-      alert(data.message || 'Error deleting comment.');
+    try {
+      const res = await fetch('index.php?action=deleteComment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `comment_id=${commentId}`
+      });
+      const data = await res.json();
+      if (data.success) {
+        const postId = commentItem.closest('[data-post-id]')?.dataset.postId;
+        commentItem.remove();
+        if (postId) loadComments(postId); // Refresh after delete
+      } else {
+        alert(data.message || 'Error deleting comment.');
+      }
+    } catch (error) {
+      alert('Request failed.');
     }
-  } catch (error) {
-    alert('Request failed.');
-  }
-});
+  });
+
+  // Flag to prevent re-binding
+  window.commentDeleteBound = true;
+}
 </script>
