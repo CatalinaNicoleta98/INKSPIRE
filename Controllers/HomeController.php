@@ -39,6 +39,7 @@ class HomeController {
         foreach ($posts as &$post) {
             $post['comments'] = $commentModel->getCommentsByPost($post['post_id']);
         }
+        unset($post);
 
         include __DIR__ . '/../Views/Home.php';
     }
