@@ -19,7 +19,7 @@ class CommentController {
         }
 
         $post_id = $_POST['post_id'] ?? null;
-        $content = $_POST['content'] ?? '';
+        $content = $_POST['text'] ?? '';
 
         if ($post_id && !empty(trim($content))) {
             $user_id = $user['user_id'];

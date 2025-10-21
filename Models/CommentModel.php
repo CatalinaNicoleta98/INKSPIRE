@@ -10,9 +10,9 @@ class CommentModel {
     }
 
     // Add a new comment
-    public function addComment($post_id, $user_id, $content) {
+    public function addComment($post_id, $user_id, $text) {
         $stmt = $this->conn->prepare("INSERT INTO `comment` (post_id, user_id, text, created_at) VALUES (?, ?, ?, NOW())");
-        return $stmt->execute([$post_id, $user_id, htmlspecialchars(trim($content))]);
+        return $stmt->execute([$post_id, $user_id, htmlspecialchars(trim($text))]);
     }
 
     // Get all comments for a specific post, include ownership flag

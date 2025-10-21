@@ -102,7 +102,8 @@ document.addEventListener('click', async (e) => {
     const data = await res.json();
     if (data.success) {
       input.value = '';
-      loadComments(postId);
+      const context = submitBtn.closest('[data-context]')?.dataset.context || 'inline';
+      loadComments(postId, context);
     }
   } catch (error) {
     console.error('Failed to post comment');
