@@ -60,5 +60,32 @@ class CommentController {
             echo json_encode(['success' => false, 'message' => 'Invalid comment ID']);
         }
     }
+    // Handle AJAX requests for comments
+    public function handleAjax() {
+        $action = $_GET['ajax'] ?? null;
+        switch ($action) {
+            case 'get':
+                $post_id = $_GET['post_id'] ?? null;
+                if ($post_id) {
+                    $this->getCommentsByPost($post_id);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Missing post ID']);
+                }
+                break;
+
+            case 'add':
+                $this->addComment();
+                break;
+
+            case 'delete':
+                $this->deleteComment();
+                break;
+
+            default:
+                echo json_encode(['success' => false, 'message' => 'Invalid AJAX action']);
+                break;
+        }
+        exit;
+    }
 }
 ?>
