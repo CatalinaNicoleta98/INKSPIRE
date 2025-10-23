@@ -22,12 +22,18 @@
                 <span class="like-btn cursor-pointer transition" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#f87171;' : '' ?>">❤️ <?= $post['likes'] ?></span>
                 <span class="comment-btn cursor-pointer" data-id="<?= $post['post_id'] ?>">💬 <?= $post['comments'] ?? 0 ?></span>
               </div>
+              <div id="comments-<?= $post['post_id'] ?>" class="hidden mt-4"></div>
             </div>
           <?php endforeach; ?>
         </div>
       <?php else: ?>
         <p class="text-center text-gray-500 italic mt-10">No posts yet. Be the first to create one!</p>
       <?php endif; ?>
+
+      <?php 
+        $context = 'modal';
+        include __DIR__ . '/Comments.php';
+      ?>
     </main>
 
     <?php include __DIR__ . '/layout/Sidebar.php'; ?>
@@ -60,11 +66,6 @@
     <div class="bg-white rounded-lg w-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-lg relative">
       <span id="closeComments" class="absolute top-3 right-4 text-gray-500 cursor-pointer text-2xl">&times;</span>
       <h3 class="text-xl font-semibold text-indigo-500 mb-4 text-center">Comments</h3>
-
-      <?php 
-        $context = 'modal';
-        include __DIR__ . '/Comments.php';
-      ?>
     </div>
   </div>
 
@@ -110,6 +111,7 @@ document.addEventListener('click', (e) => {
   const commentsList = document.getElementById('commentsList');
   if (commentsModal && commentsList) {
     commentsModal.classList.remove('hidden');
+    commentsModal.dataset.postId = postId; // store post ID for comment submission
     loadComments(postId, 'modal'); // function defined in Comments.php
   }
 

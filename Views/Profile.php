@@ -50,12 +50,13 @@
                 <span class="cursor-pointer transition hover:scale-110">❤️ <?= htmlspecialchars($post['likes'] ?? 0) ?></span>
                 <span class="cursor-pointer transition hover:scale-110 comment-toggle" data-id="<?= $post['post_id'] ?>">💬 <?= htmlspecialchars($post['comments'] ?? 0) ?></span>
               </div>
-              <?php 
-                $context = 'inline';
-                include __DIR__ . '/Comments.php';
-              ?>
+              <div id="comments-<?= $post['post_id'] ?>" class="hidden mt-4"></div>
             </div>
           <?php endforeach; ?>
+          <?php 
+            $context = 'inline';
+            include __DIR__ . '/Comments.php';
+          ?>
         <?php else: ?>
           <p class="text-center text-gray-500 italic">No posts yet.</p>
         <?php endif; ?>

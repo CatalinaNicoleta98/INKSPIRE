@@ -88,7 +88,7 @@ document.addEventListener('click', async (e) => {
   const submitBtn = e.target.closest('.comment-submit');
   if (!submitBtn) return;
 
-  const postId = submitBtn.dataset.id;
+  const postId = submitBtn.dataset.id || document.getElementById('commentsModal')?.dataset.postId;
   const input = document.querySelector(`#newCommentInput-${postId}`) || document.querySelector(`#newCommentInput`);
   const text = input.value.trim();
   if (!text) return;
