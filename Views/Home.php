@@ -41,14 +41,13 @@
               <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= is_array($post['comments']) ? count($post['comments']) : ($post['comments'] ?? 0) ?></span>
             </div>
 
-            <div id="comments-<?= $post['post_id'] ?>" class="hidden mt-4">
-              <?php 
-                $context = 'inline';
-                include __DIR__ . '/Comments.php';
-              ?>
-            </div>
+            <div id="comments-<?= $post['post_id'] ?>" class="hidden mt-4"></div>
           </div>
         <?php endforeach; ?>
+        <?php 
+          $context = 'inline';
+          include __DIR__ . '/Comments.php';
+        ?>
       <?php else: ?>
         <p class="text-center text-gray-500 italic mt-10">No posts yet.</p>
       <?php endif; ?>
