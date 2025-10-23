@@ -103,10 +103,6 @@ switch ($action) {
         $commentController->deleteComment();
         break;
 
-    case 'commentsAjax':
-        $commentController->handleAjax();
-        break;
-
     default:
         if (isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=home");

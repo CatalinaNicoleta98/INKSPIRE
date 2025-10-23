@@ -41,14 +41,13 @@
               <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= is_array($post['comments']) ? count($post['comments']) : ($post['comments'] ?? 0) ?></span>
             </div>
 
-            <div id="comments-<?= $post['post_id'] ?>" class="hidden mt-4">
-              <?php 
-                $context = 'inline';
-                include __DIR__ . '/Comments.php';
-              ?>
-            </div>
+            <div id="comments-<?= $post['post_id'] ?>" class="hidden mt-4"></div>
           </div>
         <?php endforeach; ?>
+        <?php 
+          $context = 'inline';
+          include __DIR__ . '/Comments.php';
+        ?>
       <?php else: ?>
         <p class="text-center text-gray-500 italic mt-10">No posts yet.</p>
       <?php endif; ?>
@@ -88,41 +87,5 @@ document.addEventListener('click', (e) => {
 });
 </script>
 
-</script>
-<script>
-// Load comments dynamically from controller
-async function loadComments(postId) {
-  const list = document.querySelector(`#commentsList-${postId}`);
-  if (!list) return;
-  list.innerHTML = "<p class='text-center text-gray-400 italic'>Loading...</p>";
-
-  try {
-    const res = await fetch(`index.php?action=commentsAjax&ajax=get&post_id=${postId}`);
-    const data = await res.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      list.innerHTML = data.map(c => `
-        <div class="comment-item bg-indigo-50 p-2 rounded-md shadow-sm mb-1 flex justify-between items-start">
-          <div>
-            <p class="text-gray-700 text-sm">${c.text}</p>
-            <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
-          </div>
-          ${c.owned ? `<button class='delete-comment text-red-400 hover:text-red-600' data-comment-id='${c.comment_id}'>✕</button>` : ''}
-        </div>
-      `).join('');
-    } else {
-      list.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
-    }
-  } catch (err) {
-    list.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
-  }
-}
-
-// Auto-load for visible comment sections
-document.querySelectorAll('.comments-section').forEach(section => {
-  const postId = section.dataset.postId;
-  loadComments(postId);
-});
-</script>
 </body>
 </html>
