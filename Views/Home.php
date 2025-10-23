@@ -41,10 +41,12 @@
               <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= is_array($post['comments']) ? count($post['comments']) : ($post['comments'] ?? 0) ?></span>
             </div>
 
-            <?php 
-              $context = 'inline';
-              include __DIR__ . '/Comments.php';
-            ?>
+            <div id="comments-<?= $post['post_id'] ?>" class="hidden mt-4">
+              <?php 
+                $context = 'inline';
+                include __DIR__ . '/Comments.php';
+              ?>
+            </div>
           </div>
         <?php endforeach; ?>
       <?php else: ?>
