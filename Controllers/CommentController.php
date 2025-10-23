@@ -32,11 +32,7 @@ class CommentController {
 
     // Get comments for a specific post
     public function getCommentsByPost($post_id) {
-        global $user;
-
-        $current_user_id = isset($user) ? $user['user_id'] : null;
-
-        $comments = $this->model->getCommentsByPost($post_id, $current_user_id);
+        $comments = $this->model->getCommentsByPost($post_id);
         header('Content-Type: application/json');
         echo json_encode($comments);
     }
