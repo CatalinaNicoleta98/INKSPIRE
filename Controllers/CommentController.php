@@ -14,6 +14,7 @@ class CommentController {
         global $user;
 
         if (!isset($user)) {
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
         }
@@ -24,8 +25,10 @@ class CommentController {
         if ($post_id && !empty(trim($content))) {
             $user_id = $user['user_id'];
             $success = $this->model->addComment($post_id, $user_id, $content);
+            header('Content-Type: application/json');
             echo json_encode(['success' => $success]);
         } else {
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Invalid input']);
         }
     }
@@ -42,6 +45,7 @@ class CommentController {
         global $user;
 
         if (!isset($user)) {
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
         }
@@ -51,8 +55,10 @@ class CommentController {
         if ($comment_id) {
             $user_id = $user['user_id'];
             $success = $this->model->deleteComment($comment_id, $user_id);
+            header('Content-Type: application/json');
             echo json_encode(['success' => $success]);
         } else {
+            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Invalid comment ID']);
         }
     }

@@ -41,10 +41,28 @@
               <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= is_array($post['comments']) ? count($post['comments']) : ($post['comments'] ?? 0) ?></span>
             </div>
 
-            <?php 
-              $context = 'inline';
-              include __DIR__ . '/Comments.php';
-            ?>
+            <!-- Inline Comments Section -->
+            <div class="comments-section mt-4 hidden" id="comments-<?= $post['post_id'] ?>" data-post-id="<?= $post['post_id'] ?>">
+              <div id="commentsList-<?= $post['post_id'] ?>" 
+                   class="comments-list text-gray-600 text-sm space-y-2 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-md border border-indigo-100"
+                   data-post-id="<?= $post['post_id'] ?>">
+                <p class="text-center text-gray-400 italic">Loading comments...</p>
+              </div>
+
+              <div class="add-comment flex items-center gap-2 mt-3 bg-white border-t border-indigo-100 pt-2 pb-2 px-2 rounded-b-md sticky bottom-0 z-10" data-post-id="<?= $post['post_id'] ?>">
+                <input type="text" placeholder="Add a comment..."
+                      id="newCommentInput-<?= $post['post_id'] ?>"
+                      class="comment-input flex-1 border border-indigo-200 rounded-full px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none"
+                      data-id="<?= $post['post_id'] ?>" data-post-id="<?= $post['post_id'] ?>">
+                <button id="submitComment-<?= $post['post_id'] ?>"
+                        class="comment-submit bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-full p-2 hover:from-indigo-500 hover:to-purple-500 transition"
+                        data-id="<?= $post['post_id'] ?>" data-post-id="<?= $post['post_id'] ?>">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-6 9 6-9 6-9-6zM3 10v10l9-6 9 6V10" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         <?php endforeach; ?>
       <?php else: ?>
@@ -79,9 +97,79 @@ document.addEventListener('click', (e) => {
   if (section) {
     section.classList.toggle('hidden');
     if (!section.dataset.loaded) {
-      loadComments(postId); // function defined in Comments.php
+      loadComments(postId);
       section.dataset.loaded = "true";
     }
+  }
+});
+</script>
+
+<script>
+async function loadComments(postId) {
+  const list = document.querySelector(`#commentsList-${postId}`);
+  if (!list) return;
+  list.innerHTML = "<p class='text-center text-gray-400 italic'>Loading...</p>";
+  try {
+    const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
+    const comments = await res.json();
+    if (Array.isArray(comments) && comments.length > 0) {
+      list.innerHTML = comments.map(c => `
+        <div class="comment-item bg-indigo-50 p-2 rounded-md shadow-sm mb-1 flex justify-between items-start" data-comment-id="${c.comment_id}">
+          <div>
+            <p class="text-gray-700 text-sm">${c.text}</p>
+            <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+          </div>
+          ${c.owned ? `<button class="delete-comment text-red-400 hover:text-red-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✕</button>` : ''}
+        </div>
+      `).join('');
+    } else {
+      list.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
+    }
+  } catch (err) {
+    list.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
+  }
+}
+
+document.addEventListener('click', async (e) => {
+  const submitBtn = e.target.closest('.comment-submit');
+  if (!submitBtn) return;
+  const postId = submitBtn.dataset.id;
+  const input = document.querySelector(`#newCommentInput-${postId}`);
+  const text = (input?.value || '').trim();
+  if (!text) return;
+  try {
+    const res = await fetch('index.php?action=addComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `post_id=${encodeURIComponent(postId)}&text=${encodeURIComponent(text)}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      input.value = '';
+      loadComments(postId);
+    }
+  } catch {
+    alert('Failed to post comment.');
+  }
+});
+
+document.addEventListener('click', async (e) => {
+  const delBtn = e.target.closest('.delete-comment');
+  if (!delBtn) return;
+  const commentId = delBtn.dataset.commentId;
+  const postId = delBtn.dataset.postId;
+  if (!confirm('Delete this comment?')) return;
+  try {
+    const res = await fetch('index.php?action=deleteComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `comment_id=${encodeURIComponent(commentId)}`
+    });
+    const data = await res.json();
+    if (data.success) loadComments(postId);
+    else alert(data.message || 'Error deleting comment.');
+  } catch {
+    alert('Error sending request.');
   }
 });
 </script>

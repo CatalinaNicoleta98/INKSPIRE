@@ -61,10 +61,25 @@
       <span id="closeComments" class="absolute top-3 right-4 text-gray-500 cursor-pointer text-2xl">&times;</span>
       <h3 class="text-xl font-semibold text-indigo-500 mb-4 text-center">Comments</h3>
 
-      <?php 
-        $context = 'modal';
-        include __DIR__ . '/Comments.php';
-      ?>
+      <!-- Modal Comments Layout -->
+      <div class="flex flex-col h-[70vh]" data-context="modal">
+        <div id="commentsList" class="comments-list flex-1 overflow-y-auto text-gray-600 text-sm p-1">
+          <p class="text-center text-gray-400 italic">Loading...</p>
+        </div>
+
+        <div class="bg-white border-t border-indigo-100 p-2 sticky bottom-0">
+          <div class="flex items-center gap-2">
+            <input id="newCommentInput" type="text" placeholder="Add a comment..."
+                  class="comment-input flex-1 border border-indigo-200 rounded-full px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+            <button id="submitComment"
+                    class="comment-submit bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-full p-2 hover:from-indigo-500 hover:to-purple-500 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-6 9 6-9 6-9-6zM3 10v10l9-6 9 6V10" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -102,10 +117,12 @@
     });
   </script>
 <script>
+let currentPostId = null;
 document.addEventListener('click', (e) => {
   const toggle = e.target.closest('.comment-btn');
   if (!toggle) return;
   const postId = toggle.dataset.id;
+  currentPostId = postId;
   const commentsModal = document.getElementById('commentsModal');
   const commentsList = document.getElementById('commentsList');
   if (commentsModal && commentsList) {
@@ -117,6 +134,75 @@ document.addEventListener('click', (e) => {
   const closeComments = document.getElementById('closeComments');
   if (closeComments) {
     closeComments.onclick = () => commentsModal.classList.add('hidden');
+  }
+});
+</script>
+<script>
+async function loadComments(postId) {
+  const list = document.getElementById('commentsList');
+  if (!list) return;
+  list.innerHTML = "<p class='text-center text-gray-400 italic'>Loading...</p>";
+  try {
+    const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
+    const comments = await res.json();
+    if (Array.isArray(comments) && comments.length > 0) {
+      list.innerHTML = comments.map(c => `
+        <div class="comment-item bg-indigo-50 p-2 rounded-md shadow-sm mb-1 flex justify-between items-start" data-comment-id="${c.comment_id}">
+          <div>
+            <p class="text-gray-700 text-sm">${c.text}</p>
+            <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+          </div>
+          ${c.owned ? `<button class="delete-comment text-red-400 hover:text-red-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✕</button>` : ''}
+        </div>
+      `).join('');
+    } else {
+      list.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
+    }
+  } catch (err) {
+    list.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
+  }
+}
+
+document.addEventListener('click', async (e) => {
+  const submitBtn = e.target.closest('.comment-submit');
+  if (!submitBtn) return;
+  const input = document.getElementById('newCommentInput');
+  const text = (input?.value || '').trim();
+  const activePostId = currentPostId;
+  if (!text || !activePostId) return;
+  try {
+    const res = await fetch('index.php?action=addComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `post_id=${encodeURIComponent(activePostId)}&text=${encodeURIComponent(text)}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      input.value = '';
+      loadComments(activePostId);
+    }
+  } catch {
+    alert('Failed to post comment.');
+  }
+});
+
+document.addEventListener('click', async (e) => {
+  const delBtn = e.target.closest('.delete-comment');
+  if (!delBtn) return;
+  const commentId = delBtn.dataset.commentId;
+  const postId = delBtn.dataset.postId;
+  if (!confirm('Delete this comment?')) return;
+  try {
+    const res = await fetch('index.php?action=deleteComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `comment_id=${encodeURIComponent(commentId)}`
+    });
+    const data = await res.json();
+    if (data.success) loadComments(postId);
+    else alert(data.message || 'Error deleting comment.');
+  } catch {
+    alert('Error sending request.');
   }
 });
 </script>
