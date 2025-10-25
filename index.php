@@ -12,6 +12,9 @@ $postController = new PostController();
 $likeController = new LikeController();
 $commentController = new CommentController();
 
+// Get the logged-in user from the session
+$user = Session::get('user');
+
 // If no action specified, redirect based on login state
 if (!isset($_GET['action'])) {
     if (isset($_SESSION['user']['user_id'])) {
@@ -83,6 +86,19 @@ switch ($action) {
         if (isset($_GET['id'])) {
             $postController->view($_GET['id']);
         }
+        break;
+
+    // post management: edit, delete, change privacy
+    case 'editPost':
+        $postController->editPost();
+        break;
+
+    case 'deletePost':
+        $postController->deletePost();
+        break;
+
+    case 'changePrivacy':
+        $postController->changePrivacy();
         break;
     
     case 'toggleLike':

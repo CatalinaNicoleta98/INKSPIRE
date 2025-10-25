@@ -30,6 +30,21 @@
                 <span class="like-btn cursor-pointer transition" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#f87171;' : '' ?>">❤️ <?= $post['likes'] ?></span>
                 <span class="comment-btn cursor-pointer" data-id="<?= $post['post_id'] ?>">💬 <?= $post['comments'] ?? 0 ?></span>
               </div>
+
+              <?php if ($post['user_id'] === $user['user_id']): ?>
+                <div class="absolute top-3 right-3 z-20">
+                  <div class="relative">
+                    <button class="post-options text-gray-500 hover:text-gray-700 transition" data-post-id="<?= $post['post_id'] ?>">⋮</button>
+                    <div class="options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-30">
+                      <button class="edit-post block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-post-id="<?= $post['post_id'] ?>">Edit</button>
+                      <button class="delete-post block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-post-id="<?= $post['post_id'] ?>">Delete</button>
+                      <button class="toggle-privacy block w-full text-left px-3 py-1 text-sm text-gray-700 hover:bg-indigo-50" data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>">
+                        <?= (!empty($post['is_public']) && $post['is_public']) ? 'Make Private' : 'Make Public' ?>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              <?php endif; ?>
             </div>
           <?php endforeach; ?>
         </div>
@@ -157,6 +172,8 @@
         }
       });
     });
+
+    <!-- Post management handled globally by Home.php script (edit, delete, privacy toggle) -->
   </script>
 </body>
 </html>

@@ -18,6 +18,42 @@
       <?php if (!empty($posts)): ?>
         <?php foreach ($posts as $post): ?>
           <div class="post bg-white rounded-xl shadow-md p-6 mb-6 w-full max-w-[700px] hover:shadow-lg transition relative">
+            <!-- Author info and privacy icon (privacy icon beside date) -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <img src="<?= htmlspecialchars($post['profile_picture'] ?? 'assets/default-avatar.png') ?>"
+                     alt="profile" class="w-9 h-9 rounded-full object-cover border border-indigo-200">
+                <div>
+                  <p class="text-sm font-semibold text-gray-800">
+                    <?= htmlspecialchars($post['username']) ?>
+                  </p>
+                  <div class="flex items-center gap-1 text-xs text-gray-500">
+                    <span><?= date('M j, Y', strtotime($post['created_at'])) ?></span>
+                    <span title="<?= $post['is_public'] ? 'Public' : 'Private' ?>" class="text-gray-400">
+                      <?= $post['is_public'] ? '🌍' : '👥' ?>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <?php if ($post['user_id'] === $user['user_id']): ?>
+              <div class="absolute top-3 right-3 z-20">
+                <div class="relative">
+                  <button class="post-options flex items-center justify-center w-8 h-8 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition" data-post-id="<?= $post['post_id'] ?>" title="Post settings">
+                    ⚙️
+                  </button>
+                  <div class="options-menu hidden absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[150px] overflow-hidden">
+                    <button class="edit-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition" data-post-id="<?= $post['post_id'] ?>">✏️ Edit</button>
+                    <button class="delete-post block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition" data-post-id="<?= $post['post_id'] ?>">🗑️ Delete</button>
+                    <button class="toggle-privacy block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
+                            data-post-id="<?= $post['post_id'] ?>"
+                            data-public="<?= $post['is_public'] ?? 1 ?>">
+                      <?= (!empty($post['is_public']) && $post['is_public']) ? '🔒 Make Private' : '🌍 Make Public' ?>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            <?php endif; ?>
             <h3 class="text-lg font-semibold text-gray-800">
               <?= htmlspecialchars(is_array($post['title']) ? implode(', ', $post['title']) : $post['title']) ?>
             </h3>
@@ -300,4 +336,150 @@ document.addEventListener('click', (e) => {
 </script>
 
 </body>
+<!--
+  // 3-dot post management menu for feed posts (edit, delete, toggle privacy)
+-->
+<script>
+// 3-dot post management menu for feed posts (edit, delete, toggle privacy)
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.post-options');
+  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  openMenus.forEach(m => m.classList.add('hidden'));
+  if (btn) {
+    const menu = btn.nextElementSibling;
+    menu.classList.toggle('hidden');
+  }
+});
+
+// inline edit post in feed
+document.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.edit-post');
+  if (!editBtn) return;
+  const postCard = editBtn.closest('.post');
+  const postId = editBtn.dataset.postId;
+  const titleEl = postCard.querySelector('h3');
+  const descEl = postCard.querySelector('p.text-gray-600');
+  const oldTitle = titleEl ? titleEl.textContent.trim() : '';
+  const oldDesc = descEl ? descEl.textContent.trim() : '';
+
+  const form = document.createElement('div');
+  form.innerHTML = `
+    <input type="text" class="edit-title w-full border border-indigo-200 rounded-md p-2 mb-2" value="${oldTitle}">
+    <textarea class="edit-description w-full border border-indigo-200 rounded-md p-2 mb-2">${oldDesc}</textarea>
+    <div class="flex gap-2">
+      <button class="save-edit bg-indigo-500 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-600" data-post-id="${postId}">Save</button>
+      <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-400">Cancel</button>
+    </div>
+  `;
+  postCard.querySelector('.options-menu').classList.add('hidden');
+  titleEl.replaceWith(form);
+});
+
+document.addEventListener('click', async (e) => {
+  const saveBtn = e.target.closest('.save-edit');
+  const cancelBtn = e.target.closest('.cancel-edit');
+
+  if (cancelBtn) {
+    window.location.reload();
+    return;
+  }
+
+  if (saveBtn) {
+    const postId = saveBtn.dataset.postId;
+    const postCard = saveBtn.closest('.post');
+    const title = postCard.querySelector('.edit-title').value.trim();
+    const description = postCard.querySelector('.edit-description').value.trim();
+    if (!title || !description) return alert('Please fill all fields.');
+
+    try {
+      const res = await fetch('index.php?action=editPost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `post_id=${encodeURIComponent(postId)}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Post updated successfully!');
+        window.location.reload();
+      } else {
+        alert('Error updating post.');
+      }
+    } catch {
+      alert('Request failed.');
+    }
+  }
+});
+
+// delete post confirmation modal
+document.addEventListener('click', async (e) => {
+  const delBtn = e.target.closest('.delete-post');
+  if (!delBtn) return;
+  const postId = delBtn.dataset.postId;
+
+  const overlay = document.createElement('div');
+  overlay.className = "fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50";
+  overlay.innerHTML = `
+    <div class="bg-white rounded-lg p-5 text-center shadow-lg max-w-xs w-full">
+      <p class="text-gray-700 mb-4 text-sm">Are you sure you want to delete this post?</p>
+      <div class="flex justify-center gap-3">
+        <button class="cancel-del bg-gray-300 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-400 transition">Cancel</button>
+        <button class="confirm-del bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition" data-post-id="${postId}">Delete</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+});
+
+document.addEventListener('click', async (e) => {
+  const cancel = e.target.closest('.cancel-del');
+  const confirm = e.target.closest('.confirm-del');
+  const overlay = document.querySelector('.fixed.inset-0.bg-black');
+  if (cancel && overlay) overlay.remove();
+  if (confirm) {
+    const postId = confirm.dataset.postId;
+    try {
+      const res = await fetch('index.php?action=deletePost', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `post_id=${encodeURIComponent(postId)}`
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Post deleted!');
+        overlay.remove();
+        window.location.reload();
+      } else {
+        alert('Error deleting post.');
+      }
+    } catch {
+      alert('Delete request failed.');
+    }
+  }
+});
+
+// toggle post privacy
+document.addEventListener('click', async (e) => {
+  const privacyBtn = e.target.closest('.toggle-privacy');
+  if (!privacyBtn) return;
+  const postId = privacyBtn.dataset.postId;
+  const isPublic = privacyBtn.dataset.public === '1' ? 0 : 1;
+
+  try {
+    const res = await fetch('index.php?action=changePrivacy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `post_id=${encodeURIComponent(postId)}&is_public=${encodeURIComponent(isPublic)}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Privacy updated!');
+      window.location.reload();
+    } else {
+      alert('Error updating privacy.');
+    }
+  } catch {
+    alert('Privacy request failed.');
+  }
+});
+</script>
 </html>

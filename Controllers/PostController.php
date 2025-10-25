@@ -61,8 +61,79 @@ class PostController {
     header('Content-Type: application/json');
     echo json_encode($post);
     exit;
-}
+  }
 
+    // user edits a post
+    public function editPost() {
+        global $user;
+        if (!isset($user)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            exit;
+        }
+
+        $postId = $_POST['post_id'] ?? null;
+        $title = $_POST['title'] ?? '';
+        $description = $_POST['description'] ?? '';
+
+        if (!$postId || empty(trim($title)) || empty(trim($description))) {
+            echo json_encode(['success' => false, 'message' => 'Missing data']);
+            exit;
+        }
+
+        $success = $this->postModel->updatePost($postId, $user['user_id'], $title, $description);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success]);
+        exit;
+    }
+
+    // user deletes their post
+    public function deletePost() {
+        global $user;
+        if (!isset($user)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            exit;
+        }
+
+        $postId = $_POST['post_id'] ?? null;
+        if (!$postId) {
+            echo json_encode(['success' => false, 'message' => 'Invalid post']);
+            exit;
+        }
+
+        $success = $this->postModel->deletePost($postId, $user['user_id']);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success]);
+        exit;
+    }
+
+    // user toggles privacy
+    public function changePrivacy() {
+        global $user;
+        if (!isset($user)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            exit;
+        }
+
+        $postId = $_POST['post_id'] ?? null;
+        $isPublic = $_POST['is_public'] ?? null;
+
+        if ($postId === null || $isPublic === null) {
+            echo json_encode(['success' => false, 'message' => 'Invalid input']);
+            exit;
+        }
+
+        $isPublic = (int)$isPublic;
+        $success = $this->postModel->togglePrivacy($postId, $user['user_id'], $isPublic);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success]);
+        exit;
+    }
     // Handle new post submission
     public function create() {
         global $user;

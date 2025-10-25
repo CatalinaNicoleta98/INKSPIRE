@@ -11,18 +11,23 @@ class ExploreModel {
 
     public function getExplorePosts() {
         $sql = "SELECT 
-                    p.post_id, 
+                    p.post_id,
+                    p.user_id,
                     p.title, 
                     p.description, 
                     p.image_url,
                     p.created_at,
-                    pr.display_name AS author,
+                    u.username,
+                    pr.profile_picture,
+                    p.is_public,
                     COUNT(DISTINCT l.like_id) AS likes,
                     COUNT(DISTINCT c.comment_id) AS comments
-                FROM Post p
-                LEFT JOIN Profile pr ON pr.profile_id = p.user_id
-                LEFT JOIN `Like` l ON l.post_id = p.post_id
-                LEFT JOIN Comment c ON c.post_id = p.post_id
+                FROM post p
+                JOIN user u ON p.user_id = u.user_id
+                LEFT JOIN profile pr ON u.user_id = pr.user_id
+                LEFT JOIN `like` l ON l.post_id = p.post_id
+                LEFT JOIN comment c ON c.post_id = p.post_id
+                WHERE p.is_public = 1
                 GROUP BY p.post_id
                 ORDER BY p.created_at DESC";
         $stmt = $this->db->prepare($sql);
