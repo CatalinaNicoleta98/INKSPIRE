@@ -148,14 +148,17 @@ async function loadComments(postId) {
     if (Array.isArray(comments) && comments.length > 0) {
       list.innerHTML = comments.map(c => `
         <div class="comment-item bg-indigo-50 p-2 rounded-md shadow-sm mb-1 flex justify-between items-start" data-comment-id="${c.comment_id}">
-          <div>
-            <p class="text-gray-700 text-sm">${c.text}</p>
+          <div class="comment-text-container flex-1">
+            <p class="text-gray-700 text-sm comment-text">${c.text}</p>
             <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
           </div>
           ${c.owned ? `
-            <div class="flex gap-2">
-              <button class="edit-comment text-indigo-500 hover:text-indigo-700 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✎</button>
-              <button class="delete-comment text-red-400 hover:text-red-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✕</button>
+            <div class="relative">
+              <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
+              <div class="options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
+                <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
+                <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
+              </div>
             </div>` : ''}
         </div>
       `).join('');
@@ -168,67 +171,191 @@ async function loadComments(postId) {
 }
 
 document.addEventListener('click', async (e) => {
+  // Submit new comment
   const submitBtn = e.target.closest('.comment-submit');
-  if (!submitBtn) return;
-  const input = document.getElementById('newCommentInput');
-  const text = (input?.value || '').trim();
-  const activePostId = currentPostId;
-  if (!text || !activePostId) return;
-  try {
-    const res = await fetch('index.php?action=addComment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `post_id=${encodeURIComponent(activePostId)}&text=${encodeURIComponent(text)}`
-    });
-    const data = await res.json();
-    if (data.success) {
-      input.value = '';
-      loadComments(activePostId);
+  if (submitBtn) {
+    const input = document.getElementById('newCommentInput');
+    const text = (input?.value || '').trim();
+    const activePostId = currentPostId;
+    if (!text || !activePostId) return;
+    try {
+      const res = await fetch('index.php?action=addComment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `post_id=${encodeURIComponent(activePostId)}&text=${encodeURIComponent(text)}`
+      });
+      const data = await res.json();
+      if (data.success) {
+        input.value = '';
+        loadComments(activePostId);
+      }
+    } catch {
+      alert('Failed to post comment.');
     }
-  } catch {
-    alert('Failed to post comment.');
+    return;
   }
-});
 
-document.addEventListener('click', async (e) => {
-  const delBtn = e.target.closest('.delete-comment');
-  if (!delBtn) return;
-  const commentId = delBtn.dataset.commentId;
-  const postId = delBtn.dataset.postId;
-  if (!confirm('Delete this comment?')) return;
-  try {
-    const res = await fetch('index.php?action=deleteComment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `comment_id=${encodeURIComponent(commentId)}`
-    });
-    const data = await res.json();
-    if (data.success) loadComments(postId);
-    else alert(data.message || 'Error deleting comment.');
-  } catch {
-    alert('Error sending request.');
+  // Toggle comment options menu
+  const optionsBtn = e.target.closest('.comment-options');
+  if (optionsBtn) {
+    const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+    openMenus.forEach(m => m.classList.add('hidden'));
+    const menu = optionsBtn.nextElementSibling;
+    menu.classList.toggle('hidden');
+    return;
   }
-});
 
-// Handle editing comments inline
-document.addEventListener('click', async (e) => {
+  // Edit comment
   const editBtn = e.target.closest('.edit-comment');
-  if (!editBtn) return;
-  const commentId = editBtn.dataset.commentId;
-  const postId = editBtn.dataset.postId;
-  const newText = prompt('Edit your comment:');
-  if (!newText) return;
-  try {
-    const res = await fetch('index.php?action=editComment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
-    });
-    const data = await res.json();
-    if (data.success) loadComments(postId);
-    else alert(data.message || 'Error editing comment.');
-  } catch {
-    alert('Error sending request.');
+  if (editBtn) {
+    const commentId = editBtn.dataset.commentId;
+    const postId = editBtn.dataset.postId;
+    const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+    if (!commentItem) return;
+    const textContainer = commentItem.querySelector('.comment-text-container');
+    const originalText = textContainer.querySelector('.comment-text').textContent;
+
+    // Hide options menu
+    const optionsMenu = editBtn.parentElement;
+    optionsMenu.classList.add('hidden');
+
+    // Replace text with textarea and buttons
+    textContainer.innerHTML = `
+      <textarea class="edit-textarea w-full border border-indigo-300 rounded-md p-1 text-sm">${originalText}</textarea>
+      <div class="mt-1 flex gap-2">
+        <button class="save-edit bg-indigo-500 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-600 transition">Save</button>
+        <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-400 transition">Cancel</button>
+      </div>
+    `;
+    return;
+  }
+
+  // Cancel edit
+  const cancelBtn = e.target.closest('.cancel-edit');
+  if (cancelBtn) {
+    const commentItem = cancelBtn.closest('.comment-item');
+    if (!commentItem) return;
+    const commentId = commentItem.dataset.commentId;
+    const textContainer = commentItem.querySelector('.comment-text-container');
+    // Reload comment text from server or just restore original
+    try {
+      const res = await fetch(`index.php?action=getCommentsByPost&post_id=${currentPostId}`);
+      const comments = await res.json();
+      const comment = comments.find(c => c.comment_id == commentId);
+      if (comment) {
+        textContainer.innerHTML = `
+          <p class="text-gray-700 text-sm comment-text">${comment.text}</p>
+          <p class="text-xs text-gray-500">@${comment.username} • ${comment.created_at}</p>
+        `;
+      }
+    } catch {
+      // fallback if error, just clear edit
+      textContainer.innerHTML = `
+        <p class="text-gray-700 text-sm comment-text">[Error loading comment]</p>
+      `;
+    }
+    return;
+  }
+
+  // Save edit
+  const saveBtn = e.target.closest('.save-edit');
+  if (saveBtn) {
+    const commentItem = saveBtn.closest('.comment-item');
+    if (!commentItem) return;
+    const commentId = commentItem.dataset.commentId;
+    const postId = currentPostId;
+    const textarea = commentItem.querySelector('.edit-textarea');
+    if (!textarea) return;
+    const newText = textarea.value.trim();
+    if (!newText) {
+      alert('Comment cannot be empty.');
+      return;
+    }
+    try {
+      const res = await fetch('index.php?action=editComment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadComments(postId);
+      } else {
+        alert(data.message || 'Error editing comment.');
+      }
+    } catch {
+      alert('Error sending request.');
+    }
+    return;
+  }
+
+  // Delete comment
+  const delBtn = e.target.closest('.delete-comment');
+  if (delBtn) {
+    const commentId = delBtn.dataset.commentId;
+    const postId = delBtn.dataset.postId;
+
+    // Hide options menu
+    const optionsMenu = delBtn.parentElement;
+    optionsMenu.classList.add('hidden');
+
+    // Create confirmation overlay
+    const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+    if (!commentItem) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1100]';
+    overlay.innerHTML = `
+      <div class="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-lg">
+        <p class="mb-4 text-gray-700">Are you sure you want to delete this comment?</p>
+        <div class="flex justify-center gap-4">
+          <button id="confirmDelete" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Delete</button>
+          <button id="cancelDelete" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const removeOverlay = () => {
+      if (overlay && overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    };
+
+    overlay.querySelector('#cancelDelete').onclick = () => {
+      removeOverlay();
+    };
+
+    overlay.querySelector('#confirmDelete').onclick = async () => {
+      try {
+        const res = await fetch('index.php?action=deleteComment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `comment_id=${encodeURIComponent(commentId)}`
+        });
+        const data = await res.json();
+        if (data.success) {
+          removeOverlay();
+          loadComments(postId);
+        } else {
+          alert(data.message || 'Error deleting comment.');
+        }
+      } catch {
+        alert('Error sending request.');
+      }
+    };
+    return;
+  }
+});
+
+// handle comment options menu toggle
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.comment-options');
+  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  openMenus.forEach(m => m.classList.add('hidden'));
+  if (btn) {
+    const menu = btn.nextElementSibling;
+    menu.classList.toggle('hidden');
   }
 });
 </script>

@@ -81,9 +81,24 @@
     </div>
   </div>
 
-</script>
+<!-- Modal for delete confirmation -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
+    <h3 class="text-lg font-semibold mb-4">Delete Comment</h3>
+    <p class="mb-6">Are you sure you want to delete this comment? This action cannot be undone.</p>
+    <div class="flex justify-end gap-4">
+      <button id="cancelDeleteBtn" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition">Delete</button>
+    </div>
+  </div>
+</div>
 
 <script>
+/**
+ * These scripts enable inline comment editing with a 3-dot options menu,
+ * and a custom delete confirmation modal styled consistently with the app.
+ */
+
 async function loadComments(postId) {
   const list = document.querySelector(`#commentsList-${postId}`);
   if (!list) return;
@@ -94,14 +109,17 @@ async function loadComments(postId) {
     if (Array.isArray(comments) && comments.length > 0) {
       list.innerHTML = comments.map(c => `
         <div class="comment-item bg-indigo-50 p-2 rounded-md shadow-sm mb-1 flex justify-between items-start" data-comment-id="${c.comment_id}">
-          <div>
-            <p class="text-gray-700 text-sm">${c.text}</p>
+          <div class="comment-text-container flex-1">
+            <p class="comment-text text-gray-700 text-sm whitespace-pre-wrap">${c.text}</p>
             <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
           </div>
           ${c.owned ? `
-            <div class="flex gap-2">
-              <button class="edit-comment text-indigo-500 hover:text-indigo-700 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✎</button>
-              <button class="delete-comment text-red-400 hover:text-red-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✕</button>
+            <div class="relative">
+              <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
+              <div class="options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
+                <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
+                <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
+              </div>
             </div>` : ''}
         </div>
       `).join('');
@@ -150,34 +168,58 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-document.addEventListener('click', async (e) => {
-  const delBtn = e.target.closest('.delete-comment');
-  if (!delBtn) return;
-  const commentId = delBtn.dataset.commentId;
-  const postId = delBtn.dataset.postId;
-  if (!confirm('Delete this comment?')) return;
-  try {
-    const res = await fetch('index.php?action=deleteComment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `comment_id=${encodeURIComponent(commentId)}`
-    });
-    const data = await res.json();
-    if (data.success) loadComments(postId);
-    else alert(data.message || 'Error deleting comment.');
-  } catch {
-    alert('Error sending request.');
+// handle comment options menu toggle
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.comment-options');
+  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  openMenus.forEach(m => m.classList.add('hidden'));
+  if (btn) {
+    const menu = btn.nextElementSibling;
+    menu.classList.toggle('hidden');
   }
 });
 
-// Handle inline editing of existing comments
-document.addEventListener('click', async (e) => {
+// Inline editing system for comments
+document.addEventListener('click', (e) => {
   const editBtn = e.target.closest('.edit-comment');
   if (!editBtn) return;
+  e.preventDefault();
   const commentId = editBtn.dataset.commentId;
   const postId = editBtn.dataset.postId;
-  const newText = prompt('Edit your comment:');
-  if (!newText) return;
+
+  const commentItem = editBtn.closest('.comment-item');
+  if (!commentItem) return;
+
+  const textContainer = commentItem.querySelector('.comment-text-container');
+  const originalText = textContainer.querySelector('.comment-text').textContent;
+
+  // Replace comment text with textarea and buttons
+  textContainer.innerHTML = `
+    <textarea class="edit-textarea w-full border border-indigo-300 rounded-md p-2 text-sm resize-y">${originalText}</textarea>
+    <div class="mt-2 flex gap-2 justify-end">
+      <button class="save-edit bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition" data-comment-id="${commentId}" data-post-id="${postId}">Save</button>
+      <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 transition">Cancel</button>
+    </div>
+  `;
+
+  // Hide options menu
+  const optionsMenu = editBtn.closest('.options-menu');
+  if (optionsMenu) optionsMenu.classList.add('hidden');
+});
+
+// Save edited comment
+document.addEventListener('click', async (e) => {
+  const saveBtn = e.target.closest('.save-edit');
+  if (!saveBtn) return;
+  const commentId = saveBtn.dataset.commentId;
+  const postId = saveBtn.dataset.postId;
+  const commentItem = saveBtn.closest('.comment-item');
+  const textArea = commentItem.querySelector('.edit-textarea');
+  const newText = textArea.value.trim();
+  if (!newText) {
+    alert('Comment cannot be empty.');
+    return;
+  }
   try {
     const res = await fetch('index.php?action=editComment', {
       method: 'POST',
@@ -185,11 +227,76 @@ document.addEventListener('click', async (e) => {
       body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
     });
     const data = await res.json();
-    if (data.success) loadComments(postId);
-    else alert(data.message || 'Error editing comment.');
+    if (data.success) {
+      loadComments(postId);
+    } else {
+      alert(data.message || 'Error editing comment.');
+    }
   } catch {
     alert('Error sending request.');
   }
+});
+
+// Cancel editing comment
+document.addEventListener('click', (e) => {
+  const cancelBtn = e.target.closest('.cancel-edit');
+  if (!cancelBtn) return;
+  const commentItem = cancelBtn.closest('.comment-item');
+  if (!commentItem) return;
+  const postId = cancelBtn.closest('.save-edit')?.dataset.postId || commentItem.querySelector('.edit-textarea')?.dataset.postId;
+  const commentId = cancelBtn.closest('.save-edit')?.dataset.commentId || commentItem.dataset.commentId;
+  // Reload comments to reset text
+  const section = document.getElementById(`comments-${postId}`);
+  if (section) {
+    loadComments(postId);
+  }
+});
+
+// Delete comment with custom modal confirmation
+let commentToDelete = null;
+let postIdOfCommentToDelete = null;
+
+document.addEventListener('click', (e) => {
+  const delBtn = e.target.closest('.delete-comment');
+  if (!delBtn) return;
+  e.preventDefault();
+  commentToDelete = delBtn.dataset.commentId;
+  postIdOfCommentToDelete = delBtn.dataset.postId;
+
+  // Hide options menu
+  const optionsMenu = delBtn.closest('.options-menu');
+  if (optionsMenu) optionsMenu.classList.add('hidden');
+
+  // Show modal
+  document.getElementById('deleteModal').classList.remove('hidden');
+});
+
+document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+  commentToDelete = null;
+  postIdOfCommentToDelete = null;
+  document.getElementById('deleteModal').classList.add('hidden');
+});
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+  if (!commentToDelete) return;
+  try {
+    const res = await fetch('index.php?action=deleteComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `comment_id=${encodeURIComponent(commentToDelete)}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      loadComments(postIdOfCommentToDelete);
+    } else {
+      alert(data.message || 'Error deleting comment.');
+    }
+  } catch {
+    alert('Error sending request.');
+  }
+  commentToDelete = null;
+  postIdOfCommentToDelete = null;
+  document.getElementById('deleteModal').classList.add('hidden');
 });
 </script>
 </body>
