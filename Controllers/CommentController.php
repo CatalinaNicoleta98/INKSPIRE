@@ -35,7 +35,21 @@ class CommentController {
 
     // Get comments for a specific post
     public function getCommentsByPost($post_id) {
+        global $user;
+
         $comments = $this->model->getCommentsByPost($post_id);
+
+        // mark which comments belong to the logged in user
+        if (isset($user)) {
+            foreach ($comments as &$comment) {
+                $comment['owned'] = ($comment['user_id'] == $user['user_id']);
+            }
+        } else {
+            foreach ($comments as &$comment) {
+                $comment['owned'] = false;
+            }
+        }
+
         header('Content-Type: application/json');
         echo json_encode($comments);
     }
@@ -60,6 +74,30 @@ class CommentController {
         } else {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Invalid comment ID']);
+        }
+    }
+
+    // edit an existing comment if it's owned by the user
+    public function editComment() {
+        global $user;
+
+        if (!isset($user)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            exit;
+        }
+
+        $comment_id = $_POST['comment_id'] ?? null;
+        $text = $_POST['text'] ?? '';
+
+        if ($comment_id && !empty(trim($text))) {
+            $user_id = $user['user_id'];
+            $success = $this->model->updateComment($comment_id, $user_id, $text);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => $success]);
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid input']);
         }
     }
 }

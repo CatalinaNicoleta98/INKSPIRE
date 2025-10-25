@@ -98,7 +98,11 @@ async function loadComments(postId) {
             <p class="text-gray-700 text-sm">${c.text}</p>
             <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
           </div>
-          ${c.owned ? `<button class="delete-comment text-red-400 hover:text-red-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✕</button>` : ''}
+          ${c.owned ? `
+            <div class="flex gap-2">
+              <button class="edit-comment text-indigo-500 hover:text-indigo-700 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✎</button>
+              <button class="delete-comment text-red-400 hover:text-red-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">✕</button>
+            </div>` : ''}
         </div>
       `).join('');
     } else {
@@ -161,6 +165,28 @@ document.addEventListener('click', async (e) => {
     const data = await res.json();
     if (data.success) loadComments(postId);
     else alert(data.message || 'Error deleting comment.');
+  } catch {
+    alert('Error sending request.');
+  }
+});
+
+// Handle inline editing of existing comments
+document.addEventListener('click', async (e) => {
+  const editBtn = e.target.closest('.edit-comment');
+  if (!editBtn) return;
+  const commentId = editBtn.dataset.commentId;
+  const postId = editBtn.dataset.postId;
+  const newText = prompt('Edit your comment:');
+  if (!newText) return;
+  try {
+    const res = await fetch('index.php?action=editComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
+    });
+    const data = await res.json();
+    if (data.success) loadComments(postId);
+    else alert(data.message || 'Error editing comment.');
   } catch {
     alert('Error sending request.');
   }
