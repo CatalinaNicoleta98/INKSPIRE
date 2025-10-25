@@ -36,33 +36,51 @@ class UserModel {
     }
 
     public function register($firstName, $lastName, $email, $username, $password, $dob) {
+        // basic validation before checking anything else
+
+        // check email format
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return "invalid_email"; // email not valid
+        }
+
+        // check password length
+        if (strlen($password) < 6) {
+            return "weak_password"; // password too short
+        }
+
+        // make sure user is at least 14 years old
         $age = $this->calculateAge($dob);
         if ($age < 14) {
             return "too_young";
         }
 
+        // check if username or email already exists
         $check = $this->conn->prepare("SELECT user_id FROM User WHERE username = :username OR email = :email");
         $check->execute([':username' => $username, ':email' => $email]);
         if ($check->rowCount() > 0) {
             return "exists";
         }
 
+        // if everything looks good, insert the new user
         $query = "INSERT INTO User (first_name, last_name, email, username, password, DOB) 
                   VALUES (:first_name, :last_name, :email, :username, :password, :dob)";
         $stmt = $this->conn->prepare($query);
 
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-        $stmt->execute([
+        if (!$stmt->execute([
             ':first_name' => htmlspecialchars($firstName),
             ':last_name'  => htmlspecialchars($lastName),
             ':email'      => htmlspecialchars($email),
             ':username'   => htmlspecialchars($username),
             ':password'   => $hashedPassword,
             ':dob'        => $dob
-        ]);
+        ])) {
+            $error = $stmt->errorInfo();
+            return "db_error: " . $error[2]; // for debugging or future logs
+        }
 
-        return true;
+        return true; // everything went fine
     }
 
     public function login($username, $password) {

@@ -13,6 +13,13 @@ $action = $_GET['action'] ?? 'login';
 <body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen flex items-center justify-center">
 
   <div class="bg-white rounded-2xl shadow-lg w-full max-w-md p-8 mx-4">
+    <!-- show success message if user just registered -->
+    <?php if (!empty($_SESSION['success_message'])): ?>
+      <p class="text-green-600 text-center mb-4 text-sm font-medium bg-green-50 py-2 rounded-md">
+        <?= htmlspecialchars($_SESSION['success_message']) ?>
+      </p>
+      <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
     <?php if (!empty($error)): ?>
       <p class="text-red-500 text-center mb-4 text-sm"><?= htmlspecialchars($error) ?></p>
     <?php endif; ?>

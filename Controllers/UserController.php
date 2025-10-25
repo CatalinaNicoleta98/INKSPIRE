@@ -17,13 +17,33 @@ class UserController {
             $email = $_POST['email'] ?? '';
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
+            $dob = $_POST['dob'] ?? ''; // date of birth from the form
 
-            if ($this->userModel->register($firstName, $lastName, $email, $username, $password)) {
+            // Try to register and handle all possible outcomes (show clear messages for the user)
+            $result = $this->userModel->register($firstName, $lastName, $email, $username, $password, $dob);
+
+            if ($result === true) {
+                // registration succeeded
+                $_SESSION['success_message'] = "Account created successfully! Please log in.";
                 header("Location: index.php?action=login");
                 exit;
+            } elseif ($result === "too_young") {
+                $error = "You must be at least 14 years old to register.";
+            } elseif ($result === "exists") {
+                $error = "That username or email is already registered.";
+            } elseif ($result === "invalid_email") {
+                $error = "Please enter a valid email address.";
+            } elseif ($result === "weak_password") {
+                $error = "Password must be at least 6 characters long.";
+            } elseif (strpos($result, "db_error:") === 0) {
+                $error = "A database error occurred. Please try again later.";
             } else {
-                echo "Error: could not register user.";
+                $error = "Something went wrong, please try again.";
             }
+
+            // if we reach here, registration failed — show the user page with error message
+            include __DIR__ . '/../views/User.php';
+            return;
         }
         include __DIR__ . '/../views/User.php';
     }
