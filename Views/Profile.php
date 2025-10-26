@@ -92,7 +92,7 @@
               <?php endif; ?>
 
               <div class="flex items-center gap-6 mt-3 text-lg text-gray-600">
-                <span class="cursor-pointer transition hover:scale-110">❤️ <?= htmlspecialchars($post['likes'] ?? 0) ?></span>
+                <span class="cursor-pointer transition hover:scale-110" data-action="like">❤️ <?= htmlspecialchars($post['likes'] ?? 0) ?></span>
                 <span class="cursor-pointer transition hover:scale-110 comment-toggle" data-id="<?= $post['post_id'] ?>">💬 <?= htmlspecialchars($post['comments'] ?? 0) ?></span>
               </div>
 
@@ -475,14 +475,19 @@ document.addEventListener('click', async (e) => {
 });
 </script>
 <script>
-// Like / Unlike post on Profile page
+// Like / Unlike post on Profile page (final reliable version)
 document.addEventListener('click', async (e) => {
-  const likeSpan = e.target.closest('.post-card .cursor-pointer:first-child'); // The ❤️ span
+  // Detect if clicked element or its parent is the like button
+  const likeSpan = e.target.closest('[data-action="like"]');
   if (!likeSpan) return;
 
-  const card = likeSpan.closest('.post-card');
-  const postId = card.dataset.postId;
-  if (!postId) return;
+  // Get the post card and ID
+  const card = likeSpan.closest('[data-post-id]');
+  const postId = card?.dataset?.postId;
+  if (!postId) {
+    console.error('Missing post_id for like/unlike action');
+    return;
+  }
 
   try {
     const res = await fetch('index.php?action=toggleLike', {
@@ -493,12 +498,12 @@ document.addEventListener('click', async (e) => {
     const data = await res.json();
 
     if (data.success) {
-      // Update like count visually
       likeSpan.innerHTML = `❤️ ${data.likes}`;
     } else {
       alert(data.message || 'Error updating like.');
     }
-  } catch {
+  } catch (err) {
+    console.error(err);
     alert('Error sending like request.');
   }
 });
