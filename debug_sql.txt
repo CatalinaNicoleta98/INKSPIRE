@@ -1,1 +1,1 @@
-SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`inkspiredb`.`comment`, CONSTRAINT `comment_ibfk_3` FOREIGN KEY (`post_id`) REFERENCES `Post` (`post_id`))
+SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`inkspiredb`.`like`, CONSTRAINT `like_ibfk_2` FOREIGN KEY (`post_id`) REFERENCES `Post` (`post_id`))

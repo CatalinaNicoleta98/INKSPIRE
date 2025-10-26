@@ -12,8 +12,9 @@ class PostController {
 
     // Show all posts (feed)
     public function index() {
-        global $user;
-        if (!isset($user)) {
+        Session::start();
+        $user = Session::get('user');
+        if (!$user) {
             header("Location: index.php?action=login");
             exit;
         }
@@ -45,28 +46,30 @@ class PostController {
     }
 
     public function view($postId) {
-    global $user;
-    if (!isset($user)) {
-        header("Location: index.php?action=login");
+        Session::start();
+        $user = Session::get('user');
+        if (!$user) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        $post = $this->postModel->getPostById($postId);
+
+        require_once __DIR__ . '/../Models/LikeModel.php';
+        $likeModel = new LikeModel();
+        $post['likes'] = $likeModel->countLikes($postId);
+        $post['liked'] = $likeModel->userLiked($user['user_id'], $postId);
+
+        header('Content-Type: application/json');
+        echo json_encode($post);
         exit;
     }
 
-    $post = $this->postModel->getPostById($postId);
-
-    require_once __DIR__ . '/../Models/LikeModel.php';
-    $likeModel = new LikeModel();
-    $post['likes'] = $likeModel->countLikes($postId);
-    $post['liked'] = $likeModel->userLiked($user['user_id'], $postId);
-
-    header('Content-Type: application/json');
-    echo json_encode($post);
-    exit;
-  }
-
     // user edits a post
     public function editPost() {
-        global $user;
-        if (!isset($user)) {
+        Session::start();
+        $user = Session::get('user');
+        if (!$user) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
@@ -90,8 +93,11 @@ class PostController {
 
     // user deletes their post
     public function deletePost() {
-        global $user;
-        if (!isset($user)) {
+        // Ensure session is active and user is loaded
+        Session::start();
+        $user = Session::get('user');
+
+        if (!$user) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
@@ -112,8 +118,9 @@ class PostController {
 
     // user toggles privacy
     public function changePrivacy() {
-        global $user;
-        if (!isset($user)) {
+        Session::start();
+        $user = Session::get('user');
+        if (!$user) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
@@ -136,41 +143,43 @@ class PostController {
     }
     // Handle new post submission
     public function create() {
-        global $user;
-        if (!isset($user)) {
-            header("Location: index.php?action=login");
+        Session::start();
+        $user = Session::get('user');
+        if (!$user) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = trim($_POST['title'] ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $tags = trim($_POST['tags'] ?? '');
-    if (empty($title) || empty($description)) {
-        echo "All fields are required.";
-        exit;
-    }
+            $title = trim($_POST['title'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $tags = trim($_POST['tags'] ?? '');
+            if (empty($title) || empty($description)) {
+                echo "All fields are required.";
+                exit;
+            }
 
-    $imagePath = null;
-    if (!empty($_FILES['image']['name'])) {
-        $uploadDir = __DIR__ . '/../uploads/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
+            $imagePath = null;
+            if (!empty($_FILES['image']['name'])) {
+                $uploadDir = __DIR__ . '/../uploads/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
 
-        $fileName = time() . '_' . basename($_FILES['image']['name']);
-        $targetFile = $uploadDir . $fileName;
+                $fileName = time() . '_' . basename($_FILES['image']['name']);
+                $targetFile = $uploadDir . $fileName;
 
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
-            $this->resizeImage($targetFile);
-            $imagePath = 'uploads/' . $fileName;
-        } else {
-            echo "Image upload failed.";
-            exit;
-        }
-    }
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                    $this->resizeImage($targetFile);
+                    $imagePath = 'uploads/' . $fileName;
+                } else {
+                    echo "Image upload failed.";
+                    exit;
+                }
+            }
 
-    $success = $this->postModel->createPost($title, $description, $imagePath, $user['user_id'], $tags);
+            $success = $this->postModel->createPost($title, $description, $imagePath, $user['user_id'], $tags);
 
             if ($success) {
                 header("Location: index.php?action=feed");
