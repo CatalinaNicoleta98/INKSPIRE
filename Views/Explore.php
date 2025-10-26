@@ -150,8 +150,13 @@
   </script>
 </body>
 </html>
+</body>
+</html>
 <script>
 let currentPostId = null;
+let replyTarget = null;
+
+// Open comments modal and load comments
 document.addEventListener('click', (e) => {
   const toggle = e.target.closest('.comment-btn');
   if (!toggle) return;
@@ -161,17 +166,14 @@ document.addEventListener('click', (e) => {
   const commentsList = document.getElementById('commentsList');
   if (commentsModal && commentsList) {
     commentsModal.classList.remove('hidden');
-    loadComments(postId, 'modal'); // function defined in Comments.php
+    loadComments(postId);
   }
 
-  // Close comments modal when clicking the close button
   const closeComments = document.getElementById('closeComments');
-  if (closeComments) {
-    closeComments.onclick = () => commentsModal.classList.add('hidden');
-  }
+  if (closeComments) closeComments.onclick = () => commentsModal.classList.add('hidden');
 });
-</script>
-<script>
+
+// Unified loadComments (with nested replies and reply toggles)
 async function loadComments(postId) {
   const list = document.getElementById('commentsList');
   if (!list) return;
@@ -179,217 +181,296 @@ async function loadComments(postId) {
   try {
     const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
     const comments = await res.json();
-    if (Array.isArray(comments) && comments.length > 0) {
-      list.innerHTML = comments.map(c => `
-        <div class="comment-item bg-indigo-50 p-2 rounded-md shadow-sm mb-1 flex justify-between items-start" data-comment-id="${c.comment_id}">
-          <div class="comment-text-container flex-1">
-            <p class="text-gray-700 text-sm comment-text">${c.text}</p>
+
+    function renderComment(c, level = 0) {
+      const repliesCount = c.replies ? c.replies.length : 0;
+      return `
+        <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
+          <div class="w-full">
+            <p class="text-gray-700 text-sm">${c.text}</p>
             <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+            <div class="flex gap-2 mt-1">
+              <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
+              ${repliesCount > 0 ? `<button class="toggle-replies text-xs text-indigo-400" data-comment-id="${c.comment_id}" data-post-id="${postId}">Show replies (${repliesCount})</button>` : ''}
+            </div>
+            <div class="replies hidden mt-2 ml-6">
+              ${c.replies && c.replies.length > 0 ? c.replies.map(r => renderComment(r, level + 1)).join('') : ''}
+            </div>
           </div>
           ${c.owned ? `
-            <div class="relative">
+            <div class="comment-tools absolute top-2 right-2">
               <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
-              <div class="options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
+              <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
                 <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
                 <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
               </div>
             </div>` : ''}
-        </div>
-      `).join('');
+        </div>`;
+    }
+
+    if (Array.isArray(comments) && comments.length > 0) {
+      list.innerHTML = comments.map(c => renderComment(c)).join('');
     } else {
       list.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
     }
-  } catch (err) {
+  } catch {
     list.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
   }
 }
 
-document.addEventListener('click', async (e) => {
-  // Submit new comment
-  const submitBtn = e.target.closest('.comment-submit');
-  if (submitBtn) {
-    const input = document.getElementById('newCommentInput');
-    const text = (input?.value || '').trim();
-    const activePostId = currentPostId;
-    if (!text || !activePostId) return;
-    try {
-      const res = await fetch('index.php?action=addComment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `post_id=${encodeURIComponent(activePostId)}&text=${encodeURIComponent(text)}`
-      });
-      const data = await res.json();
-      if (data.success) {
-        input.value = '';
-        loadComments(activePostId);
-      }
-    } catch {
-      alert('Failed to post comment.');
-    }
-    return;
-  }
+// Reply handler (same unified system as Home)
+document.addEventListener('click', (e) => {
+  const replyBtn = e.target.closest('.reply-btn');
+  if (!replyBtn) return;
 
-  // Toggle comment options menu
-  const optionsBtn = e.target.closest('.comment-options');
-  if (optionsBtn) {
-    const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
-    openMenus.forEach(m => m.classList.add('hidden'));
-    const menu = optionsBtn.nextElementSibling;
-    menu.classList.toggle('hidden');
-    return;
-  }
+  replyTarget = {
+    commentId: replyBtn.dataset.commentId,
+    username: replyBtn.dataset.username,
+    postId: replyBtn.dataset.postId
+  };
 
-  // Edit comment
-  const editBtn = e.target.closest('.edit-comment');
-  if (editBtn) {
-    const commentId = editBtn.dataset.commentId;
-    const postId = editBtn.dataset.postId;
-    const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
-    if (!commentItem) return;
-    const textContainer = commentItem.querySelector('.comment-text-container');
-    const originalText = textContainer.querySelector('.comment-text').textContent;
+  const commentBox = document.getElementById('newCommentInput');
+  const indicator = document.createElement('div');
+  indicator.className = "reply-indicator text-xs text-indigo-600 mb-1 flex justify-between items-center";
+  indicator.innerHTML = `<span>Replying to @${replyTarget.username}</span> <button class="cancel-reply text-red-500 text-xs">Cancel</button>`;
+  const parent = commentBox.closest('.bg-white');
+  if (!parent.querySelector('.reply-indicator')) parent.prepend(indicator);
+  commentBox.focus();
+});
 
-    // Hide options menu
-    const optionsMenu = editBtn.parentElement;
-    optionsMenu.classList.add('hidden');
-
-    // Replace text with textarea and buttons
-    textContainer.innerHTML = `
-      <textarea class="edit-textarea w-full border border-indigo-300 rounded-md p-1 text-sm">${originalText}</textarea>
-      <div class="mt-1 flex gap-2">
-        <button class="save-edit bg-indigo-500 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-600 transition">Save</button>
-        <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-400 transition">Cancel</button>
-      </div>
-    `;
-    return;
-  }
-
-  // Cancel edit
-  const cancelBtn = e.target.closest('.cancel-edit');
-  if (cancelBtn) {
-    const commentItem = cancelBtn.closest('.comment-item');
-    if (!commentItem) return;
-    const commentId = commentItem.dataset.commentId;
-    const textContainer = commentItem.querySelector('.comment-text-container');
-    // Reload comment text from server or just restore original
-    try {
-      const res = await fetch(`index.php?action=getCommentsByPost&post_id=${currentPostId}`);
-      const comments = await res.json();
-      const comment = comments.find(c => c.comment_id == commentId);
-      if (comment) {
-        textContainer.innerHTML = `
-          <p class="text-gray-700 text-sm comment-text">${comment.text}</p>
-          <p class="text-xs text-gray-500">@${comment.username} • ${comment.created_at}</p>
-        `;
-      }
-    } catch {
-      // fallback if error, just clear edit
-      textContainer.innerHTML = `
-        <p class="text-gray-700 text-sm comment-text">[Error loading comment]</p>
-      `;
-    }
-    return;
-  }
-
-  // Save edit
-  const saveBtn = e.target.closest('.save-edit');
-  if (saveBtn) {
-    const commentItem = saveBtn.closest('.comment-item');
-    if (!commentItem) return;
-    const commentId = commentItem.dataset.commentId;
-    const postId = currentPostId;
-    const textarea = commentItem.querySelector('.edit-textarea');
-    if (!textarea) return;
-    const newText = textarea.value.trim();
-    if (!newText) {
-      alert('Comment cannot be empty.');
-      return;
-    }
-    try {
-      const res = await fetch('index.php?action=editComment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
-      });
-      const data = await res.json();
-      if (data.success) {
-        loadComments(postId);
-      } else {
-        alert(data.message || 'Error editing comment.');
-      }
-    } catch {
-      alert('Error sending request.');
-    }
-    return;
-  }
-
-  // Delete comment
-  const delBtn = e.target.closest('.delete-comment');
-  if (delBtn) {
-    const commentId = delBtn.dataset.commentId;
-    const postId = delBtn.dataset.postId;
-
-    // Hide options menu
-    const optionsMenu = delBtn.parentElement;
-    optionsMenu.classList.add('hidden');
-
-    // Create confirmation overlay
-    const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
-    if (!commentItem) return;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[1100]';
-    overlay.innerHTML = `
-      <div class="bg-white rounded-lg p-6 max-w-sm w-full text-center shadow-lg">
-        <p class="mb-4 text-gray-700">Are you sure you want to delete this comment?</p>
-        <div class="flex justify-center gap-4">
-          <button id="confirmDelete" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition">Delete</button>
-          <button id="cancelDelete" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Cancel</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    const removeOverlay = () => {
-      if (overlay && overlay.parentNode) {
-        overlay.parentNode.removeChild(overlay);
-      }
-    };
-
-    overlay.querySelector('#cancelDelete').onclick = () => {
-      removeOverlay();
-    };
-
-    overlay.querySelector('#confirmDelete').onclick = async () => {
-      try {
-        const res = await fetch('index.php?action=deleteComment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `comment_id=${encodeURIComponent(commentId)}`
-        });
-        const data = await res.json();
-        if (data.success) {
-          removeOverlay();
-          loadComments(postId);
-        } else {
-          alert(data.message || 'Error deleting comment.');
-        }
-      } catch {
-        alert('Error sending request.');
-      }
-    };
-    return;
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.cancel-reply')) {
+    const indicator = e.target.closest('.reply-indicator');
+    if (indicator) indicator.remove();
+    replyTarget = null;
   }
 });
 
-// handle comment options menu toggle
+// Show/hide replies
 document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.comment-options');
-  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
-  openMenus.forEach(m => m.classList.add('hidden'));
-  if (btn) {
-    const menu = btn.nextElementSibling;
-    menu.classList.toggle('hidden');
+  const toggleBtn = e.target.closest('.toggle-replies');
+  if (!toggleBtn) return;
+  const commentItem = toggleBtn.closest('.comment-item');
+  const replies = commentItem.querySelector('.replies');
+  if (!replies) return;
+  const isHidden = replies.classList.contains('hidden');
+  replies.classList.toggle('hidden');
+  toggleBtn.textContent = isHidden ? 'Hide replies' : `Show replies (${replies.children.length})`;
+});
+
+// Submit comment or reply
+document.addEventListener('click', async (e) => {
+  const submitBtn = e.target.closest('.comment-submit');
+  if (!submitBtn) return;
+  const postId = currentPostId;
+  const input = document.getElementById('newCommentInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const parentId = replyTarget && replyTarget.postId === postId ? replyTarget.commentId : null;
+  try {
+    const res = await fetch('index.php?action=addComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `post_id=${encodeURIComponent(postId)}&text=${encodeURIComponent(text)}${parentId ? `&parent_id=${encodeURIComponent(parentId)}` : ''}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      input.value = '';
+      replyTarget = null;
+      const indicator = document.querySelector('.reply-indicator');
+      if (indicator) indicator.remove();
+      loadComments(postId);
+    }
+  } catch {
+    alert('Failed to post comment.');
+  }
+});
+
+// Preserve open replies after editing or deleting
+document.addEventListener('click', async (e) => {
+  const saveBtn = e.target.closest('.save-edit');
+  const delBtn = e.target.closest('.delete-comment');
+  if (!saveBtn && !delBtn) return;
+  const postId = currentPostId;
+
+  // Remember open reply threads
+  const openReplies = Array.from(document.querySelectorAll(`#commentsList .replies:not(.hidden)`))
+    .map(r => r.closest('.comment-item')?.dataset.commentId);
+
+  setTimeout(async () => {
+    await loadComments(postId);
+    // Re-open threads
+    openReplies.forEach(id => {
+      const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
+      if (parent) parent.classList.remove('hidden');
+      const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
+      if (toggleBtn) toggleBtn.textContent = 'Hide replies';
+    });
+  }, 500);
+});
+
+// --- Edit/Delete Menu Toggle ---
+document.addEventListener('click', (e) => {
+  const menuButton = e.target.closest('.comment-options');
+  const openMenu = document.querySelector('.comment-options-menu:not(.hidden)');
+
+  // If clicked outside of any menu, close it
+  if (!menuButton && !e.target.closest('.comment-options-menu')) {
+    if (openMenu) openMenu.classList.add('hidden');
+    return;
+  }
+
+  // Toggle current menu
+  if (menuButton) {
+    const menu = menuButton.nextElementSibling;
+    if (menu.classList.contains('hidden')) {
+      if (openMenu) openMenu.classList.add('hidden');
+      menu.classList.remove('hidden');
+    } else {
+      menu.classList.add('hidden');
+    }
+  }
+});
+
+// --- Edit Comment Handler ---
+document.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.edit-comment');
+  if (!editBtn) return;
+
+  const commentItem = editBtn.closest('.comment-item');
+  const commentId = editBtn.dataset.commentId;
+  const postId = editBtn.dataset.postId;
+  const textEl = commentItem.querySelector('p.text-gray-700');
+
+  // Prevent multiple edit boxes
+  if (commentItem.querySelector('textarea')) return;
+
+  const originalText = textEl.textContent.trim();
+
+  // Replace with textarea
+  textEl.outerHTML = `
+    <div class="edit-container mt-1">
+      <textarea class="edit-textarea w-full border border-indigo-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none">${originalText}</textarea>
+      <div class="flex justify-end gap-2 mt-2">
+        <button class="save-edit bg-indigo-500 hover:bg-indigo-600 text-white text-xs px-3 py-1 rounded-md" data-comment-id="${commentId}" data-post-id="${postId}">Save</button>
+        <button class="cancel-edit bg-gray-200 hover:bg-gray-300 text-xs px-3 py-1 rounded-md">Cancel</button>
+      </div>
+    </div>
+  `;
+});
+
+// --- Save Edited Comment ---
+document.addEventListener('click', async (e) => {
+  const saveBtn = e.target.closest('.save-edit');
+  if (!saveBtn) return;
+
+  const commentItem = saveBtn.closest('.comment-item');
+  const textarea = commentItem.querySelector('.edit-textarea');
+  const newText = textarea.value.trim();
+  const commentId = saveBtn.dataset.commentId;
+  const postId = saveBtn.dataset.postId;
+
+  if (!newText) return;
+
+  try {
+    const res = await fetch('index.php?action=editComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Preserve open replies
+      const openReplies = Array.from(document.querySelectorAll(`#commentsList .replies:not(.hidden)`))
+        .map(r => r.closest('.comment-item')?.dataset.commentId);
+      await loadComments(postId);
+      openReplies.forEach(id => {
+        const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
+        if (parent) parent.classList.remove('hidden');
+        const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
+        if (toggleBtn) toggleBtn.textContent = 'Hide replies';
+      });
+    }
+  } catch {
+    alert('Failed to update comment.');
+  }
+});
+
+// --- Cancel Edit ---
+document.addEventListener('click', (e) => {
+  const cancelBtn = e.target.closest('.cancel-edit');
+  if (!cancelBtn) return;
+  const commentItem = cancelBtn.closest('.comment-item');
+  loadComments(currentPostId);
+});
+
+// --- Delete Comment Handler ---
+document.addEventListener('click', async (e) => {
+  const delBtn = e.target.closest('.delete-comment');
+  if (!delBtn) return;
+
+  const commentId = delBtn.dataset.commentId;
+  const postId = delBtn.dataset.postId;
+
+  // Confirmation overlay
+  const overlay = document.createElement('div');
+  overlay.className = "fixed inset-0 bg-black/40 flex items-center justify-center z-[1100]";
+  overlay.innerHTML = `
+    <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+      <p class="mb-4 text-gray-700 text-sm">Are you sure you want to delete this comment?</p>
+      <div class="flex justify-center gap-3">
+        <button class="confirm-delete bg-red-500 hover:bg-red-600 text-white text-xs px-4 py-2 rounded-md" data-comment-id="${commentId}" data-post-id="${postId}">Delete</button>
+        <button class="cancel-delete bg-gray-200 hover:bg-gray-300 text-xs px-4 py-2 rounded-md">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+});
+
+// --- Confirm or Cancel Deletion ---
+document.addEventListener('click', async (e) => {
+  const confirmBtn = e.target.closest('.confirm-delete');
+  const cancelBtn = e.target.closest('.cancel-delete');
+  if (!confirmBtn && !cancelBtn) return;
+
+  const overlay = document.querySelector('.fixed.inset-0.bg-black\\/40');
+  if (cancelBtn && overlay) overlay.remove();
+
+  if (confirmBtn) {
+    const commentId = confirmBtn.dataset.commentId;
+    const postId = confirmBtn.dataset.postId;
+
+    try {
+      const res = await fetch('index.php?action=deleteComment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `comment_id=${encodeURIComponent(commentId)}&post_id=${encodeURIComponent(postId)}`
+      });
+      const data = await res.json();
+      if (data.success) {
+        overlay.remove();
+
+        // Preserve open replies
+        const openReplies = Array.from(document.querySelectorAll(`#commentsList .replies:not(.hidden)`))
+          .map(r => r.closest('.comment-item')?.dataset.commentId);
+
+        await loadComments(postId);
+        openReplies.forEach(id => {
+          const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
+          if (parent) parent.classList.remove('hidden');
+          const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
+          if (toggleBtn) toggleBtn.textContent = 'Hide replies';
+        });
+
+        // Update comment counter
+        const commentToggle = document.querySelector(`.comment-btn[data-id="${postId}"]`);
+        if (commentToggle && data.count !== undefined) {
+          commentToggle.innerHTML = `💬 ${data.count}`;
+        }
+      }
+    } catch {
+      alert('Failed to delete comment.');
+    }
   }
 });
 </script>
