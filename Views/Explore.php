@@ -35,10 +35,6 @@
                     </div>
                   </div>
                   <?php if (!empty($user) && isset($user['user_id']) && $user['user_id'] === $post['user_id']): ?>
-                    <div class="relative">
-                      <button class="post-options flex items-center justify-center w-7 h-7 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition"
-                              data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>" title="Post settings">⚙️</button>
-                    </div>
                   <?php endif; ?>
                 </div>
 
@@ -152,90 +148,7 @@
       });
     });
   </script>
-<script>
-const settingsMenu = document.getElementById('settingsMenu');
-let activePostId = null;
-
-document.addEventListener('click', async (e) => {
-  const gear = e.target.closest('.post-options');
-  if (gear) {
-    const rect = gear.getBoundingClientRect();
-    activePostId = gear.dataset.postId;
-
-    // Position floating menu beside the gear
-    settingsMenu.style.top = `${rect.bottom + window.scrollY + 5}px`;
-    settingsMenu.style.left = `${rect.right - settingsMenu.offsetWidth}px`;
-    settingsMenu.classList.remove('hidden');
-
-    // Update privacy button text dynamically
-    const post = document.querySelector(`.post-options[data-post-id="${activePostId}"]`).dataset;
-    const privacyBtn = document.getElementById('privacyPostBtn');
-    privacyBtn.textContent = post.public === '1' ? '🔒 Make Private' : '🌍 Make Public';
-    return;
-  }
-
-  // Handle edit
-  if (e.target.id === 'editPostBtn') {
-    const newTitle = prompt('Enter new title:');
-    const newDesc = prompt('Enter new description:');
-    if (newTitle && newDesc) {
-      const res = await fetch('index.php?action=editPost', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `post_id=${activePostId}&title=${encodeURIComponent(newTitle)}&description=${encodeURIComponent(newDesc)}`
-      });
-      const data = await res.json();
-      if (data.success) location.reload();
-      else alert('Error updating post.');
-    }
-    settingsMenu.classList.add('hidden');
-    return;
-  }
-
-  // Handle delete
-  if (e.target.id === 'deletePostBtn') {
-    if (!confirm('Are you sure you want to delete this post?')) return;
-    const res = await fetch('index.php?action=deletePost', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `post_id=${activePostId}`
-    });
-    const data = await res.json();
-    if (data.success) location.reload();
-    else alert('Error deleting post.');
-    settingsMenu.classList.add('hidden');
-    return;
-  }
-
-  // Handle privacy toggle
-  if (e.target.id === 'privacyPostBtn') {
-    const btn = e.target;
-    const isPublic = btn.textContent.includes('Private') ? 0 : 1;
-    const res = await fetch('index.php?action=changePrivacy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `post_id=${encodeURIComponent(activePostId)}&is_public=${encodeURIComponent(isPublic)}`
-    });
-    const data = await res.json();
-    if (data.success) location.reload();
-    else alert('Error changing privacy.');
-    settingsMenu.classList.add('hidden');
-    return;
-  }
-
-  // Close menu when clicking outside
-  if (!settingsMenu.contains(e.target)) {
-    settingsMenu.classList.add('hidden');
-  }
-});
-</script>
 </body>
-<!-- Floating Post Settings Menu -->
-<div id="settingsMenu" class="hidden fixed bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] min-w-[160px] overflow-hidden">
-  <button id="editPostBtn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition">✏️ Edit</button>
-  <button id="deletePostBtn" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">🗑️ Delete</button>
-  <button id="privacyPostBtn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition">🌍 Make Private</button>
-</div>
 </html>
 <script>
 let currentPostId = null;

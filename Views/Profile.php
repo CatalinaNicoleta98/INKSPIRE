@@ -33,13 +33,56 @@
       <div class="space-y-6">
         <?php if (!empty($posts)): ?>
           <?php foreach ($posts as $post): ?>
-            <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition relative">
+            <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition relative post-card" data-post-id="<?= $post['post_id'] ?>">
+              <!-- User Header -->
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <img src="<?= htmlspecialchars($profile['profile_picture'] ?? 'uploads/default.png') ?>"
+                       alt="User Avatar"
+                       class="w-10 h-10 rounded-full object-cover border border-indigo-100 shadow-sm">
+                  <div>
+                    <p class="font-semibold text-gray-800"><?= htmlspecialchars($profile['username']) ?></p>
+                    <div class="flex items-center text-xs text-gray-500 gap-2">
+                      <span><?= htmlspecialchars($post['created_at'] ?? '') ?></span>
+                      <span>•</span>
+                      <span class="text-indigo-500 privacy-icon"><?= ($post['is_public'] ?? 1) ? '🌍' : '🔒' ?></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="relative">
+                  <button class="post-options flex items-center justify-center w-7 h-7 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition"
+                          data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>" title="Post settings">⚙️</button>
+                  <div class="options-menu hidden absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                    <button class="edit-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition" data-post-id="<?= $post['post_id'] ?>">✏️ Edit</button>
+                    <button class="delete-post block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition" data-post-id="<?= $post['post_id'] ?>">🗑️ Delete</button>
+                    <button class="privacy-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
+                            data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>">
+                      <?= ($post['is_public'] ?? 1) ? '👥 Make Private' : '🌍 Make Public' ?>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="post-content-view" data-post-id="<?= $post['post_id'] ?>">
+                <h3 class="text-lg font-semibold text-gray-800 post-title"><?= htmlspecialchars($post['title'] ?? 'Untitled') ?></h3>
+                <?php if (!empty($post['description'])): ?>
+                  <p class="text-gray-600 text-sm mt-1 post-desc"><?= htmlspecialchars($post['description']) ?></p>
+                <?php else: ?>
+                  <p class="text-gray-600 text-sm mt-1 post-desc"></p>
+                <?php endif; ?>
+              </div>
+              <!-- Inline edit form (hidden by default) -->
+              <form class="post-edit-form hidden space-y-2" data-post-id="<?= $post['post_id'] ?>">
+                <input type="text" name="title" class="edit-title border border-indigo-300 rounded-md px-2 py-1 w-full font-semibold text-gray-800" value="<?= htmlspecialchars($post['title'] ?? 'Untitled') ?>">
+                <textarea name="description" class="edit-desc border border-indigo-300 rounded-md px-2 py-1 w-full text-sm text-gray-700" rows="3"><?= htmlspecialchars($post['description'] ?? '') ?></textarea>
+                <div class="flex gap-2 justify-end">
+                  <button type="button" class="save-edit-post bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition" data-post-id="<?= $post['post_id'] ?>">Save</button>
+                  <button type="button" class="cancel-edit-post bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 transition" data-post-id="<?= $post['post_id'] ?>">Cancel</button>
+                </div>
+              </form>
+
               <?php if (!empty($post['image_url'])): ?>
-                <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post Image" class="w-full rounded-lg mb-4 object-cover shadow-sm">
-              <?php endif; ?>
-              <h3 class="text-lg font-semibold text-gray-800"><?= htmlspecialchars($post['title'] ?? 'Untitled') ?></h3>
-              <?php if (!empty($post['description'])): ?>
-                <p class="text-gray-600 text-sm mt-1"><?= htmlspecialchars($post['description']) ?></p>
+                <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post Image" class="w-full rounded-lg mt-4 mb-3 object-cover shadow-sm">
               <?php endif; ?>
 
               <?php if (!empty($post['tags'])): ?>
@@ -50,19 +93,19 @@
                 <span class="cursor-pointer transition hover:scale-110">❤️ <?= htmlspecialchars($post['likes'] ?? 0) ?></span>
                 <span class="cursor-pointer transition hover:scale-110 comment-toggle" data-id="<?= $post['post_id'] ?>">💬 <?= htmlspecialchars($post['comments'] ?? 0) ?></span>
               </div>
-              <!-- Inline Comments Section -->
+
+              <!-- Comments Section -->
               <div class="comments-section mt-4 hidden" id="comments-<?= $post['post_id'] ?>" data-post-id="<?= $post['post_id'] ?>">
                 <div id="commentsList-<?= $post['post_id'] ?>" 
                      class="comments-list text-gray-600 text-sm space-y-2 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded-md border border-indigo-100"
                      data-post-id="<?= $post['post_id'] ?>">
                   <p class="text-center text-gray-400 italic">Loading comments...</p>
                 </div>
-
                 <div class="add-comment flex items-center gap-2 mt-3 bg-white border-t border-indigo-100 pt-2 pb-2 px-2 rounded-b-md sticky bottom-0 z-10" data-post-id="<?= $post['post_id'] ?>">
                   <input type="text" placeholder="Add a comment..."
-                        id="newCommentInput-<?= $post['post_id'] ?>"
-                        class="comment-input flex-1 border border-indigo-200 rounded-full px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none"
-                        data-id="<?= $post['post_id'] ?>" data-post-id="<?= $post['post_id'] ?>">
+                         id="newCommentInput-<?= $post['post_id'] ?>"
+                         class="comment-input flex-1 border border-indigo-200 rounded-full px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none"
+                         data-id="<?= $post['post_id'] ?>" data-post-id="<?= $post['post_id'] ?>">
                   <button id="submitComment-<?= $post['post_id'] ?>"
                           class="comment-submit bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-full p-2 hover:from-indigo-500 hover:to-purple-500 transition"
                           data-id="<?= $post['post_id'] ?>" data-post-id="<?= $post['post_id'] ?>">
@@ -84,11 +127,23 @@
 <!-- Modal for delete confirmation -->
 <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-    <h3 class="text-lg font-semibold mb-4">Delete Comment</h3>
-    <p class="mb-6">Are you sure you want to delete this comment? This action cannot be undone.</p>
+    <h3 class="text-lg font-semibold mb-4" id="deleteModalTitle">Delete Comment</h3>
+    <p class="mb-6" id="deleteModalText">Are you sure you want to delete this comment? This action cannot be undone.</p>
     <div class="flex justify-end gap-4">
       <button id="cancelDeleteBtn" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition">Cancel</button>
       <button id="confirmDeleteBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for post deletion -->
+<div id="deletePostModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
+    <h3 class="text-lg font-semibold mb-4">Delete Post</h3>
+    <p class="mb-6">Are you sure you want to delete this post? This action cannot be undone.</p>
+    <div class="flex justify-end gap-4">
+      <button id="cancelDeletePostBtn" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition">Cancel</button>
+      <button id="confirmDeletePostBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition">Delete</button>
     </div>
   </div>
 </div>
@@ -297,6 +352,111 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
   commentToDelete = null;
   postIdOfCommentToDelete = null;
   document.getElementById('deleteModal').classList.add('hidden');
+});
+</script>
+
+<script>
+// Toggle post settings menu
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.post-options');
+  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  openMenus.forEach(m => m.classList.add('hidden'));
+  if (btn) {
+    const menu = btn.nextElementSibling;
+    menu.classList.toggle('hidden');
+    e.stopPropagation();
+  }
+});
+
+// Close all menus when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.options-menu') && !e.target.closest('.post-options')) {
+    document.querySelectorAll('.options-menu').forEach(m => m.classList.add('hidden'));
+  }
+});
+
+// Edit post
+document.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.edit-post');
+  if (!editBtn) return;
+  const postId = editBtn.dataset.postId;
+  const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+  card.querySelector('.options-menu').classList.add('hidden');
+  card.querySelector('.post-content-view').classList.add('hidden');
+  card.querySelector('.post-edit-form').classList.remove('hidden');
+});
+
+// Save edit
+document.addEventListener('click', async (e) => {
+  const saveBtn = e.target.closest('.save-edit-post');
+  if (!saveBtn) return;
+  const postId = saveBtn.dataset.postId;
+  const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+  const title = card.querySelector('.edit-title').value.trim();
+  const desc = card.querySelector('.edit-desc').value.trim();
+  if (!title) return alert('Title cannot be empty.');
+  const res = await fetch('index.php?action=editPost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `post_id=${postId}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(desc)}`
+  });
+  const data = await res.json();
+  if (data.success) location.reload();
+  else alert('Error updating post.');
+});
+
+// Cancel edit
+document.addEventListener('click', (e) => {
+  const cancelBtn = e.target.closest('.cancel-edit-post');
+  if (!cancelBtn) return;
+  const postId = cancelBtn.dataset.postId;
+  const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+  card.querySelector('.post-edit-form').classList.add('hidden');
+  card.querySelector('.post-content-view').classList.remove('hidden');
+});
+
+// Delete post
+document.addEventListener('click', (e) => {
+  const delBtn = e.target.closest('.delete-post');
+  if (!delBtn) return;
+  const postId = delBtn.dataset.postId;
+  document.getElementById('deletePostModal').classList.remove('hidden');
+  window.postToDelete = postId;
+});
+
+document.getElementById('cancelDeletePostBtn').addEventListener('click', () => {
+  window.postToDelete = null;
+  document.getElementById('deletePostModal').classList.add('hidden');
+});
+
+document.getElementById('confirmDeletePostBtn').addEventListener('click', async () => {
+  if (!window.postToDelete) return;
+  const res = await fetch('index.php?action=deletePost', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `post_id=${encodeURIComponent(window.postToDelete)}`
+  });
+  const data = await res.json();
+  if (data.success) location.reload();
+  else alert('Error deleting post.');
+  document.getElementById('deletePostModal').classList.add('hidden');
+  window.postToDelete = null;
+});
+
+// Privacy toggle
+document.addEventListener('click', async (e) => {
+  const privacyBtn = e.target.closest('.privacy-post');
+  if (!privacyBtn) return;
+  const postId = privacyBtn.dataset.postId;
+  const isPublic = privacyBtn.dataset.public === '1' ? 0 : 1;
+  const res = await fetch('index.php?action=changePrivacy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `post_id=${encodeURIComponent(postId)}&is_public=${encodeURIComponent(isPublic)}`
+  });
+  const data = await res.json();
+  if (data.success) location.reload();
+  else alert('Error changing privacy.');
 });
 </script>
 </body>

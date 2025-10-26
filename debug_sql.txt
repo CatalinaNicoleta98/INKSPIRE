@@ -1,1 +1,1 @@
-SQLSTATE[42S22]: Column not found: 1054 Unknown column 'is_public' in 'field list'
+SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`inkspiredb`.`comment`, CONSTRAINT `comment_ibfk_3` FOREIGN KEY (`post_id`) REFERENCES `Post` (`post_id`))
