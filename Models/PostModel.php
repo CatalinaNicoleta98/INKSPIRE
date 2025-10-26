@@ -33,7 +33,7 @@ class PostModel {
     public function getAllPosts() {
         $query = "SELECT p.*, u.username, pr.profile_picture,
                          (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comments
+                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM comment WHERE post_id = p.post_id)) AS comments
                   FROM post p
                   JOIN user u ON p.user_id = u.user_id
                   LEFT JOIN profile pr ON u.user_id = pr.user_id
@@ -60,7 +60,7 @@ class PostModel {
         $placeholders = implode(',', array_fill(0, count($userIds), '?'));
         $sql = "SELECT p.*, u.username, pr.profile_picture,
                        (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
-                       (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comments
+                       (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM comment WHERE post_id = p.post_id)) AS comments
                 FROM post p
                 JOIN user u ON p.user_id = u.user_id
                 LEFT JOIN profile pr ON u.user_id = pr.user_id
@@ -75,7 +75,7 @@ class PostModel {
     public function getPostsByUser($userId) {
         $query = "SELECT p.*, u.username, pr.profile_picture,
                          (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id) AS comments
+                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM comment WHERE post_id = p.post_id)) AS comments
                   FROM post p
                   JOIN user u ON p.user_id = u.user_id
                   LEFT JOIN profile pr ON u.user_id = pr.user_id

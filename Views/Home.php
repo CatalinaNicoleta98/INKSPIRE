@@ -74,7 +74,7 @@
 
             <div class="flex items-center gap-6 mt-3 text-lg text-gray-600">
               <span class="like-btn cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#ef4444;' : '' ?>">❤️ <?= $post['likes'] ?></span>
-              <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= is_array($post['comments']) ? count($post['comments']) : ($post['comments'] ?? 0) ?></span>
+              <span class="comment-toggle cursor-pointer transition hover:scale-110" data-id="<?= $post['post_id'] ?>">💬 <?= htmlspecialchars($post['comment_count'] ?? (is_array($post['comments']) ? count($post['comments']) : 0)) ?></span>
             </div>
 
             <!-- Inline Comments Section -->
@@ -141,22 +141,33 @@ document.addEventListener('click', (e) => {
 </script>
 
 <script>
+// --- Unified Comments & Replies UX ---
 async function loadComments(postId) {
   const list = document.querySelector(`#commentsList-${postId}`);
   if (!list) return;
   list.innerHTML = "<p class='text-center text-gray-400 italic'>Loading...</p>";
+
   try {
     const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
     const comments = await res.json();
-    if (Array.isArray(comments) && comments.length > 0) {
-      list.innerHTML = comments.map(c => `
-        <div class="comment-item bg-indigo-50 p-2 rounded-md shadow-sm mb-1 flex justify-between items-start" data-comment-id="${c.comment_id}">
-          <div>
+
+    function renderComment(c, level = 0) {
+      const repliesCount = c.replies ? c.replies.length : 0;
+      return `
+        <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
+          <div class="w-full">
             <p class="text-gray-700 text-sm">${c.text}</p>
             <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+            <div class="flex gap-2 mt-1">
+              <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
+              ${repliesCount > 0 ? `<button class="toggle-replies text-xs text-indigo-400" data-comment-id="${c.comment_id}" data-post-id="${postId}">Show replies (${repliesCount})</button>` : ''}
+            </div>
+            <div class="replies hidden mt-2 ml-6">
+              ${c.replies && c.replies.length > 0 ? c.replies.map(r => renderComment(r, level + 1)).join('') : ''}
+            </div>
           </div>
           ${c.owned ? `
-            <div class="relative">
+            <div class="comment-tools absolute top-2 right-2">
               <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
               <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
                 <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
@@ -164,7 +175,11 @@ async function loadComments(postId) {
               </div>
             </div>` : ''}
         </div>
-      `).join('');
+      `;
+    }
+
+    if (Array.isArray(comments) && comments.length > 0) {
+      list.innerHTML = comments.map(c => renderComment(c)).join('');
     } else {
       list.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
     }
@@ -173,23 +188,76 @@ async function loadComments(postId) {
   }
 }
 
+// Unified reply system
+let replyTarget = null;
+
+document.addEventListener('click', (e) => {
+  const replyBtn = e.target.closest('.reply-btn');
+  if (!replyBtn) return;
+  replyTarget = {
+    commentId: replyBtn.dataset.commentId,
+    username: replyBtn.dataset.username,
+    postId: replyBtn.dataset.postId
+  };
+  const commentBox = document.querySelector(`#newCommentInput-${replyTarget.postId}`);
+  const indicator = document.createElement('div');
+  indicator.className = "reply-indicator text-xs text-indigo-600 mb-1 flex justify-between items-center";
+  indicator.innerHTML = `<span>Replying to @${replyTarget.username}</span> <button class="cancel-reply text-red-500 text-xs">Cancel</button>`;
+  const parent = commentBox.closest('.add-comment');
+  if (!parent.querySelector('.reply-indicator')) parent.prepend(indicator);
+  commentBox.focus();
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.cancel-reply')) {
+    const indicator = e.target.closest('.reply-indicator');
+    if (indicator) indicator.remove();
+    replyTarget = null;
+  }
+});
+
+// Show/hide replies
+document.addEventListener('click', (e) => {
+  const toggleBtn = e.target.closest('.toggle-replies');
+  if (!toggleBtn) return;
+  const commentItem = toggleBtn.closest('.comment-item');
+  const replies = commentItem.querySelector('.replies');
+  if (!replies) return;
+  const isHidden = replies.classList.contains('hidden');
+  replies.classList.toggle('hidden');
+  toggleBtn.textContent = isHidden ? 'Hide replies' : `Show replies (${replies.children.length})`;
+});
+
+// Override comment submission to include reply target
 document.addEventListener('click', async (e) => {
   const submitBtn = e.target.closest('.comment-submit');
   if (!submitBtn) return;
   const postId = submitBtn.dataset.id;
   const input = document.querySelector(`#newCommentInput-${postId}`);
-  const text = (input?.value || '').trim();
+  const text = input.value.trim();
   if (!text) return;
+
+  const parentId = replyTarget && replyTarget.postId === postId ? replyTarget.commentId : null;
+
   try {
     const res = await fetch('index.php?action=addComment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `post_id=${encodeURIComponent(postId)}&text=${encodeURIComponent(text)}`
+      body: `post_id=${encodeURIComponent(postId)}&text=${encodeURIComponent(text)}${parentId ? `&parent_id=${encodeURIComponent(parentId)}` : ''}`
     });
     const data = await res.json();
     if (data.success) {
       input.value = '';
+      replyTarget = null;
+      const indicator = document.querySelector('.reply-indicator');
+      if (indicator) indicator.remove();
       loadComments(postId);
+
+      // Update the comment count on the post dynamically
+      const commentToggle = document.querySelector(`.comment-toggle[data-id="${postId}"]`);
+      if (commentToggle && data.count !== undefined) {
+        commentToggle.innerHTML = `💬 ${data.count}`;
+      }
     }
   } catch {
     alert('Failed to post comment.');
@@ -238,7 +306,27 @@ document.addEventListener('click', async (e) => {
       const data = await res.json();
       if (data.success) {
         if (overlay) overlay.remove();
-        loadComments(postId);
+
+        // Remember which reply sections are currently open
+        const openReplies = Array.from(document.querySelectorAll(`#commentsList-${postId} .replies:not(.hidden)`))
+          .map(r => r.closest('.comment-item')?.dataset.commentId);
+
+        // Reload comments
+        await loadComments(postId);
+
+        // Re-open previously open reply sections
+        openReplies.forEach(id => {
+          const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
+          if (parent) parent.classList.remove('hidden');
+          const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
+          if (toggleBtn) toggleBtn.textContent = 'Hide replies';
+        });
+
+        // Update the comment count dynamically
+        const commentToggle = document.querySelector(`.comment-toggle[data-id="${postId}"]`);
+        if (commentToggle && data.count !== undefined) {
+          commentToggle.innerHTML = `💬 ${data.count}`;
+        }
       }
     } catch {
       alert('Error deleting comment.');
@@ -302,9 +390,10 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // Save edit (unchanged logic)
+  // Save edit (with preservation of open reply sections)
   if (saveBtn) {
     const commentItem = saveBtn.closest('.comment-item');
+    if (!commentItem) return;
     const textarea = commentItem.querySelector('textarea');
     const commentId = saveBtn.dataset.commentId;
     const postId = saveBtn.dataset.postId;
@@ -317,7 +406,22 @@ document.addEventListener('click', async (e) => {
         body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
       });
       const data = await res.json();
-      if (data.success) loadComments(postId);
+      if (data.success) {
+        // Remember which reply sections are currently open
+        const openReplies = Array.from(document.querySelectorAll(`#commentsList-${postId} .replies:not(.hidden)`))
+          .map(r => r.closest('.comment-item')?.dataset.commentId);
+
+        // Reload comments
+        await loadComments(postId);
+
+        // Re-open previously open reply sections
+        openReplies.forEach(id => {
+          const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
+          if (parent) parent.classList.remove('hidden');
+          const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
+          if (toggleBtn) toggleBtn.textContent = 'Hide replies';
+        });
+      }
     } catch {
       alert('Error updating comment.');
     }
@@ -446,7 +550,6 @@ document.addEventListener('click', async (e) => {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Post deleted!');
         overlay.remove();
         window.location.reload();
       } else {

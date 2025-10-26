@@ -9,11 +9,12 @@ class CommentController {
         $this->model = new CommentModel();
     }
 
-    // Add a comment
+    // Add a comment (supports replies)
     public function addComment() {
-        global $user;
+        Session::start();
+        $user = Session::get('user');
 
-        if (!isset($user)) {
+        if (!$user) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
@@ -21,34 +22,32 @@ class CommentController {
 
         $post_id = $_POST['post_id'] ?? null;
         $content = $_POST['text'] ?? '';
+        $parent_id = $_POST['parent_id'] ?? null;
 
         if ($post_id && !empty(trim($content))) {
             $user_id = $user['user_id'];
-            $success = $this->model->addComment($post_id, $user_id, $content);
+            $success = $this->model->addComment($post_id, $user_id, $content, $parent_id);
             header('Content-Type: application/json');
-            echo json_encode(['success' => $success]);
+            if ($success) {
+                // Always count all comments including replies
+                $totalCount = $this->model->countCommentsByPost($post_id);
+                echo json_encode(['success' => true, 'count' => $totalCount]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
         } else {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Invalid input']);
         }
     }
 
-    // Get comments for a specific post
+    // Get comments for a specific post (including replies and ownership)
     public function getCommentsByPost($post_id) {
-        global $user;
+        Session::start();
+        $user = Session::get('user');
+        $current_user_id = $user ? $user['user_id'] : 0;
 
-        $comments = $this->model->getCommentsByPost($post_id);
-
-        // mark which comments belong to the logged in user
-        if (isset($user)) {
-            foreach ($comments as &$comment) {
-                $comment['owned'] = ($comment['user_id'] == $user['user_id']);
-            }
-        } else {
-            foreach ($comments as &$comment) {
-                $comment['owned'] = false;
-            }
-        }
+        $comments = $this->model->getCommentsByPost($post_id, $current_user_id);
 
         header('Content-Type: application/json');
         echo json_encode($comments);
@@ -56,9 +55,10 @@ class CommentController {
 
     // Delete a comment
     public function deleteComment() {
-        global $user;
+        Session::start();
+        $user = Session::get('user');
 
-        if (!isset($user)) {
+        if (!$user) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
@@ -68,9 +68,23 @@ class CommentController {
 
         if ($comment_id) {
             $user_id = $user['user_id'];
+
+            // Retrieve post_id if not passed (for replies)
+            $post_id = $_POST['post_id'] ?? $this->model->getPostIdByComment($comment_id);
+
             $success = $this->model->deleteComment($comment_id, $user_id);
+
             header('Content-Type: application/json');
-            echo json_encode(['success' => $success]);
+            if ($success) {
+                if ($post_id) {
+                    $totalCount = $this->model->countCommentsByPost($post_id);
+                    echo json_encode(['success' => true, 'count' => $totalCount]);
+                } else {
+                    echo json_encode(['success' => true]);
+                }
+            } else {
+                echo json_encode(['success' => false]);
+            }
         } else {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Invalid comment ID']);

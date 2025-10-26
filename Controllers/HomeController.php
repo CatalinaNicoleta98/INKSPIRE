@@ -38,6 +38,7 @@ class HomeController {
 
         foreach ($posts as &$post) {
             $post['comments'] = $commentModel->getCommentsByPost($post['post_id']);
+            $post['comment_count'] = $commentModel->countCommentsByPost($post['post_id']); // includes replies
         }
         unset($post);
 
