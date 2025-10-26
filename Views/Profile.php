@@ -43,16 +43,18 @@
                   <div>
                     <p class="font-semibold text-gray-800"><?= htmlspecialchars($profile['username']) ?></p>
                     <div class="flex items-center text-xs text-gray-500 gap-2">
-                      <span><?= htmlspecialchars($post['created_at'] ?? '') ?></span>
+                      <span>
+                        <?= htmlspecialchars(date('M j, Y', strtotime($post['created_at'] ?? ''))) ?>
+                      </span>
                       <span>•</span>
-                      <span class="text-indigo-500 privacy-icon"><?= ($post['is_public'] ?? 1) ? '🌍' : '🔒' ?></span>
+                      <span class="text-indigo-500 privacy-icon"><?= ($post['is_public'] ?? 1) ? '🌍' : '👥' ?></span>
                     </div>
                   </div>
                 </div>
-                <div class="relative">
+              <div class="relative">
                   <button class="post-options flex items-center justify-center w-7 h-7 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition"
                           data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>" title="Post settings">⚙️</button>
-                  <div class="options-menu hidden absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                  <div class="post-options-menu hidden absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-md z-10">
                     <button class="edit-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition" data-post-id="<?= $post['post_id'] ?>">✏️ Edit</button>
                     <button class="delete-post block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition" data-post-id="<?= $post['post_id'] ?>">🗑️ Delete</button>
                     <button class="privacy-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
@@ -171,7 +173,7 @@ async function loadComments(postId) {
           ${c.owned ? `
             <div class="relative">
               <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
-              <div class="options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
+              <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
                 <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
                 <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
               </div>
@@ -226,7 +228,7 @@ document.addEventListener('click', async (e) => {
 // handle comment options menu toggle
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.comment-options');
-  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  const openMenus = document.querySelectorAll('.comment-options-menu:not(.hidden)');
   openMenus.forEach(m => m.classList.add('hidden'));
   if (btn) {
     const menu = btn.nextElementSibling;
@@ -258,7 +260,7 @@ document.addEventListener('click', (e) => {
   `;
 
   // Hide options menu
-  const optionsMenu = editBtn.closest('.options-menu');
+  const optionsMenu = editBtn.closest('.comment-options-menu');
   if (optionsMenu) optionsMenu.classList.add('hidden');
 });
 
@@ -292,19 +294,32 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// Cancel editing comment
+// Cancel editing comment smoothly (no reload)
 document.addEventListener('click', (e) => {
   const cancelBtn = e.target.closest('.cancel-edit');
   if (!cancelBtn) return;
+
   const commentItem = cancelBtn.closest('.comment-item');
   if (!commentItem) return;
-  const postId = cancelBtn.closest('.save-edit')?.dataset.postId || commentItem.querySelector('.edit-textarea')?.dataset.postId;
-  const commentId = cancelBtn.closest('.save-edit')?.dataset.commentId || commentItem.dataset.commentId;
-  // Reload comments to reset text
-  const section = document.getElementById(`comments-${postId}`);
-  if (section) {
-    loadComments(postId);
+
+  const textContainer = commentItem.querySelector('.comment-text-container');
+  const textarea = textContainer.querySelector('.edit-textarea');
+  const originalText = textarea?.defaultValue || textarea?.value || '';
+
+  // Try to extract username and date from the commentItem (if available)
+  // Fallback to empty string if not found.
+  // Try to find the .text-xs element in the DOM (it may no longer exist after editing, so fallback to commentItem's dataset if available)
+  let metaText = '';
+  // If the commentItem still has a .text-xs somewhere, grab it
+  const metaElem = commentItem.querySelector('.text-xs');
+  if (metaElem) {
+    metaText = metaElem.textContent || '';
   }
+
+  textContainer.innerHTML = `
+    <p class="comment-text text-gray-700 text-sm whitespace-pre-wrap">${originalText}</p>
+    <p class="text-xs text-gray-500">${metaText}</p>
+  `;
 });
 
 // Delete comment with custom modal confirmation
@@ -319,7 +334,7 @@ document.addEventListener('click', (e) => {
   postIdOfCommentToDelete = delBtn.dataset.postId;
 
   // Hide options menu
-  const optionsMenu = delBtn.closest('.options-menu');
+  const optionsMenu = delBtn.closest('.comment-options-menu');
   if (optionsMenu) optionsMenu.classList.add('hidden');
 
   // Show modal
@@ -359,7 +374,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
 // Toggle post settings menu
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.post-options');
-  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  const openMenus = document.querySelectorAll('.post-options-menu:not(.hidden)');
   openMenus.forEach(m => m.classList.add('hidden'));
   if (btn) {
     const menu = btn.nextElementSibling;
@@ -368,10 +383,10 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Close all menus when clicking outside
+// Close all post menus when clicking outside
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.options-menu') && !e.target.closest('.post-options')) {
-    document.querySelectorAll('.options-menu').forEach(m => m.classList.add('hidden'));
+  if (!e.target.closest('.post-options-menu') && !e.target.closest('.post-options')) {
+    document.querySelectorAll('.post-options-menu').forEach(m => m.classList.add('hidden'));
   }
 });
 
@@ -381,7 +396,7 @@ document.addEventListener('click', (e) => {
   if (!editBtn) return;
   const postId = editBtn.dataset.postId;
   const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-  card.querySelector('.options-menu').classList.add('hidden');
+  card.querySelector('.post-options-menu').classList.add('hidden');
   card.querySelector('.post-content-view').classList.add('hidden');
   card.querySelector('.post-edit-form').classList.remove('hidden');
 });

@@ -42,13 +42,13 @@
                   <button class="post-options flex items-center justify-center w-8 h-8 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition" data-post-id="<?= $post['post_id'] ?>" title="Post settings">
                     ⚙️
                   </button>
-                  <div class="options-menu hidden absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[150px] overflow-hidden">
+                  <div class="post-options-menu hidden absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[150px] overflow-hidden">
                     <button class="edit-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition" data-post-id="<?= $post['post_id'] ?>">✏️ Edit</button>
                     <button class="delete-post block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition" data-post-id="<?= $post['post_id'] ?>">🗑️ Delete</button>
                     <button class="toggle-privacy block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
                             data-post-id="<?= $post['post_id'] ?>"
                             data-public="<?= $post['is_public'] ?? 1 ?>">
-                      <?= (!empty($post['is_public']) && $post['is_public']) ? '🔒 Make Private' : '🌍 Make Public' ?>
+                      <?= (!empty($post['is_public']) && $post['is_public']) ? '👥 Make Private' : '🌍 Make Public' ?>
                     </button>
                   </div>
                 </div>
@@ -158,7 +158,7 @@ async function loadComments(postId) {
           ${c.owned ? `
             <div class="relative">
               <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
-              <div class="options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
+              <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
                 <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
                 <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
               </div>
@@ -211,7 +211,7 @@ document.addEventListener('click', async (e) => {
       <p class="text-gray-700 mb-4 text-sm">Are you sure you want to delete this comment?</p>
       <div class="flex justify-center gap-3">
         <button class="cancel-del bg-gray-300 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-400 transition">Cancel</button>
-        <button class="confirm-del bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition" data-comment-id="${commentId}" data-post-id="${postId}">Delete</button>
+        <button class="confirm-del-comment bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition" data-comment-id="${commentId}" data-post-id="${postId}">Delete</button>
       </div>
     </div>
   `;
@@ -221,7 +221,7 @@ document.addEventListener('click', async (e) => {
 // handle confirmation actions
 document.addEventListener('click', async (e) => {
   const cancel = e.target.closest('.cancel-del');
-  const confirm = e.target.closest('.confirm-del');
+  const confirm = e.target.closest('.confirm-del-comment');
   const overlay = document.querySelector('.fixed.inset-0.bg-black');
 
   if (cancel && overlay) overlay.remove();
@@ -246,37 +246,38 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// edit existing comment inline within the DWP
+// edit existing comment inline within the DWP (Profile-style textarea and actions)
 document.addEventListener('click', (e) => {
   const editBtn = e.target.closest('.edit-comment');
   if (!editBtn) return;
+  e.preventDefault();
+
   const commentItem = editBtn.closest('.comment-item');
-  // This ensures the comment element is found and highlights it during editing.
-  const textEl = commentItem.querySelector('p.text-gray-700');
-  if (!textEl) {
-    console.warn('Edit failed: comment text element not found.');
-    return;
-  }
-  const oldText = textEl.textContent.trim();
-  commentItem.dataset.oldText = oldText;
-  commentItem.classList.add('ring-2', 'ring-indigo-300', 'bg-indigo-50'); // small visual highlight
+  if (!commentItem) return;
 
-  // create textarea for editing (handles nested structure)
-  const textarea = document.createElement('textarea');
-  textarea.value = oldText;
-  textarea.className = "w-full text-sm border border-indigo-200 rounded-md p-1 mb-1 focus:ring-2 focus:ring-indigo-300 focus:outline-none";
-  // insert before the old text element, then remove it
-  textEl.parentNode.insertBefore(textarea, textEl);
-  textEl.remove();
+  // Prevent opening multiple edit areas on the same comment
+  if (commentItem.querySelector('.edit-textarea')) return;
 
-  // create action buttons
-  const actions = document.createElement('div');
-  actions.className = "flex gap-2 mt-1";
-  actions.innerHTML = `
-    <button class="save-edit bg-indigo-500 text-white text-xs px-3 py-1 rounded-md hover:bg-indigo-600 transition" data-comment-id="${editBtn.dataset.commentId}" data-post-id="${editBtn.dataset.postId}">Save</button>
-    <button class="cancel-edit bg-gray-300 text-gray-700 text-xs px-3 py-1 rounded-md hover:bg-gray-400 transition">Cancel</button>
+  const commentId = editBtn.dataset.commentId;
+  const postId = editBtn.dataset.postId;
+
+  const textContainer = commentItem.querySelector('.text-gray-700')?.parentNode;
+  const originalText = commentItem.querySelector('.text-gray-700')?.textContent?.trim() || '';
+
+  // Replace the comment content with a clean full-width textarea + buttons layout
+  textContainer.innerHTML = `
+    <textarea class="edit-textarea w-full border border-indigo-300 rounded-md p-2 text-sm resize-y focus:ring-2 focus:ring-indigo-300 focus:outline-none">${originalText}</textarea>
+    <div class="mt-2 flex justify-end gap-2">
+      <button class="save-edit bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition" data-comment-id="${commentId}" data-post-id="${postId}">Save</button>
+      <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 transition">Cancel</button>
+    </div>
   `;
-  commentItem.appendChild(actions);
+
+  textContainer.classList.add('w-full', 'col-span-2');
+
+  // Hide options menu if open
+  const optionsMenu = editBtn.closest('.comment-options-menu');
+  if (optionsMenu) optionsMenu.classList.add('hidden');
 });
 
 // handle save and cancel for inline edit
@@ -284,21 +285,24 @@ document.addEventListener('click', async (e) => {
   const saveBtn = e.target.closest('.save-edit');
   const cancelBtn = e.target.closest('.cancel-edit');
 
+  // Smooth cancel (no reload)
   if (cancelBtn) {
     const commentItem = cancelBtn.closest('.comment-item');
-    const textarea = commentItem.querySelector('textarea');
-    // Restore original comment text on cancel
-    const oldText = commentItem.dataset.oldText || '';
-    const p = document.createElement('p');
-    p.className = "text-gray-700 text-sm";
-    p.textContent = oldText;
-    textarea.parentNode.insertBefore(p, textarea);
-    textarea.remove();
-    cancelBtn.parentElement.remove();
-    commentItem.classList.remove('ring-2', 'ring-indigo-300', 'bg-indigo-50');
+    if (!commentItem) return;
+
+    const textContainer = commentItem.querySelector('.text-gray-700')?.parentNode;
+    const textarea = textContainer?.querySelector('.edit-textarea');
+    const originalText = textarea?.defaultValue || '';
+
+    // Restore the original comment inline
+    textContainer.innerHTML = `
+      <p class="text-gray-700 text-sm whitespace-pre-wrap">${originalText}</p>
+      <p class="text-xs text-gray-500">${commentItem.querySelector('.text-xs')?.textContent || ''}</p>
+    `;
     return;
   }
 
+  // Save edit (unchanged logic)
   if (saveBtn) {
     const commentItem = saveBtn.closest('.comment-item');
     const textarea = commentItem.querySelector('textarea');
@@ -313,10 +317,7 @@ document.addEventListener('click', async (e) => {
         body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
       });
       const data = await res.json();
-      if (data.success) {
-        commentItem.classList.remove('ring-2', 'ring-indigo-300', 'bg-indigo-50');
-        loadComments(postId);
-      }
+      if (data.success) loadComments(postId);
     } catch {
       alert('Error updating comment.');
     }
@@ -326,7 +327,7 @@ document.addEventListener('click', async (e) => {
 // handle comment options menu toggle
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.comment-options');
-  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  const openMenus = document.querySelectorAll('.comment-options-menu:not(.hidden)');
   openMenus.forEach(m => m.classList.add('hidden'));
   if (btn) {
     const menu = btn.nextElementSibling;
@@ -343,7 +344,7 @@ document.addEventListener('click', (e) => {
 // 3-dot post management menu for feed posts (edit, delete, toggle privacy)
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.post-options');
-  const openMenus = document.querySelectorAll('.options-menu:not(.hidden)');
+  const openMenus = document.querySelectorAll('.post-options-menu:not(.hidden)');
   openMenus.forEach(m => m.classList.add('hidden'));
   if (btn) {
     const menu = btn.nextElementSibling;
@@ -371,7 +372,7 @@ document.addEventListener('click', (e) => {
       <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-400">Cancel</button>
     </div>
   `;
-  postCard.querySelector('.options-menu').classList.add('hidden');
+  postCard.querySelector('.post-options-menu').classList.add('hidden');
   titleEl.replaceWith(form);
 });
 
@@ -423,7 +424,7 @@ document.addEventListener('click', async (e) => {
       <p class="text-gray-700 mb-4 text-sm">Are you sure you want to delete this post?</p>
       <div class="flex justify-center gap-3">
         <button class="cancel-del bg-gray-300 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-400 transition">Cancel</button>
-        <button class="confirm-del bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition" data-post-id="${postId}">Delete</button>
+        <button class="confirm-del-post bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition" data-post-id="${postId}">Delete</button>
       </div>
     </div>
   `;
@@ -432,7 +433,7 @@ document.addEventListener('click', async (e) => {
 
 document.addEventListener('click', async (e) => {
   const cancel = e.target.closest('.cancel-del');
-  const confirm = e.target.closest('.confirm-del');
+  const confirm = e.target.closest('.confirm-del-post');
   const overlay = document.querySelector('.fixed.inset-0.bg-black');
   if (cancel && overlay) overlay.remove();
   if (confirm) {
@@ -472,13 +473,12 @@ document.addEventListener('click', async (e) => {
     });
     const data = await res.json();
     if (data.success) {
-      alert('Privacy updated!');
       window.location.reload();
     } else {
-      alert('Error updating privacy.');
+      console.error('Error updating privacy.');
     }
   } catch {
-    alert('Privacy request failed.');
+    console.error('Privacy request failed.');
   }
 });
 </script>
