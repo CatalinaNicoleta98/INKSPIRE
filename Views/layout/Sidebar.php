@@ -32,11 +32,12 @@
           <div class="bg-white rounded-lg w-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-lg">
             <span id="closeModal" class="float-right text-gray-500 cursor-pointer text-2xl">&times;</span>
             <h3 class="text-xl font-semibold text-indigo-500 mb-4">Create New Post</h3>
-            <form method="POST" action="index.php?action=createPost" enctype="multipart/form-data" class="space-y-3">
+            <form id="createPostForm" enctype="multipart/form-data" class="space-y-3">
               <input type="text" name="title" placeholder="Title" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
               <textarea name="description" placeholder="Description" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"></textarea>
               <input type="text" name="tags" placeholder="Tags (comma-separated)" class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
               <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-600">
+              <p id="postError" class="hidden text-red-600 text-sm mt-2"></p>
               <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-md py-2 hover:from-indigo-500 hover:to-purple-500 transition">Post</button>
             </form>
           </div>
@@ -52,4 +53,37 @@
       };
     });
   }
+</script>
+
+<script>
+document.addEventListener('submit', async (e) => {
+  if (e.target && e.target.id === 'createPostForm') {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const errorBox = document.getElementById('postError');
+    errorBox.classList.add('hidden');
+    errorBox.textContent = '';
+
+    try {
+      const res = await fetch('index.php?action=createPost', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        errorBox.textContent = data.error || '⚠️ An error occurred while creating your post.';
+        errorBox.classList.remove('hidden');
+      } else {
+        // Close modal and optionally refresh page or add post dynamically
+        document.getElementById('postModal').style.display = 'none';
+        location.reload();
+      }
+    } catch (err) {
+      errorBox.textContent = '⚠️ Failed to connect to the server.';
+      errorBox.classList.remove('hidden');
+    }
+  }
+});
 </script>

@@ -156,7 +156,8 @@ class PostController {
             $description = trim($_POST['description'] ?? '');
             $tags = trim($_POST['tags'] ?? '');
             if (empty($title) || empty($description)) {
-                echo "All fields are required.";
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => '⚠️ Title and description are required.']);
                 exit;
             }
 
@@ -170,23 +171,44 @@ class PostController {
                 $fileName = time() . '_' . basename($_FILES['image']['name']);
                 $targetFile = $uploadDir . $fileName;
 
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                // Validate MIME and real image content
+                $fileTmp = $_FILES['image']['tmp_name'];
+                $fileMime = mime_content_type($fileTmp);
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+                if (!in_array($fileMime, $allowedTypes)) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => '⚠️ Invalid file type. Please upload only PNG, JPEG, or GIF images.']);
+                    exit;
+                }
+
+                // Verify actual image structure (blocks renamed non-images)
+                if (!@getimagesize($fileTmp)) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => '⚠️ The uploaded file is not a valid image or is corrupted.']);
+                    exit;
+                }
+
+                if (move_uploaded_file($fileTmp, $targetFile)) {
+                    // Resize and sanitize
                     $this->resizeImage($targetFile);
                     $imagePath = 'uploads/' . $fileName;
                 } else {
-                    echo "Image upload failed.";
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => '⚠️ Image upload failed. Please try again.']);
                     exit;
                 }
             }
 
             $success = $this->postModel->createPost($title, $description, $imagePath, $user['user_id'], $tags);
 
+            header('Content-Type: application/json');
             if ($success) {
-                header("Location: index.php?action=feed");
-                exit;
+                echo json_encode(['success' => true]);
             } else {
-                echo "Database error — check debug_sql.txt";
+                echo json_encode(['success' => false, 'error' => '⚠️ Database error — please try again.']);
             }
+            exit;
         } else {
             header("Location: index.php?action=feed");
             exit;
@@ -194,45 +216,40 @@ class PostController {
     }
 
     private function resizeImage($filePath, $maxWidth = 1200, $maxHeight = 1200) {
-        list($width, $height, $type) = getimagesize($filePath);
-        if ($width <= $maxWidth && $height <= $maxHeight) {
+        [$width, $height, $type] = getimagesize($filePath);
+
+        // Avoid invalid sizes (e.g., 0x0)
+        if ($width <= 0 || $height <= 0) {
             return;
         }
 
-        $ratio = $width / $height;
-        if ($maxWidth / $maxHeight > $ratio) {
-            $maxWidth = $maxHeight * $ratio;
-        } else {
-            $maxHeight = $maxWidth / $ratio;
-        }
+        // Prevent upscaling
+        $ratio = min($maxWidth / $width, $maxHeight / $height, 1);
+        $newWidth = max(1, (int)($width * $ratio));
+        $newHeight = max(1, (int)($height * $ratio));
 
         switch ($type) {
-            case IMAGETYPE_JPEG:
-                $src = imagecreatefromjpeg($filePath);
-                break;
-            case IMAGETYPE_PNG:
-                $src = imagecreatefrompng($filePath);
-                break;
-            case IMAGETYPE_GIF:
-                $src = imagecreatefromgif($filePath);
-                break;
-            default:
-                return;
+            case IMAGETYPE_JPEG: $src = imagecreatefromjpeg($filePath); break;
+            case IMAGETYPE_PNG: $src = imagecreatefrompng($filePath); break;
+            case IMAGETYPE_GIF: $src = imagecreatefromgif($filePath); break;
+            default: return;
         }
 
-        $dst = imagecreatetruecolor($maxWidth, $maxHeight);
-        imagecopyresampled($dst, $src, 0, 0, 0, 0, $maxWidth, $maxHeight, $width, $height);
+        $dst = imagecreatetruecolor($newWidth, $newHeight);
+
+        // Preserve transparency for PNG and GIF
+        if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF) {
+            imagecolortransparent($dst, imagecolorallocatealpha($dst, 0, 0, 0, 127));
+            imagealphablending($dst, false);
+            imagesavealpha($dst, true);
+        }
+
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
 
         switch ($type) {
-            case IMAGETYPE_JPEG:
-                imagejpeg($dst, $filePath, 85);
-                break;
-            case IMAGETYPE_PNG:
-                imagepng($dst, $filePath);
-                break;
-            case IMAGETYPE_GIF:
-                imagegif($dst, $filePath);
-                break;
+            case IMAGETYPE_JPEG: imagejpeg($dst, $filePath, 90); break;
+            case IMAGETYPE_PNG: imagepng($dst, $filePath, 9); break;
+            case IMAGETYPE_GIF: imagegif($dst, $filePath); break;
         }
 
         imagedestroy($src);
