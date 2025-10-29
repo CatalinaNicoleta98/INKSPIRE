@@ -326,7 +326,7 @@ document.addEventListener('click', (e) => {
   if (optionsMenu) optionsMenu.classList.add('hidden');
 });
 
-// --- Save Edited Comment ---
+// --- Save Edited Comment (No Page Reload) ---
 document.addEventListener('click', async (e) => {
   const saveBtn = e.target.closest('.save-edit');
   if (!saveBtn) return;
@@ -335,7 +335,6 @@ document.addEventListener('click', async (e) => {
   const textarea = commentItem.querySelector('.edit-textarea');
   const newText = textarea.value.trim();
   const commentId = saveBtn.dataset.commentId;
-  const postId = saveBtn.dataset.postId;
   if (!newText) return;
 
   try {
@@ -345,25 +344,33 @@ document.addEventListener('click', async (e) => {
       body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
     });
     const data = await res.json();
+
     if (data.success) {
-      const openReplies = Array.from(document.querySelectorAll(`#commentsList-${postId} .replies:not(.hidden)`))
-        .map(r => r.closest('.comment-item')?.dataset.commentId);
-      await loadComments(postId);
-      openReplies.forEach(id => {
-        const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
-        if (parent) parent.classList.remove('hidden');
-      });
+      // Replace textarea with updated comment text instantly
+      const newComment = document.createElement('p');
+      newComment.className = 'text-gray-700 text-sm';
+      newComment.textContent = newText;
+      commentItem.querySelector('.edit-container').replaceWith(newComment);
     }
   } catch {
     alert('Failed to update comment.');
   }
 });
 
-// --- Cancel Edit ---
+// --- Cancel Edit (Instantly Revert Without Reload) ---
 document.addEventListener('click', (e) => {
   const cancelBtn = e.target.closest('.cancel-edit');
   if (!cancelBtn) return;
-  loadComments(currentPostId);
+
+  const commentItem = cancelBtn.closest('.comment-item');
+  const originalText = commentItem.dataset.originalText || '';
+  const editContainer = commentItem.querySelector('.edit-container');
+  if (editContainer) {
+    const originalEl = document.createElement('p');
+    originalEl.className = 'text-gray-700 text-sm';
+    originalEl.textContent = originalText;
+    editContainer.replaceWith(originalEl);
+  }
 });
 
 // --- Delete Comment Confirmation ---
@@ -394,6 +401,7 @@ document.addEventListener('click', async (e) => {
   if (confirmBtn) {
     const commentId = confirmBtn.dataset.commentId;
     const postId = confirmBtn.dataset.postId;
+
     try {
       const res = await fetch('index.php?action=deleteComment', {
         method: 'POST',
@@ -403,13 +411,12 @@ document.addEventListener('click', async (e) => {
       const data = await res.json();
       if (data.success) {
         overlay.remove();
-        const openReplies = Array.from(document.querySelectorAll(`#commentsList-${postId} .replies:not(.hidden)`))
-          .map(r => r.closest('.comment-item')?.dataset.commentId);
-        await loadComments(postId);
-        openReplies.forEach(id => {
-          const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
-          if (parent) parent.classList.remove('hidden');
-        });
+
+        // Instantly remove comment from DOM
+        const commentItem = document.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+        if (commentItem) commentItem.remove();
+
+        // Update counter dynamically if available
         const commentToggle = document.querySelector(`.comment-toggle[data-id="${postId}"]`);
         if (commentToggle && data.count !== undefined) {
           commentToggle.innerHTML = `💬 ${data.count}`;
