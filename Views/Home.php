@@ -156,7 +156,7 @@ async function loadComments(postId) {
       return `
         <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
           <div class="w-full">
-            <p class="text-gray-700 text-sm">${c.text}</p>
+            <p class="text-gray-700 text-sm whitespace-pre-wrap">${c.text}</p>
             <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
             <div class="flex gap-2 mt-1">
               <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
@@ -334,7 +334,7 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// edit existing comment inline within the DWP (Profile-style textarea and actions)
+// Inline edit for comments (profile-style: non-destructive DOM updates)
 document.addEventListener('click', (e) => {
   const editBtn = e.target.closest('.edit-comment');
   if (!editBtn) return;
@@ -343,88 +343,98 @@ document.addEventListener('click', (e) => {
   const commentItem = editBtn.closest('.comment-item');
   if (!commentItem) return;
 
-  // Prevent opening multiple edit areas on the same comment
-  if (commentItem.querySelector('.edit-textarea')) return;
+  // Target ONLY the text paragraph, not the whole container
+  const textEl = commentItem.querySelector('p.text-gray-700.text-sm');
+  if (!textEl) return;
 
-  const commentId = editBtn.dataset.commentId;
-  const postId = editBtn.dataset.postId;
+  // Prevent multiple editors on the same comment
+  if (commentItem.querySelector('.js-edit-form')) return;
 
-  const textContainer = commentItem.querySelector('.text-gray-700')?.parentNode;
-  const originalText = commentItem.querySelector('.text-gray-700')?.textContent?.trim() || '';
+  // Preserve original plain text for cancel
+  if (!commentItem.dataset.originalText) {
+    commentItem.dataset.originalText = textEl.textContent;
+  }
 
-  // Replace the comment content with a clean full-width textarea + buttons layout
-  textContainer.innerHTML = `
-    <textarea class="edit-textarea w-full border border-indigo-300 rounded-md p-2 text-sm resize-y focus:ring-2 focus:ring-indigo-300 focus:outline-none">${originalText}</textarea>
+  // Build lightweight edit form
+  const form = document.createElement('div');
+  form.className = 'js-edit-form mt-2';
+  form.innerHTML = `
+    <textarea class="js-edit-text w-full border border-indigo-300 rounded-md p-2 text-sm resize-y focus:ring-2 focus:ring-indigo-300 focus:outline-none">${textEl.textContent.trim()}</textarea>
     <div class="mt-2 flex justify-end gap-2">
-      <button class="save-edit bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition" data-comment-id="${commentId}" data-post-id="${postId}">Save</button>
-      <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 transition">Cancel</button>
+      <button class="js-save-edit bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition" data-comment-id="${editBtn.dataset.commentId}" data-post-id="${editBtn.dataset.postId}">Save</button>
+      <button class="js-cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 transition" type="button">Cancel</button>
     </div>
   `;
 
-  textContainer.classList.add('w-full', 'col-span-2');
+  // Hide original text and insert editor right after it, keeping replies, buttons, etc.
+  textEl.hidden = true;
+  textEl.insertAdjacentElement('afterend', form);
 
   // Hide options menu if open
   const optionsMenu = editBtn.closest('.comment-options-menu');
   if (optionsMenu) optionsMenu.classList.add('hidden');
+
+  // Focus textarea
+  const ta = form.querySelector('.js-edit-text');
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
 });
 
-// handle save and cancel for inline edit
+// Save & Cancel handlers (non-destructive, no full list reload)
 document.addEventListener('click', async (e) => {
-  const saveBtn = e.target.closest('.save-edit');
-  const cancelBtn = e.target.closest('.cancel-edit');
-
-  // Smooth cancel (no reload)
+  // Cancel
+  const cancelBtn = e.target.closest('.js-cancel-edit');
   if (cancelBtn) {
+    const form = cancelBtn.closest('.js-edit-form');
     const commentItem = cancelBtn.closest('.comment-item');
-    if (!commentItem) return;
-
-    const textContainer = commentItem.querySelector('.text-gray-700')?.parentNode;
-    const textarea = textContainer?.querySelector('.edit-textarea');
-    const originalText = textarea?.defaultValue || '';
-
-    // Restore the original comment inline
-    textContainer.innerHTML = `
-      <p class="text-gray-700 text-sm whitespace-pre-wrap">${originalText}</p>
-      <p class="text-xs text-gray-500">${commentItem.querySelector('.text-xs')?.textContent || ''}</p>
-    `;
+    const textEl = commentItem.querySelector('p.text-gray-700.text-sm');
+    // Restore original text and clean up
+    if (commentItem.dataset.originalText !== undefined) {
+      textEl.textContent = commentItem.dataset.originalText;
+    }
+    textEl.hidden = false;
+    form.remove();
     return;
   }
 
-  // Save edit (with preservation of open reply sections)
-  if (saveBtn) {
-    const commentItem = saveBtn.closest('.comment-item');
-    if (!commentItem) return;
-    const textarea = commentItem.querySelector('textarea');
-    const commentId = saveBtn.dataset.commentId;
-    const postId = saveBtn.dataset.postId;
-    const newText = textarea.value.trim();
-    if (!newText) return;
-    try {
-      const res = await fetch('index.php?action=editComment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
-      });
-      const data = await res.json();
-      if (data.success) {
-        // Remember which reply sections are currently open
-        const openReplies = Array.from(document.querySelectorAll(`#commentsList-${postId} .replies:not(.hidden)`))
-          .map(r => r.closest('.comment-item')?.dataset.commentId);
+  // Save
+  const saveBtn = e.target.closest('.js-save-edit');
+  if (!saveBtn) return;
 
-        // Reload comments
-        await loadComments(postId);
+  const commentItem = saveBtn.closest('.comment-item');
+  const form = saveBtn.closest('.js-edit-form');
+  const textEl = commentItem.querySelector('p.text-gray-700.text-sm');
+  const textarea = form.querySelector('.js-edit-text');
 
-        // Re-open previously open reply sections
-        openReplies.forEach(id => {
-          const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
-          if (parent) parent.classList.remove('hidden');
-          const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
-          if (toggleBtn) toggleBtn.textContent = 'Hide replies';
-        });
-      }
-    } catch {
+  const commentId = saveBtn.dataset.commentId;
+  const postId = saveBtn.dataset.postId;
+  const newText = textarea.value.trim();
+  if (!newText) return;
+
+  // Disable controls while saving
+  Array.from(form.querySelectorAll('button, textarea')).forEach(el => el.disabled = true);
+
+  try {
+    const res = await fetch('index.php?action=editComment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `comment_id=${encodeURIComponent(commentId)}&text=${encodeURIComponent(newText)}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Update just the text content in place (safe: textContent)
+      textEl.textContent = newText;
+      textEl.hidden = false;
+      form.remove();
+      // Update cache for subsequent cancels
+      commentItem.dataset.originalText = newText;
+    } else {
       alert('Error updating comment.');
+      Array.from(form.querySelectorAll('button, textarea')).forEach(el => el.disabled = false);
     }
+  } catch {
+    alert('Error updating comment.');
+    Array.from(form.querySelectorAll('button, textarea')).forEach(el => el.disabled = false);
   }
 });
 
