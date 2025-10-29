@@ -27,17 +27,34 @@ class CommentController {
         if ($post_id && !empty(trim($content))) {
             $user_id = $user['user_id'];
             $success = $this->model->addComment($post_id, $user_id, $content, $parent_id);
-            header('Content-Type: application/json');
             if ($success) {
                 // Always count all comments including replies
                 $totalCount = $this->model->countCommentsByPost($post_id);
-                echo json_encode(['success' => true, 'count' => $totalCount]);
+                $username = $user['username'] ?? 'Unknown';
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'count' => $totalCount,
+                    'comment' => [
+                        'comment_id' => (int)$success,
+                        'post_id'    => (int)$post_id,
+                        'parent_id'  => $parent_id ? (int)$parent_id : null,
+                        'username'   => $username,
+                        'created_at' => date('M j, Y H:i'),
+                        'text'       => htmlspecialchars($content, ENT_QUOTES, 'UTF-8'),
+                        'owned'      => true
+                    ]
+                ]);
+                exit;
             } else {
+                header('Content-Type: application/json');
                 echo json_encode(['success' => false]);
+                exit;
             }
         } else {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Invalid input']);
+            exit;
         }
     }
 
