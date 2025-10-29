@@ -360,6 +360,7 @@ document.addEventListener('click', (e) => {
   const commentItem = editBtn.closest('.comment-item');
   const textEl = commentItem.querySelector('p.text-gray-700');
   const originalText = textEl.textContent.trim();
+  commentItem.dataset.originalText = originalText;
 
   textEl.outerHTML = `
     <div class="edit-container mt-1">
