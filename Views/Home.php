@@ -586,7 +586,6 @@ document.addEventListener('click', async (e) => {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Post updated successfully!');
         window.location.reload();
       } else {
         alert('Error updating post.');
