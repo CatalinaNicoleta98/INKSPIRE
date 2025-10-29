@@ -154,6 +154,41 @@
 let currentPostId = null;
 let replyTarget = null;
 
+// Global comment renderer for both loader and add-comment handler
+function renderComment(c, postId, level = 0) {
+  const repliesCount = Array.isArray(c.replies) ? c.replies.length : 0;
+  const repliesHTML = Array.isArray(c.replies)
+    ? c.replies.map(r => renderComment(r, postId, level + 1)).join('')
+    : '';
+
+  return `
+    <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
+      <div class="w-full">
+        <p class="text-gray-700 text-sm whitespace-pre-wrap">${c.text}</p>
+        <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+        <div class="flex gap-2 mt-1">
+          <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
+          ${repliesCount > 0
+            ? `<button class="toggle-replies text-xs text-indigo-400" data-comment-id="${c.comment_id}" data-post-id="${postId}">Show replies (${repliesCount})</button>`
+            : ''}
+        </div>
+        <div class="replies hidden mt-2 ml-6">${repliesHTML}</div>
+      </div>
+      ${c.owned
+        ? `
+          <div class="comment-tools absolute top-2 right-2">
+            <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
+            <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
+              <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
+              <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
+            </div>
+          </div>
+        `
+        : ''}
+    </div>
+  `;
+}
+
 // --- Open Comments and Load ---
 document.addEventListener('click', (e) => {
   const toggle = e.target.closest('.comment-toggle');
@@ -178,35 +213,8 @@ async function loadComments(postId) {
   try {
     const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
     const comments = await res.json();
-
-    function renderComment(c) {
-      const repliesCount = c.replies ? c.replies.length : 0;
-      return `
-        <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
-          <div class="w-full">
-            <p class="text-gray-700 text-sm">${c.text}</p>
-            <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
-            <div class="flex gap-2 mt-1">
-              <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
-              ${repliesCount > 0 ? `<button class="toggle-replies text-xs text-indigo-400" data-comment-id="${c.comment_id}" data-post-id="${postId}">Show replies (${repliesCount})</button>` : ''}
-            </div>
-            <div class="replies hidden mt-2 ml-6">
-              ${c.replies && c.replies.length > 0 ? c.replies.map(r => renderComment(r)).join('') : ''}
-            </div>
-          </div>
-          ${c.owned ? `
-            <div class="comment-tools absolute top-2 right-2">
-              <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
-              <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
-                <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
-                <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
-              </div>
-            </div>` : ''}
-        </div>`;
-    }
-
     if (Array.isArray(comments) && comments.length > 0) {
-      list.innerHTML = comments.map(c => renderComment(c)).join('');
+      list.innerHTML = comments.map(c => renderComment(c, postId)).join('');
     } else {
       list.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
     }
@@ -259,6 +267,10 @@ document.addEventListener('click', (e) => {
 document.addEventListener('click', async (e) => {
   const submitBtn = e.target.closest('.comment-submit');
   if (!submitBtn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+
   const postId = submitBtn.dataset.postId;
   const input = document.querySelector(`#newCommentInput-${postId}`);
   const text = input.value.trim();
@@ -278,7 +290,43 @@ document.addEventListener('click', async (e) => {
       replyTarget = null;
       const indicator = document.querySelector('.reply-indicator');
       if (indicator) indicator.remove();
-      loadComments(postId);
+
+      const list = document.querySelector(`#commentsList-${postId}`);
+      if (!list) return;
+      const newComment = data.comment;
+      const html = renderComment(newComment, postId);
+
+      if (parentId) {
+        const parentItem = list.querySelector(`.comment-item[data-comment-id="${parentId}"]`);
+        const repliesContainer = parentItem ? parentItem.querySelector('.replies') : null;
+        if (repliesContainer) {
+          repliesContainer.classList.remove('hidden');
+          repliesContainer.insertAdjacentHTML('beforeend', html);
+          const toggleBtn = parentItem.querySelector(`.toggle-replies[data-comment-id="${parentId}"]`);
+          if (toggleBtn) toggleBtn.textContent = 'Hide replies';
+          const newEl = repliesContainer.querySelector(`.comment-item[data-comment-id="${newComment.comment_id}"]`);
+          if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      } else {
+        list.insertAdjacentHTML('afterbegin', html);
+        requestAnimationFrame(() => {
+          const newEl = list.querySelector(`.comment-item[data-comment-id="${newComment.comment_id}"]`);
+          if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      // Keep section open
+      const section = document.getElementById(`comments-${postId}`);
+      if (section) {
+        section.classList.remove('hidden');
+        section.dataset.loaded = "true";
+      }
+
+      // Update comment counter
+      const commentToggle = document.querySelector(`.comment-toggle[data-id="${postId}"]`);
+      if (commentToggle && data.count !== undefined) {
+        commentToggle.innerHTML = `💬 ${data.count}`;
+      }
     }
   } catch {
     alert('Failed to post comment.');
