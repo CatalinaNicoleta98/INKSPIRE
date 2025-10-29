@@ -550,10 +550,14 @@ document.addEventListener('click', (e) => {
   const oldDesc = descEl ? descEl.textContent.trim() : '';
 
   const form = document.createElement('div');
+  form.className = 'post-edit-form';
+  // persist originals so Cancel can restore without reload
+  form.dataset.originalTitle = oldTitle;
+  form.dataset.originalDesc = oldDesc;
   form.innerHTML = `
-    <input type="text" class="edit-title w-full border border-indigo-200 rounded-md p-2 mb-2" value="${oldTitle}">
-    <textarea class="edit-description w-full border border-indigo-200 rounded-md p-2 mb-2">${oldDesc}</textarea>
-    <div class="flex gap-2">
+    <input type="text" class="edit-title w-full border border-indigo-200 rounded-md p-2 mb-2 font-semibold" value="${oldTitle}">
+    <textarea class="edit-description w-full border border-indigo-200 rounded-md p-2 mb-2 text-sm">${oldDesc}</textarea>
+    <div class="flex justify-end gap-2">
       <button class="save-edit bg-indigo-500 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-600" data-post-id="${postId}">Save</button>
       <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-400">Cancel</button>
     </div>
@@ -567,7 +571,27 @@ document.addEventListener('click', async (e) => {
   const cancelBtn = e.target.closest('.cancel-edit');
 
   if (cancelBtn) {
-    window.location.reload();
+    const form = cancelBtn.closest('.post-edit-form');
+    const postCard = cancelBtn.closest('.post');
+    if (!form || !postCard) return;
+
+    const originalTitle = form.dataset.originalTitle || '';
+    const originalDesc = form.dataset.originalDesc || '';
+
+    // Remove any existing description paragraph to prevent duplicates
+    const existingDesc = postCard.querySelector('p.text-gray-600.text-sm.mt-1');
+    if (existingDesc) existingDesc.remove();
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'text-lg font-semibold text-gray-800';
+    titleEl.textContent = originalTitle;
+
+    const descEl = document.createElement('p');
+    descEl.className = 'text-gray-600 text-sm mt-1';
+    descEl.textContent = originalDesc;
+
+    form.replaceWith(titleEl);
+    titleEl.insertAdjacentElement('afterend', descEl);
     return;
   }
 
