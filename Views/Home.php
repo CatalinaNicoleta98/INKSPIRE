@@ -298,6 +298,11 @@ document.addEventListener('click', async (e) => {
           }
         } else {
           list.insertAdjacentHTML('afterbegin', html);
+          // Wait one frame, then scroll smoothly to the newly added top comment for the posting user
+          requestAnimationFrame(() => {
+            const newEl = list.querySelector(`.comment-item[data-comment-id="${newComment.comment_id}"]`);
+            if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
         }
 
         // --- PATCH: Keep section open and mark as loaded ---
