@@ -156,7 +156,43 @@
 let currentPostId = null;
 let replyTarget = null;
 
-// Open comments modal and load comments
+// Renders a single comment (used by loader and live updates)
+function renderComment(c, postId, level = 0) {
+  const repliesCount = c.replies ? c.replies.length : 0;
+  return `
+    <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
+      <div class="w-full">
+        <p class="text-gray-700 text-sm">${c.text}</p>
+        <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+        <div class="flex gap-2 mt-1">
+          <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
+          ${repliesCount > 0 ? `<button class="toggle-replies text-xs text-indigo-400" data-comment-id="${c.comment_id}" data-post-id="${postId}">Show replies (${repliesCount})</button>` : ''}
+        </div>
+        <div class="replies hidden mt-2 ml-6">
+          ${c.replies && c.replies.length > 0 ? c.replies.map(r => renderComment(r, postId, level + 1)).join('') : ''}
+        </div>
+      </div>
+      ${c.owned ? `
+        <div class="comment-tools absolute top-2 right-2">
+          <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
+          <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
+            <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
+            <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
+          </div>
+        </div>` : ''}
+    </div>`;
+}
+// Utility: Scroll to element smoothly within modal
+function scrollToComment(commentId) {
+  const modal = document.getElementById('commentsModal');
+  const commentEl = document.querySelector(`#commentsList .comment-item[data-comment-id="${commentId}"]`);
+  if (commentEl && modal) {
+    // Use scrollIntoView but only within the modal's scroll context
+    commentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// Open comments modal and load comments for a post
 document.addEventListener('click', (e) => {
   const toggle = e.target.closest('.comment-btn');
   if (!toggle) return;
@@ -168,77 +204,59 @@ document.addEventListener('click', (e) => {
     commentsModal.classList.remove('hidden');
     loadComments(postId);
   }
-
   const closeComments = document.getElementById('closeComments');
-  if (closeComments) closeComments.onclick = () => commentsModal.classList.add('hidden');
+  if (closeComments) closeComments.onclick = () => {
+    commentsModal.classList.add('hidden');
+    replyTarget = null;
+    const ind = document.querySelector('#commentsModal .reply-indicator');
+    if (ind) ind.remove();
+  };
 });
 
-// Unified loadComments (with nested replies and reply toggles)
-async function loadComments(postId) {
+// Load comments for the current post, optionally scroll to a comment
+async function loadComments(postId, { scrollTo = null } = {}) {
   const list = document.getElementById('commentsList');
   if (!list) return;
   list.innerHTML = "<p class='text-center text-gray-400 italic'>Loading...</p>";
   try {
     const res = await fetch(`index.php?action=getCommentsByPost&post_id=${postId}`);
     const comments = await res.json();
-
-    function renderComment(c, level = 0) {
-      const repliesCount = c.replies ? c.replies.length : 0;
-      return `
-        <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
-          <div class="w-full">
-            <p class="text-gray-700 text-sm">${c.text}</p>
-            <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
-            <div class="flex gap-2 mt-1">
-              <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
-              ${repliesCount > 0 ? `<button class="toggle-replies text-xs text-indigo-400" data-comment-id="${c.comment_id}" data-post-id="${postId}">Show replies (${repliesCount})</button>` : ''}
-            </div>
-            <div class="replies hidden mt-2 ml-6">
-              ${c.replies && c.replies.length > 0 ? c.replies.map(r => renderComment(r, level + 1)).join('') : ''}
-            </div>
-          </div>
-          ${c.owned ? `
-            <div class="comment-tools absolute top-2 right-2">
-              <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
-              <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
-                <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
-                <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
-              </div>
-            </div>` : ''}
-        </div>`;
-    }
-
     if (Array.isArray(comments) && comments.length > 0) {
-      list.innerHTML = comments.map(c => renderComment(c)).join('');
+      list.innerHTML = comments.map(c => renderComment(c, postId)).join('');
     } else {
       list.innerHTML = "<p class='text-center text-gray-400 italic'>No comments yet.</p>";
     }
+    // If scrollTo, scroll to that comment after render
+    if (scrollTo) setTimeout(() => scrollToComment(scrollTo), 100);
   } catch {
     list.innerHTML = "<p class='text-center text-red-400 italic'>Error loading comments.</p>";
   }
 }
 
-// Reply handler (same unified system as Home)
-document.addEventListener('click', (e) => {
+// Handle reply - show indicator above input
+document.getElementById('commentsModal').addEventListener('click', (e) => {
   const replyBtn = e.target.closest('.reply-btn');
   if (!replyBtn) return;
-
   replyTarget = {
     commentId: replyBtn.dataset.commentId,
     username: replyBtn.dataset.username,
     postId: replyBtn.dataset.postId
   };
-
   const commentBox = document.getElementById('newCommentInput');
+  if (!commentBox) return;
+  // Remove any existing indicator
+  const prev = document.querySelector('#commentsModal .reply-indicator');
+  if (prev) prev.remove();
+  // Insert indicator
   const indicator = document.createElement('div');
   indicator.className = "reply-indicator text-xs text-indigo-600 mb-1 flex justify-between items-center";
   indicator.innerHTML = `<span>Replying to @${replyTarget.username}</span> <button class="cancel-reply text-red-500 text-xs">Cancel</button>`;
   const parent = commentBox.closest('.bg-white');
-  if (!parent.querySelector('.reply-indicator')) parent.prepend(indicator);
+  if (parent && !parent.querySelector('.reply-indicator')) parent.prepend(indicator);
   commentBox.focus();
 });
-
-document.addEventListener('click', (e) => {
+// Cancel reply
+document.getElementById('commentsModal').addEventListener('click', (e) => {
   if (e.target.closest('.cancel-reply')) {
     const indicator = e.target.closest('.reply-indicator');
     if (indicator) indicator.remove();
@@ -247,7 +265,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Show/hide replies
-document.addEventListener('click', (e) => {
+document.getElementById('commentsModal').addEventListener('click', (e) => {
   const toggleBtn = e.target.closest('.toggle-replies');
   if (!toggleBtn) return;
   const commentItem = toggleBtn.closest('.comment-item');
@@ -258,12 +276,13 @@ document.addEventListener('click', (e) => {
   toggleBtn.textContent = isHidden ? 'Hide replies' : `Show replies (${replies.children.length})`;
 });
 
-// Submit comment or reply
-document.addEventListener('click', async (e) => {
+// Submit comment/reply
+document.getElementById('commentsModal').addEventListener('click', async (e) => {
   const submitBtn = e.target.closest('.comment-submit');
   if (!submitBtn) return;
   const postId = currentPostId;
   const input = document.getElementById('newCommentInput');
+  if (!input) return;
   const text = input.value.trim();
   if (!text) return;
   const parentId = replyTarget && replyTarget.postId === postId ? replyTarget.commentId : null;
@@ -275,51 +294,76 @@ document.addEventListener('click', async (e) => {
     });
     const data = await res.json();
     if (data.success) {
+      // Reset input and reply indicator
       input.value = '';
-      replyTarget = null;
-      const indicator = document.querySelector('.reply-indicator');
+      const indicator = document.querySelector('#commentsModal .reply-indicator');
       if (indicator) indicator.remove();
-      loadComments(postId);
+      const newComment = data.comment; // expect full comment payload
+      // If API only returns IDs, ensure backend sends the comment object (id, text, username, created_at, owned)
+      if (newComment && newComment.comment_id) {
+        const list = document.getElementById('commentsList');
+        if (parentId) {
+          // Append to parent's replies and ensure they are visible
+          const parentItem = list.querySelector(`.comment-item[data-comment-id="${parentId}"]`);
+          if (parentItem) {
+            const repliesContainer = parentItem.querySelector('.replies');
+            if (repliesContainer) {
+              repliesContainer.classList.remove('hidden');
+              const toggleBtn = parentItem.querySelector(`.toggle-replies[data-comment-id="${parentId}"]`);
+              if (toggleBtn) toggleBtn.textContent = 'Hide replies';
+              repliesContainer.insertAdjacentHTML('beforeend', renderComment(newComment, postId));
+              // Scroll to the new reply
+              setTimeout(() => {
+                const el = repliesContainer.querySelector(`.comment-item[data-comment-id="${newComment.comment_id}"]`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }, 50);
+            }
+          }
+        } else {
+          // Insert new main comment at the top (optimistic UX)
+          list.insertAdjacentHTML('afterbegin', renderComment(newComment, postId));
+          // Smooth scroll to the just-added comment
+          setTimeout(() => {
+            const el = list.querySelector(`.comment-item[data-comment-id="${newComment.comment_id}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 50);
+        }
+        // Update comment counter on the tile
+        const commentToggle = document.querySelector(`.comment-btn[data-id="${postId}"]`);
+        if (commentToggle) {
+          if (typeof data.count !== 'undefined') {
+            commentToggle.innerHTML = `💬 ${data.count}`;
+          } else {
+            const parts = commentToggle.textContent.trim().split(' ');
+            const num = parseInt(parts[1], 10);
+            if (!isNaN(num)) commentToggle.innerHTML = `💬 ${num + 1}`;
+          }
+        }
+      }
+      // Clear replyTarget last after DOM injection
+      replyTarget = null;
     }
   } catch {
     alert('Failed to post comment.');
   }
 });
 
-// Preserve open replies after editing or deleting
-document.addEventListener('click', async (e) => {
-  const saveBtn = e.target.closest('.save-edit');
-  const delBtn = e.target.closest('.delete-comment');
-  if (!saveBtn && !delBtn) return;
-  const postId = currentPostId;
-
-  // Remember open reply threads
-  const openReplies = Array.from(document.querySelectorAll(`#commentsList .replies:not(.hidden)`))
-    .map(r => r.closest('.comment-item')?.dataset.commentId);
-
-  setTimeout(async () => {
-    await loadComments(postId);
-    // Re-open threads
-    openReplies.forEach(id => {
-      const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
-      if (parent) parent.classList.remove('hidden');
-      const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
-      if (toggleBtn) toggleBtn.textContent = 'Hide replies';
-    });
-  }, 500);
-});
-
-// --- Edit/Delete Menu Toggle ---
+// Inline edit menu toggle (close when clicking outside)
 document.addEventListener('click', (e) => {
+  // Only affect menus inside modal
+  const modal = document.getElementById('commentsModal');
+  if (!modal.contains(e.target)) {
+    // Clicked outside modal - close all menus
+    modal.querySelectorAll('.comment-options-menu').forEach(menu => menu.classList.add('hidden'));
+    return;
+  }
   const menuButton = e.target.closest('.comment-options');
-  const openMenu = document.querySelector('.comment-options-menu:not(.hidden)');
-
-  // If clicked outside of any menu, close it
+  const openMenu = modal.querySelector('.comment-options-menu:not(.hidden)');
+  // If clicked outside menus/buttons, close all
   if (!menuButton && !e.target.closest('.comment-options-menu')) {
     if (openMenu) openMenu.classList.add('hidden');
     return;
   }
-
   // Toggle current menu
   if (menuButton) {
     const menu = menuButton.nextElementSibling;
@@ -332,22 +376,19 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// --- Edit Comment Handler ---
-document.addEventListener('click', (e) => {
+// Edit comment: inline replace with textarea
+document.getElementById('commentsModal').addEventListener('click', (e) => {
   const editBtn = e.target.closest('.edit-comment');
   if (!editBtn) return;
-
   const commentItem = editBtn.closest('.comment-item');
+  if (!commentItem) return;
   const commentId = editBtn.dataset.commentId;
   const postId = editBtn.dataset.postId;
   const textEl = commentItem.querySelector('p.text-gray-700');
-
+  if (!textEl) return;
   // Prevent multiple edit boxes
   if (commentItem.querySelector('textarea')) return;
-
   const originalText = textEl.textContent.trim();
-
-  // Replace with textarea
   textEl.outerHTML = `
     <div class="edit-container mt-1">
       <textarea class="edit-textarea w-full border border-indigo-300 rounded-md p-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none">${originalText}</textarea>
@@ -357,21 +398,23 @@ document.addEventListener('click', (e) => {
       </div>
     </div>
   `;
+  // Close any options menu in this comment
+  const tools = commentItem.querySelector('.comment-options-menu');
+  if (tools) tools.classList.add('hidden');
+  // Store original text for cancel
+  commentItem.dataset.originalText = `${originalText}`;
 });
 
-// --- Save Edited Comment ---
-document.addEventListener('click', async (e) => {
+// Save edited comment (inline update)
+document.getElementById('commentsModal').addEventListener('click', async (e) => {
   const saveBtn = e.target.closest('.save-edit');
   if (!saveBtn) return;
-
   const commentItem = saveBtn.closest('.comment-item');
   const textarea = commentItem.querySelector('.edit-textarea');
   const newText = textarea.value.trim();
   const commentId = saveBtn.dataset.commentId;
   const postId = saveBtn.dataset.postId;
-
   if (!newText) return;
-
   try {
     const res = await fetch('index.php?action=editComment', {
       method: 'POST',
@@ -380,38 +423,42 @@ document.addEventListener('click', async (e) => {
     });
     const data = await res.json();
     if (data.success) {
-      // Preserve open replies
-      const openReplies = Array.from(document.querySelectorAll(`#commentsList .replies:not(.hidden)`))
-        .map(r => r.closest('.comment-item')?.dataset.commentId);
-      await loadComments(postId);
-      openReplies.forEach(id => {
-        const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
-        if (parent) parent.classList.remove('hidden');
-        const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
-        if (toggleBtn) toggleBtn.textContent = 'Hide replies';
-      });
+      // Replace edit container with updated text node
+      const editContainer = commentItem.querySelector('.edit-container');
+      if (editContainer) {
+        editContainer.outerHTML = `<p class="text-gray-700 text-sm"></p>`;
+        const p = commentItem.querySelector('p.text-gray-700');
+        if (p) p.textContent = newText; // safe text injection
+      }
     }
   } catch {
     alert('Failed to update comment.');
   }
 });
 
-// --- Cancel Edit ---
-document.addEventListener('click', (e) => {
+// Cancel edit: restore original text without reload
+document.getElementById('commentsModal').addEventListener('click', (e) => {
   const cancelBtn = e.target.closest('.cancel-edit');
   if (!cancelBtn) return;
   const commentItem = cancelBtn.closest('.comment-item');
-  loadComments(currentPostId);
+  const orig = commentItem?.dataset?.originalText || '';
+  const editContainer = commentItem.querySelector('.edit-container');
+  if (editContainer) {
+    editContainer.outerHTML = `<p class="text-gray-700 text-sm"></p>`;
+    const p = commentItem.querySelector('p.text-gray-700');
+    if (p) p.textContent = orig;
+  }
 });
 
-// --- Delete Comment Handler ---
-document.addEventListener('click', async (e) => {
+// Delete comment: show overlay confirmation
+document.getElementById('commentsModal').addEventListener('click', (e) => {
   const delBtn = e.target.closest('.delete-comment');
   if (!delBtn) return;
-
   const commentId = delBtn.dataset.commentId;
   const postId = delBtn.dataset.postId;
-
+  // Remove any previous overlay
+  const prev = document.querySelector('.fixed.inset-0.bg-black\\/40');
+  if (prev) prev.remove();
   // Confirmation overlay
   const overlay = document.createElement('div');
   overlay.className = "fixed inset-0 bg-black/40 flex items-center justify-center z-[1100]";
@@ -427,19 +474,16 @@ document.addEventListener('click', async (e) => {
   document.body.appendChild(overlay);
 });
 
-// --- Confirm or Cancel Deletion ---
+// Confirm/cancel delete
 document.addEventListener('click', async (e) => {
   const confirmBtn = e.target.closest('.confirm-delete');
   const cancelBtn = e.target.closest('.cancel-delete');
   if (!confirmBtn && !cancelBtn) return;
-
   const overlay = document.querySelector('.fixed.inset-0.bg-black\\/40');
   if (cancelBtn && overlay) overlay.remove();
-
   if (confirmBtn) {
     const commentId = confirmBtn.dataset.commentId;
     const postId = confirmBtn.dataset.postId;
-
     try {
       const res = await fetch('index.php?action=deleteComment', {
         method: 'POST',
@@ -448,23 +492,14 @@ document.addEventListener('click', async (e) => {
       });
       const data = await res.json();
       if (data.success) {
-        overlay.remove();
-
-        // Preserve open replies
-        const openReplies = Array.from(document.querySelectorAll(`#commentsList .replies:not(.hidden)`))
-          .map(r => r.closest('.comment-item')?.dataset.commentId);
-
-        await loadComments(postId);
-        openReplies.forEach(id => {
-          const parent = document.querySelector(`.comment-item[data-comment-id="${id}"] .replies`);
-          if (parent) parent.classList.remove('hidden');
-          const toggleBtn = document.querySelector(`.toggle-replies[data-comment-id="${id}"]`);
-          if (toggleBtn) toggleBtn.textContent = 'Hide replies';
-        });
-
-        // Update comment counter
+        if (overlay) overlay.remove();
+        // Remove the comment element from DOM (replies go with it if parent)
+        const list = document.getElementById('commentsList');
+        const toRemove = list.querySelector(`.comment-item[data-comment-id="${commentId}"]`);
+        if (toRemove) toRemove.remove();
+        // Update counter on the tile
         const commentToggle = document.querySelector(`.comment-btn[data-id="${postId}"]`);
-        if (commentToggle && data.count !== undefined) {
+        if (commentToggle && typeof data.count !== 'undefined') {
           commentToggle.innerHTML = `💬 ${data.count}`;
         }
       }
