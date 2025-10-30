@@ -291,6 +291,9 @@ document.addEventListener('click', async (e) => {
 
       const list = document.querySelector(`#commentsList-${postId}`);
       if (!list) return;
+      // Remove 'No comments yet' placeholder if present
+      const emptyMsg = list.querySelector('.text-center.text-gray-400.italic');
+      if (emptyMsg) emptyMsg.remove();
       const newComment = data.comment;
       const html = renderComment(newComment, postId);
 
@@ -306,10 +309,19 @@ document.addEventListener('click', async (e) => {
           if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       } else {
+        // Preserve scroll position relative to viewport to avoid post jump
+        const prevHeight = list.scrollHeight;
         list.insertAdjacentHTML('afterbegin', html);
+        const newHeight = list.scrollHeight;
+        const heightDiff = newHeight - prevHeight;
+
+        // Adjust page scroll by the height difference so the post doesn't move
+        window.scrollBy(0, heightDiff);
+
+        // Then smoothly scroll to the new comment
         requestAnimationFrame(() => {
           const newEl = list.querySelector(`.comment-item[data-comment-id="${newComment.comment_id}"]`);
-          if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
       }
 

@@ -279,6 +279,9 @@ document.addEventListener('click', async (e) => {
 
       const list = document.querySelector(`#commentsList-${postId}`);
       if (list) {
+        // Remove 'No comments yet' placeholder if present
+        const emptyMsg = list.querySelector('.text-center.text-gray-400.italic');
+        if (emptyMsg) emptyMsg.remove();
         // Preserve scroll position
         const prevScroll = list.scrollTop;
         const wasAtBottom = Math.abs(list.scrollHeight - list.scrollTop - list.clientHeight) < 5;
@@ -297,11 +300,19 @@ document.addEventListener('click', async (e) => {
             if (toggleBtn) toggleBtn.textContent = 'Hide replies';
           }
         } else {
+          // Preserve scroll position relative to viewport to avoid post jump
+          const prevHeight = list.scrollHeight;
           list.insertAdjacentHTML('afterbegin', html);
-          // Wait one frame, then scroll smoothly to the newly added top comment for the posting user
+          const newHeight = list.scrollHeight;
+          const heightDiff = newHeight - prevHeight;
+
+          // Adjust page scroll by the height difference so the post doesn't move
+          window.scrollBy(0, heightDiff);
+
+          // Then smoothly scroll to the new comment
           requestAnimationFrame(() => {
             const newEl = list.querySelector(`.comment-item[data-comment-id="${newComment.comment_id}"]`);
-            if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           });
         }
 
