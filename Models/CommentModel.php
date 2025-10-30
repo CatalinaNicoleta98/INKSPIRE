@@ -12,7 +12,10 @@ class CommentModel {
     // Add a new comment
     public function addComment($post_id, $user_id, $text, $parent_id = null) {
         $stmt = $this->conn->prepare("INSERT INTO `comment` (post_id, user_id, text, parent_id, created_at) VALUES (?, ?, ?, ?, NOW())");
-        return $stmt->execute([$post_id, $user_id, htmlspecialchars(trim($text)), $parent_id]);
+        if ($stmt->execute([$post_id, $user_id, htmlspecialchars(trim($text)), $parent_id])) {
+            return $this->conn->lastInsertId(); // Return the new comment_id for immediate use
+        }
+        return false;
     }
 
     // Get all comments for a specific post, including ownership information
