@@ -127,25 +127,23 @@
   </div>
 
 <!-- Modal for delete confirmation -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-  <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-    <h3 class="text-lg font-semibold mb-4" id="deleteModalTitle">Delete Comment</h3>
-    <p class="mb-6" id="deleteModalText">Are you sure you want to delete this comment? This action cannot be undone.</p>
-    <div class="flex justify-end gap-4">
-      <button id="cancelDeleteBtn" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition">Cancel</button>
-      <button id="confirmDeleteBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition">Delete</button>
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full">
+    <p class="text-gray-700 mb-5 text-base font-medium">🗑️ Are you sure you want to delete this comment?</p>
+    <div class="flex justify-center gap-4">
+      <button id="cancelDeleteBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">Delete</button>
     </div>
   </div>
 </div>
 
 <!-- Modal for post deletion -->
-<div id="deletePostModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-  <div class="bg-white rounded-lg shadow-lg max-w-sm w-full p-6">
-    <h3 class="text-lg font-semibold mb-4">Delete Post</h3>
-    <p class="mb-6">Are you sure you want to delete this post? This action cannot be undone.</p>
-    <div class="flex justify-end gap-4">
-      <button id="cancelDeletePostBtn" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition">Cancel</button>
-      <button id="confirmDeletePostBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition">Delete</button>
+<div id="deletePostModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full">
+    <p class="text-gray-700 mb-5 text-base font-medium">🗑️ Are you sure you want to delete this post?</p>
+    <div class="flex justify-center gap-4">
+      <button id="cancelDeletePostBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Cancel</button>
+      <button id="confirmDeletePostBtn" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">Delete</button>
     </div>
   </div>
 </div>
@@ -429,13 +427,13 @@ document.addEventListener('click', async (e) => {
   const commentId = delBtn.dataset.commentId;
   const postId = delBtn.dataset.postId;
   const overlay = document.createElement('div');
-  overlay.className = "fixed inset-0 bg-black/40 flex items-center justify-center z-[1100]";
+  overlay.className = "fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50";
   overlay.innerHTML = `
-    <div class="bg-white p-6 rounded-lg shadow-lg text-center">
-      <p class="mb-4 text-gray-700 text-sm">Are you sure you want to delete this comment?</p>
-      <div class="flex justify-center gap-3">
-        <button class="confirm-delete bg-red-500 text-white px-4 py-2 rounded-md" data-comment-id="${commentId}" data-post-id="${postId}">Delete</button>
-        <button class="cancel-delete bg-gray-200 text-xs px-4 py-2 rounded-md">Cancel</button>
+    <div class="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full">
+      <p class="text-gray-700 mb-5 text-base font-medium">🗑️ Are you sure you want to delete this comment?</p>
+      <div class="flex justify-center gap-4">
+        <button class="cancel-delete bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Cancel</button>
+        <button class="confirm-delete bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition" data-comment-id="${commentId}" data-post-id="${postId}">Delete</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -445,7 +443,7 @@ document.addEventListener('click', async (e) => {
   const confirmBtn = e.target.closest('.confirm-delete');
   const cancelBtn = e.target.closest('.cancel-delete');
   if (!confirmBtn && !cancelBtn) return;
-  const overlay = document.querySelector('.fixed.inset-0.bg-black\\/40');
+  const overlay = e.target.closest('.fixed.inset-0.bg-black.bg-opacity-40');
   if (cancelBtn && overlay) overlay.remove();
   if (confirmBtn) {
     const commentId = confirmBtn.dataset.commentId;

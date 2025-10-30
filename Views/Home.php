@@ -344,15 +344,15 @@ document.addEventListener('click', async (e) => {
   const commentId = delBtn.dataset.commentId;
   const postId = delBtn.dataset.postId;
 
-  // create overlay confirmation
+  // create overlay confirmation (unified design)
   const overlay = document.createElement('div');
-  overlay.className = "fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50";
+  overlay.className = "fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50";
   overlay.innerHTML = `
-    <div class="bg-white rounded-lg p-4 text-center shadow-lg max-w-xs w-full">
-      <p class="text-gray-700 mb-4 text-sm">Are you sure you want to delete this comment?</p>
-      <div class="flex justify-center gap-3">
-        <button class="cancel-del bg-gray-300 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-400 transition">Cancel</button>
-        <button class="confirm-del-comment bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition" data-comment-id="${commentId}" data-post-id="${postId}">Delete</button>
+    <div class="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full">
+      <p class="text-gray-700 mb-5 text-base font-medium">🗑️ Are you sure you want to delete this comment?</p>
+      <div class="flex justify-center gap-4">
+        <button class="cancel-del bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Cancel</button>
+        <button class="confirm-del-comment bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition" data-comment-id="${commentId}" data-post-id="${postId}">Delete</button>
       </div>
     </div>
   `;
@@ -629,11 +629,11 @@ document.addEventListener('click', async (e) => {
   const overlay = document.createElement('div');
   overlay.className = "fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50";
   overlay.innerHTML = `
-    <div class="bg-white rounded-lg p-5 text-center shadow-lg max-w-xs w-full">
-      <p class="text-gray-700 mb-4 text-sm">Are you sure you want to delete this post?</p>
-      <div class="flex justify-center gap-3">
-        <button class="cancel-del bg-gray-300 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-400 transition">Cancel</button>
-        <button class="confirm-del-post bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition" data-post-id="${postId}">Delete</button>
+    <div class="bg-white rounded-xl p-6 text-center shadow-xl max-w-sm w-full">
+      <p class="text-gray-700 mb-5 text-base font-medium">🗑️ Are you sure you want to delete this post?</p>
+      <div class="flex justify-center gap-4">
+        <button class="cancel-del bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition">Cancel</button>
+        <button class="confirm-del-post bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition" data-post-id="${postId}">Delete</button>
       </div>
     </div>
   `;
