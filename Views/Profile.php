@@ -84,7 +84,9 @@
               </form>
 
               <?php if (!empty($post['image_url'])): ?>
-                <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post Image" class="w-full rounded-lg mt-4 mb-3 object-cover shadow-sm">
+                <img src="<?= htmlspecialchars($post['image_url']) ?>"
+                     alt="Post Image"
+                     class="w-full max-h-[500px] object-cover object-center rounded-lg mt-4 mb-3 shadow-sm">
               <?php endif; ?>
 
               <?php if (!empty($post['tags'])): ?>

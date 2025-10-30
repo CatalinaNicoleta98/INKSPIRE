@@ -63,7 +63,9 @@
             </p>
 
             <?php if (!empty($post['image_url'])): ?>
-              <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post image" class="w-full rounded-lg mt-4 shadow-sm">
+              <img src="<?= htmlspecialchars($post['image_url']) ?>"
+                   alt="Post image"
+                   class="w-full max-h-[500px] object-cover object-center rounded-lg mt-4 shadow-sm">
             <?php endif; ?>
 
             <?php if (!empty($post['tags'])): ?>

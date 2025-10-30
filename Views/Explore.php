@@ -17,7 +17,9 @@
           <?php foreach ($posts as $post): ?>
             <div class="post inline-block w-full mb-6 bg-white rounded-xl shadow-md overflow-hidden break-inside-avoid relative transition transform hover:-translate-y-1 hover:shadow-lg">
               <?php if (!empty($post['image_url'])): ?>
-                <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Post image" class="w-full object-cover cursor-pointer transition-transform duration-300 hover:scale-[1.03]">
+                <img src="<?= htmlspecialchars($post['image_url']) ?>"
+                     alt="Post image"
+                     class="w-full max-h-[400px] object-cover object-center cursor-pointer transition-transform duration-300 hover:scale-[1.03] rounded-t-xl">
               <?php endif; ?>
               <div class="p-4">
                 <div class="flex items-center justify-between mb-3 relative">
