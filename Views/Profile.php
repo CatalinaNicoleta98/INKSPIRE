@@ -27,6 +27,17 @@
           <div><strong class="text-indigo-600"><?= htmlspecialchars($profile['following'] ?? 0) ?></strong><br><span class="text-sm">Following</span></div>
           <div><strong class="text-indigo-600"><?= count($posts ?? []) ?></strong><br><span class="text-sm">Posts</span></div>
         </div>
+
+        <?php if ($profile['user_id'] !== $currentUser['user_id']): ?>
+          <div class="flex justify-center gap-4 mt-6">
+            <button class="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition">Follow</button>
+            <button class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">Block</button>
+          </div>
+        <?php endif; ?>
+
+        <?php if (!$canViewPosts): ?>
+          <p class="text-gray-500 italic mt-6">This profile is private. Follow to see their posts.</p>
+        <?php endif; ?>
       </div>
 
       <!-- Posts Feed -->
