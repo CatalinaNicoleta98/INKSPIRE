@@ -1,10 +1,10 @@
 <?php
 
 require_once __DIR__ . '/helpers/Session.php';
-require_once __DIR__ . '/controllers/UserController.php';
-require_once __DIR__ . '/controllers/PostController.php';
-require_once __DIR__ . '/controllers/LikeController.php';
-require_once __DIR__ . '/controllers/CommentController.php';
+require_once __DIR__ . '/Controllers/UserController.php';
+require_once __DIR__ . '/Controllers/PostController.php';
+require_once __DIR__ . '/Controllers/LikeController.php';
+require_once __DIR__ . '/Controllers/CommentController.php';
 
 // Create controllers
 $userController = new UserController();
@@ -29,7 +29,7 @@ $action = $_GET['action'];
 
 switch ($action) {
     case 'home':
-        require_once __DIR__ . '/controllers/HomeController.php';
+        require_once __DIR__ . '/Controllers/HomeController.php';
         $controller = new HomeController();
         $controller->index();
         break;
@@ -41,18 +41,18 @@ switch ($action) {
         break;
 
     case 'profile':
-        require_once __DIR__ . '/controllers/ProfileController.php';
+        require_once __DIR__ . '/Controllers/ProfileController.php';
         $controller = new ProfileController();
         $controller->view();
         break;
 
     case 'settings':
-        require_once __DIR__ . '/controllers/SettingsController.php';
+        require_once __DIR__ . '/Controllers/SettingsController.php';
         $controller = new SettingsController();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();
         } else {
-            include __DIR__ . '/views/Settings.php';
+            include __DIR__ . '/Views/Settings.php';
         }
         break;
 
@@ -76,7 +76,7 @@ switch ($action) {
 
     case 'admin':
         if (isset($user) && !empty($user['is_admin'])) {
-            include __DIR__ . '/views/User.php';
+            include __DIR__ . '/Views/User.php';
         } else {
             header("Location: index.php?action=login");
         }
