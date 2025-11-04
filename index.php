@@ -56,6 +56,12 @@ switch ($action) {
         }
         break;
 
+    case 'updateSettings':
+        require_once __DIR__ . '/Controllers/SettingsController.php';
+        $controller = new SettingsController();
+        $controller->update();
+        break;
+
     case 'register':
         $userController->register();
         break;

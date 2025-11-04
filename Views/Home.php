@@ -21,8 +21,10 @@
             <!-- Author info and privacy icon (privacy icon beside date) -->
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-3">
-                <img src="<?= htmlspecialchars($post['profile_picture'] ?? 'assets/default-avatar.png') ?>"
-                     alt="profile" class="w-9 h-9 rounded-full object-cover border border-indigo-200">
+                <a href="index.php?action=profile&user_id=<?= htmlspecialchars($post['user_id']) ?>">
+                  <img src="<?= htmlspecialchars($post['profile_picture'] ?? 'assets/default-avatar.png') ?>"
+                       alt="profile" class="w-9 h-9 rounded-full object-cover border border-indigo-200 hover:ring-2 hover:ring-indigo-300 transition">
+                </a>
                 <div>
                   <p class="text-sm font-semibold text-gray-800">
                     <?= htmlspecialchars($post['username']) ?>

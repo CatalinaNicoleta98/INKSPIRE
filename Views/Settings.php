@@ -22,12 +22,24 @@ $user = Session::get('user');
     <form method="POST" action="index.php?action=updateSettings" enctype="multipart/form-data" class="space-y-5">
       <div class="text-center">
         <label class="block text-gray-700 font-medium mb-2">Profile Picture</label>
-        <img src="<?= htmlspecialchars($user['profile_picture'] ?? 'uploads/default.png') ?>" 
+        <img id="profilePreview" 
+             src="<?= htmlspecialchars($user['profile_picture'] ?? 'uploads/default.png') ?>" 
              alt="Profile" 
              class="w-28 h-28 mx-auto rounded-full object-cover border-4 border-indigo-200 shadow-sm mb-3">
         <input type="file" name="profile_picture" accept="image/*" 
-               class="block mx-auto text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer">
+               class="block mx-auto text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer"
+               onchange="previewProfilePicture(event)">
       </div>
+      <script>
+        function previewProfilePicture(event) {
+          const reader = new FileReader();
+          reader.onload = function() {
+            const output = document.getElementById('profilePreview');
+            output.src = reader.result;
+          };
+          reader.readAsDataURL(event.target.files[0]);
+        }
+      </script>
 
       <div>
         <label class="block text-gray-700 font-medium mb-1">Username</label>
@@ -45,6 +57,13 @@ $user = Session::get('user');
         <label class="block text-gray-700 font-medium mb-1">Bio</label>
         <textarea name="bio" rows="4" placeholder="Write something about yourself..." 
                   class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"><?= htmlspecialchars($user['bio'] ?? '') ?></textarea>
+      </div>
+
+      <div class="flex items-center justify-between border border-indigo-100 rounded-md p-3 bg-indigo-50">
+        <label for="is_private" class="text-gray-700 font-medium">Make Profile Private</label>
+        <input type="checkbox" name="is_private" id="is_private"
+               class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+               <?= isset($user['is_private']) && $user['is_private'] == 1 ? 'checked' : '' ?>>
       </div>
 
       <div class="text-center">

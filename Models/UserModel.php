@@ -78,6 +78,14 @@ class UserModel {
             return "db_error: " . $error[2];
         }
 
+        // Automatically create a Profile entry for the new user
+        $userId = $this->conn->lastInsertId();
+        $profileQuery = "INSERT INTO Profile (user_id, display_name, profile_picture, bio, followers, posts, is_private)
+                         VALUES (:user_id, '', 'uploads/default.png', '', 0, 0, 0)";
+        $profileStmt = $this->conn->prepare($profileQuery);
+        $profileStmt->bindParam(':user_id', $userId);
+        $profileStmt->execute();
+
         return true;
     }
 
@@ -111,6 +119,15 @@ class UserModel {
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':user_id', $userId);
         return $stmt->execute();
+    }
+
+    // Get user by ID
+    public function getUserById($userId) {
+        $query = "SELECT * FROM User WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
 }

@@ -9,16 +9,24 @@ class ProfileModel {
         $this->conn = $database->connect();
     }
 
-    // Update profile bio and picture
-    public function updateProfileInfo($userId, $bio, $profilePicture) {
+    // Update profile bio, picture, and privacy setting
+    public function updateProfileInfo($userId, $bio, $profilePicture, $isPrivate) {
         $query = "UPDATE Profile 
-                  SET bio = :bio, profile_picture = :profile_picture 
+                  SET bio = :bio, 
+                      profile_picture = :profile_picture,
+                      is_private = :is_private
                   WHERE user_id = :user_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':bio', $bio);
         $stmt->bindParam(':profile_picture', $profilePicture);
+        $stmt->bindParam(':is_private', $isPrivate, PDO::PARAM_INT);
         $stmt->bindParam(':user_id', $userId);
-        return $stmt->execute();
+        $success = $stmt->execute();
+        if (!$success) {
+            $error = $stmt->errorInfo();
+            error_log("Profile update failed for user ID {$userId}: " . print_r($error, true));
+        }
+        return $success;
     }
 
     // Get list of following profile IDs for a given user
@@ -44,6 +52,23 @@ class ProfileModel {
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    // Check if a profile exists by user ID
+    public function getProfileByUserId($userId) {
+        $query = "SELECT * FROM Profile WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Create a default profile for a user
+    public function createProfile($userId) {
+        $query = "INSERT INTO Profile (user_id, display_name, profile_picture, bio, followers, posts, is_private)
+                  VALUES (:user_id, '', 'uploads/default.png', '', 0, 0, 0)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':user_id', $userId);
+        return $stmt->execute();
     }
 }
 ?>
