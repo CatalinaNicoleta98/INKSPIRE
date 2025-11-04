@@ -47,6 +47,38 @@ switch ($action) {
         $controller->view($userId);
         break;
 
+    case 'follow':
+        require_once __DIR__ . '/Controllers/ProfileController.php';
+        $controller = new ProfileController();
+        if (isset($_GET['user_id'])) {
+            $controller->follow(intval($_GET['user_id']));
+        }
+        break;
+
+    case 'unfollow':
+        require_once __DIR__ . '/Controllers/ProfileController.php';
+        $controller = new ProfileController();
+        if (isset($_GET['user_id'])) {
+            $controller->unfollow(intval($_GET['user_id']));
+        }
+        break;
+
+    case 'block':
+        require_once __DIR__ . '/Controllers/ProfileController.php';
+        $controller = new ProfileController();
+        if (isset($_GET['user_id'])) {
+            $controller->block(intval($_GET['user_id']));
+        }
+        break;
+
+    case 'unblock':
+        require_once __DIR__ . '/Controllers/ProfileController.php';
+        $controller = new ProfileController();
+        if (isset($_GET['user_id'])) {
+            $controller->unblock(intval($_GET['user_id']));
+        }
+        break;
+
     case 'settings':
         require_once __DIR__ . '/Controllers/SettingsController.php';
         $controller = new SettingsController();

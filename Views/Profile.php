@@ -30,8 +30,31 @@
 
         <?php if ($profile['user_id'] !== $currentUser['user_id']): ?>
           <div class="flex justify-center gap-4 mt-6">
-            <button class="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition">Follow</button>
-            <button class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">Block</button>
+            <!-- Follow / Unfollow Button -->
+            <?php if ($isFollowing): ?>
+              <a href="index.php?action=unfollow&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                 class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition">
+                 Unfollow
+              </a>
+            <?php else: ?>
+              <a href="index.php?action=follow&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                 class="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition">
+                 Follow
+              </a>
+            <?php endif; ?>
+
+            <!-- Block / Unblock Button -->
+            <?php if ($isBlocked): ?>
+              <a href="index.php?action=unblock&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                 class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition">
+                 Unblock
+              </a>
+            <?php else: ?>
+              <a href="index.php?action=block&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                 class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">
+                 Block
+              </a>
+            <?php endif; ?>
           </div>
         <?php endif; ?>
 
