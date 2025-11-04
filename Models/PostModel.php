@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . "/../config.php";
+require_once __DIR__ . '/../config.php';
 
 class PostModel {
     private $conn;
@@ -32,11 +32,11 @@ class PostModel {
     // Get all posts (used for Explore)
     public function getAllPosts() {
         $query = "SELECT p.*, u.username, pr.profile_picture,
-                         (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM comment WHERE post_id = p.post_id)) AS comments
-                  FROM post p
-                  JOIN user u ON p.user_id = u.user_id
-                  LEFT JOIN profile pr ON u.user_id = pr.user_id
+                         (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
+                         (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                  FROM Post p
+                  JOIN User u ON p.user_id = u.user_id
+                  LEFT JOIN Profile pr ON u.user_id = pr.user_id
                   ORDER BY p.created_at DESC";
         $stmt = $this->conn->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -59,11 +59,11 @@ class PostModel {
 
         $placeholders = implode(',', array_fill(0, count($userIds), '?'));
         $sql = "SELECT p.*, u.username, pr.profile_picture,
-                       (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
-                       (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM comment WHERE post_id = p.post_id)) AS comments
-                FROM post p
-                JOIN user u ON p.user_id = u.user_id
-                LEFT JOIN profile pr ON u.user_id = pr.user_id
+                       (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
+                       (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                FROM Post p
+                JOIN User u ON p.user_id = u.user_id
+                LEFT JOIN Profile pr ON u.user_id = pr.user_id
                 WHERE p.user_id IN ($placeholders)
                 ORDER BY p.created_at DESC";
         $stmt = $this->conn->prepare($sql);
@@ -74,11 +74,11 @@ class PostModel {
     // Get posts by a specific user (Profile)
     public function getPostsByUser($userId) {
         $query = "SELECT p.*, u.username, pr.profile_picture,
-                         (SELECT COUNT(*) FROM `like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM `comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM comment WHERE post_id = p.post_id)) AS comments
-                  FROM post p
-                  JOIN user u ON p.user_id = u.user_id
-                  LEFT JOIN profile pr ON u.user_id = pr.user_id
+                         (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
+                         (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                  FROM Post p
+                  JOIN User u ON p.user_id = u.user_id
+                  LEFT JOIN Profile pr ON u.user_id = pr.user_id
                   WHERE p.user_id = :user_id
                   ORDER BY p.created_at DESC";
         $stmt = $this->conn->prepare($query);
@@ -86,10 +86,12 @@ class PostModel {
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    // user edits their post title/description
+
+    // User edits their post title/description
     public function updatePost($postId, $userId, $title, $description) {
         try {
-            $query = "UPDATE post SET title = :title, description = :description, updated_at = NOW()
+            $query = "UPDATE Post 
+                      SET title = :title, description = :description, updated_at = NOW()
                       WHERE post_id = :post_id AND user_id = :user_id";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([
@@ -105,10 +107,10 @@ class PostModel {
         }
     }
 
-    // user deletes their post
+    // User deletes their post
     public function deletePost($postId, $userId) {
         try {
-            $query = "DELETE FROM post WHERE post_id = :post_id AND user_id = :user_id";
+            $query = "DELETE FROM Post WHERE post_id = :post_id AND user_id = :user_id";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([':post_id' => $postId, ':user_id' => $userId]);
             return $stmt->rowCount() > 0;
@@ -118,10 +120,10 @@ class PostModel {
         }
     }
 
-    // user toggles their post's privacy (public/private)
+    // User toggles their post's privacy (public/private)
     public function togglePrivacy($postId, $userId, $isPublic) {
         try {
-            $query = "UPDATE post SET is_public = :is_public WHERE post_id = :post_id AND user_id = :user_id";
+            $query = "UPDATE Post SET is_public = :is_public WHERE post_id = :post_id AND user_id = :user_id";
             $stmt = $this->conn->prepare($query);
             $stmt->execute([
                 ':is_public' => $isPublic,

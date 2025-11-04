@@ -1,5 +1,3 @@
-
-
 <?php
 require_once __DIR__ . '/../config.php';
 
@@ -13,7 +11,9 @@ class ProfileModel {
 
     // Update profile bio and picture
     public function updateProfileInfo($userId, $bio, $profilePicture) {
-        $query = "UPDATE Profile SET bio = :bio, profile_picture = :profile_picture WHERE user_id = :user_id";
+        $query = "UPDATE Profile 
+                  SET bio = :bio, profile_picture = :profile_picture 
+                  WHERE user_id = :user_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':bio', $bio);
         $stmt->bindParam(':profile_picture', $profilePicture);
@@ -23,7 +23,8 @@ class ProfileModel {
 
     // Get list of following profile IDs for a given user
     public function getFollowingIds($userId) {
-        $query = "SELECT following_id FROM Follow 
+        $query = "SELECT following_id 
+                  FROM Follow 
                   JOIN Profile ON Follow.follower_id = Profile.profile_id 
                   WHERE Profile.user_id = :user_id";
         $stmt = $this->conn->prepare($query);

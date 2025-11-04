@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . "/../config.php";
+require_once __DIR__ . '/../config.php';
 
 if (!class_exists('UserModel')) {
 class UserModel {
@@ -36,32 +36,30 @@ class UserModel {
     }
 
     public function register($firstName, $lastName, $email, $username, $password, $dob) {
-        // basic validation before checking anything else
-
-        // check email format
+        // Validate email format
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return "invalid_email"; // email not valid
+            return "invalid_email";
         }
 
-        // check password length
+        // Validate password length
         if (strlen($password) < 6) {
-            return "weak_password"; // password too short
+            return "weak_password";
         }
 
-        // make sure user is at least 14 years old
+        // Validate age
         $age = $this->calculateAge($dob);
         if ($age < 14) {
             return "too_young";
         }
 
-        // check if username or email already exists
+        // Check for existing username or email
         $check = $this->conn->prepare("SELECT user_id FROM User WHERE username = :username OR email = :email");
         $check->execute([':username' => $username, ':email' => $email]);
         if ($check->rowCount() > 0) {
             return "exists";
         }
 
-        // if everything looks good, insert the new user
+        // Insert new user
         $query = "INSERT INTO User (first_name, last_name, email, username, password, DOB) 
                   VALUES (:first_name, :last_name, :email, :username, :password, :dob)";
         $stmt = $this->conn->prepare($query);
@@ -77,10 +75,10 @@ class UserModel {
             ':dob'        => $dob
         ])) {
             $error = $stmt->errorInfo();
-            return "db_error: " . $error[2]; // for debugging or future logs
+            return "db_error: " . $error[2];
         }
 
-        return true; // everything went fine
+        return true;
     }
 
     public function login($username, $password) {
@@ -101,12 +99,13 @@ class UserModel {
     private function calculateAge($dob) {
         $dobDate = new DateTime($dob);
         $today = new DateTime();
-        $age = $today->diff($dobDate)->y;
-        return $age;
+        return $today->diff($dobDate)->y;
     }
 
     public function updateUserInfo($userId, $username, $email) {
-        $query = "UPDATE User SET username = :username, email = :email WHERE user_id = :user_id";
+        $query = "UPDATE User 
+                  SET username = :username, email = :email 
+                  WHERE user_id = :user_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':username', $username);
         $stmt->bindParam(':email', $email);
@@ -115,3 +114,4 @@ class UserModel {
     }
 }
 }
+?>
