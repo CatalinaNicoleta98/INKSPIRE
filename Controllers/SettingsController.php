@@ -26,44 +26,42 @@ class SettingsController {
         $existingProfile = $this->profileModel->getProfileByUserId($userId);
         if (!$existingProfile) {
             // Create a new profile if missing
-            if ($this->profileModel->createProfile($userId)) {
-                error_log("Created missing profile for user ID: " . $userId);
-            } else {
-                error_log("Failed to create missing profile for user ID: " . $userId);
-            }
+            $this->profileModel->createProfile($userId);
+            $existingProfile = $this->profileModel->getProfileByUserId($userId);
         }
 
-        $username = trim($_POST['username']);
-        $email = trim($_POST['email']);
-        $bio = trim($_POST['bio']);
-        // Retrieve privacy setting (0 = public, 1 = private)
-        $isPrivate = isset($_POST['is_private']) ? 1 : 0;
+        // Preserve old values unless changed
+        $username = !empty($_POST['username']) ? trim($_POST['username']) : ($user['username'] ?? '');
+        $email = !empty($_POST['email']) ? trim($_POST['email']) : ($user['email'] ?? '');
+        $bio = isset($_POST['bio']) ? trim($_POST['bio']) : ($existingProfile['bio'] ?? '');
+        $isPrivate = isset($_POST['is_private']) ? 1 : ($existingProfile['is_private'] ?? 0);
+        $profilePicture = $existingProfile['profile_picture'] ?? '';
 
-        // Handle profile picture upload
-        $profilePicture = $user['profile_picture'] ?? null;
+        // Handle new profile picture upload if one is provided
         if (!empty($_FILES['profile_picture']['name'])) {
             $targetDir = __DIR__ . '/../uploads/';
             if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
             $fileName = time() . '_' . basename($_FILES['profile_picture']['name']);
             $targetFile = $targetDir . $fileName;
+            $fileTmp = $_FILES['profile_picture']['tmp_name'];
+            $fileMime = mime_content_type($fileTmp);
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-            if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $targetFile)) {
+            if (in_array($fileMime, $allowedTypes) && move_uploaded_file($fileTmp, $targetFile)) {
                 $profilePicture = 'uploads/' . $fileName;
             } else {
-                error_log("Failed to move uploaded file for user ID: " . $userId);
+                error_log("Invalid or failed image upload for user ID: " . $userId);
             }
         }
 
-        // Update user data (username and email)
+        // Update user info (username, email)
         $this->userModel->updateUserInfo($userId, $username, $email);
 
-        // Update profile data (bio, profile picture, and privacy)
-        if (!$this->profileModel->updateProfileInfo($userId, $bio, $profilePicture, $isPrivate)) {
-            error_log("Failed to update profile info for user ID: " . $userId);
-        }
+        // Update profile info (bio, image, privacy)
+        $this->profileModel->updateProfileInfo($userId, $bio, $profilePicture, $isPrivate);
 
-        // Refresh session with updated user data
+        // Refresh session with updated info
         $updatedUser = $this->userModel->getUserById($userId);
         $updatedUser['bio'] = $bio;
         $updatedUser['profile_picture'] = $profilePicture;
