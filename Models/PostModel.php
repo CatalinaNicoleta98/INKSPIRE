@@ -136,5 +136,44 @@ class PostModel {
             return false;
         }
     }
+
+    // Get posts from followed users (for Home feed)
+    public function getPostsFromFollowedUsers($userId) {
+        $query = "SELECT p.*, u.username, pr.profile_picture,
+                         (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
+                         (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                  FROM Post p
+                  JOIN User u ON p.user_id = u.user_id
+                  LEFT JOIN Profile pr ON u.user_id = pr.user_id
+                  WHERE p.user_id IN (SELECT following_id FROM Follow WHERE follower_id = :user_id)
+                  ORDER BY p.created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Get all public posts (for Explore feed), excluding logged-in user and blocked users
+    public function getAllPublicPosts($excludeUserId, $blockedIds = []) {
+        $blockedCondition = '';
+        if (!empty($blockedIds)) {
+            $placeholders = implode(',', array_fill(0, count($blockedIds), '?'));
+            $blockedCondition = "AND p.user_id NOT IN ($placeholders)";
+        }
+
+        $sql = "SELECT p.*, u.username, pr.profile_picture,
+                       (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
+                       (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                FROM Post p
+                JOIN User u ON p.user_id = u.user_id
+                LEFT JOIN Profile pr ON u.user_id = pr.user_id
+                WHERE p.is_public = 1 AND p.user_id != ? $blockedCondition
+                ORDER BY p.created_at DESC";
+
+        $params = array_merge([$excludeUserId], $blockedIds);
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

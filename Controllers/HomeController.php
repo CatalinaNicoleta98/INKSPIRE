@@ -12,8 +12,6 @@ class HomeController {
         $this->profileModel = new ProfileModel();
     }
 
-    // The Home page now only displays posts from followed users and the current user.
-    // Post creation functionality is handled separately by PostController.
     public function index() {
         Session::start();
         if (!Session::isLoggedIn()) {
@@ -24,15 +22,10 @@ class HomeController {
         $user = Session::get('user');
         $userId = $user['user_id'];
 
-        // Get the IDs of profiles the user follows
-        $following = $this->profileModel->getFollowingIds($userId);
+        // Fetch posts only from followed users (not including self)
+        $posts = $this->postModel->getPostsFromFollowedUsers($userId);
 
-        // Include the user's own posts
-        $ids = array_merge([$userId], $following);
-
-        // Fetch posts for home feed
-        $posts = $this->postModel->getPostsForUsers($ids);
-
+        // Load comments for each post
         require_once __DIR__ . '/../Models/CommentModel.php';
         $commentModel = new CommentModel();
 
