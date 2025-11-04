@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . "/../models/UserModel.php";
+require_once __DIR__ . "/../Models/UserModel.php";
 require_once __DIR__ . "/../helpers/Session.php";
 
 class UserController {
@@ -42,10 +42,10 @@ class UserController {
             }
 
             // if we reach here, registration failed — show the user page with error message
-            include __DIR__ . '/../views/User.php';
+            include __DIR__ . '/../Views/User.php';
             return;
         }
-        include __DIR__ . '/../views/User.php';
+        include __DIR__ . '/../Views/User.php';
     }
 
     public function login() {
@@ -68,7 +68,7 @@ class UserController {
                 echo "<p>Invalid username or password.</p>";
             }
         }
-        include __DIR__ . '/../views/User.php';
+        include __DIR__ . '/../Views/User.php';
     }
 
     public function logout() {
