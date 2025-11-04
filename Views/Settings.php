@@ -1,4 +1,15 @@
-<?php require_once __DIR__ . '/../helpers/Session.php'; ?>
+<?php 
+require_once __DIR__ . '/../Models/ProfileModel.php';
+Session::start();
+$user = Session::get('user');
+
+$profileModel = new ProfileModel();
+$profile = $profileModel->getProfileByUserId($user['user_id']);
+
+$currentPic = !empty($profile['profile_picture']) ? htmlspecialchars($profile['profile_picture']) : 'uploads/default.png';
+$currentBio = htmlspecialchars($profile['bio'] ?? '');
+$isPrivate = isset($profile['is_private']) && $profile['is_private'] == 1 ? 'checked' : '';
+?>
 <?php include __DIR__ . '/layout/Header.php'; ?>
 <?php include __DIR__ . '/layout/Sidebar.php'; ?>
 
@@ -23,7 +34,7 @@ $user = Session::get('user');
       <div class="text-center">
         <label class="block text-gray-700 font-medium mb-2">Profile Picture</label>
         <img id="profilePreview" 
-             src="<?= htmlspecialchars($user['profile_picture'] ?? 'uploads/default.png') ?>" 
+             src="<?= $currentPic ?>" 
              alt="Profile" 
              class="w-28 h-28 mx-auto rounded-full object-cover border-4 border-indigo-200 shadow-sm mb-3">
         <input type="file" name="profile_picture" accept="image/*" 
@@ -56,14 +67,14 @@ $user = Session::get('user');
       <div>
         <label class="block text-gray-700 font-medium mb-1">Bio</label>
         <textarea name="bio" rows="4" placeholder="Write something about yourself..." 
-                  class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"><?= htmlspecialchars($user['bio'] ?? '') ?></textarea>
+                  class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"><?= $currentBio ?></textarea>
       </div>
 
       <div class="flex items-center justify-between border border-indigo-100 rounded-md p-3 bg-indigo-50">
         <label for="is_private" class="text-gray-700 font-medium">Make Profile Private</label>
         <input type="checkbox" name="is_private" id="is_private"
                class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-               <?= isset($user['is_private']) && $user['is_private'] == 1 ? 'checked' : '' ?>>
+               <?= $isPrivate ?>>
       </div>
 
       <div class="text-center">

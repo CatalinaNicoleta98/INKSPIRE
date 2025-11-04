@@ -1,9 +1,22 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <?php
 require_once __DIR__ . '/../../helpers/Session.php';
-if (!isset($user)) {
-    global $user;
+require_once __DIR__ . '/../../Models/ProfileModel.php';
+
+Session::start();
+$loggedInUser = Session::get('user'); // use a distinct variable to avoid overwriting $user used by ProfileController
+
+if ($loggedInUser) {
+    $profileModel = new ProfileModel();
+    $loggedProfile = $profileModel->getProfileByUserId($loggedInUser['user_id']);
+    if ($loggedProfile) {
+        $loggedInUser['profile_picture'] = $loggedProfile['profile_picture'];
+    }
 }
+
+$profilePic = !empty($loggedInUser['profile_picture'])
+    ? htmlspecialchars($loggedInUser['profile_picture'])
+    : 'https://via.placeholder.com/40';
 ?>
 
 <header class="fixed top-0 left-0 w-full bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 shadow-sm z-50">
@@ -15,9 +28,6 @@ if (!isset($user)) {
     </div>
 
     <div class="relative">
-      <?php
-        $profilePic = !empty($user['profile_picture']) ? htmlspecialchars($user['profile_picture']) : 'https://via.placeholder.com/40';
-      ?>
       <img 
         src="<?= $profilePic ?>" 
         alt="Profile" 
