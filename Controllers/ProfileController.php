@@ -1,5 +1,3 @@
-
-
 <?php
 require_once __DIR__ . '/../helpers/Session.php';
 require_once __DIR__ . '/../Models/ProfileModel.php';
@@ -22,23 +20,39 @@ class ProfileController {
         }
 
         $currentUser = Session::get('user');
+        $viewerId = $currentUser['user_id'];
+
+        // Determine which profile to show
         if ($userId === null) {
-            $userId = $currentUser['user_id'];
+            $userId = $viewerId;
         }
 
+        // Get profile info
         $profile = $this->profileModel->getUserProfile($userId);
-
         if (!$profile) {
             $profile = [
-                'username' => $currentUser['username'] ?? 'Unknown User',
+                'username' => 'Unknown User',
                 'bio' => '',
                 'profile_picture' => 'uploads/default.png',
                 'followers' => 0,
-                'following' => 0
+                'following' => 0,
+                'is_private' => 0
             ];
         }
 
-        $posts = $this->postModel->getPostsByUser($userId);
+        // Check if user can view this profile's posts
+        $canViewPosts = false;
+        if ($userId == $viewerId) {
+            $canViewPosts = true;
+        } elseif ($profile['is_private'] == 0) {
+            $canViewPosts = true;
+        } else {
+            // TODO: integrate follow check later
+            $canViewPosts = false;
+        }
+
+        // Load posts conditionally
+        $posts = $canViewPosts ? $this->postModel->getPostsByUser($userId) : [];
 
         include __DIR__ . '/../Views/Profile.php';
     }

@@ -26,8 +26,11 @@
                        alt="profile" class="w-9 h-9 rounded-full object-cover border border-indigo-200 hover:ring-2 hover:ring-indigo-300 transition">
                 </a>
                 <div>
-                  <p class="text-sm font-semibold text-gray-800">
-                    <?= htmlspecialchars($post['username']) ?>
+                  <p class="text-sm font-semibold">
+                    <a href="index.php?action=profile&user_id=<?= htmlspecialchars($post['user_id']) ?>" 
+                       class="text-gray-800 hover:text-indigo-600 hover:underline transition">
+                       <?= htmlspecialchars($post['username']) ?>
+                    </a>
                   </p>
                   <div class="flex items-center gap-1 text-xs text-gray-500">
                     <span><?= date('M j, Y', strtotime($post['created_at'])) ?></span>

@@ -1,5 +1,5 @@
 <?php
-
+header('Content-Type: text/html; charset=utf-8');
 require_once __DIR__ . '/helpers/Session.php';
 require_once __DIR__ . '/Controllers/UserController.php';
 require_once __DIR__ . '/Controllers/PostController.php';
@@ -43,7 +43,8 @@ switch ($action) {
     case 'profile':
         require_once __DIR__ . '/Controllers/ProfileController.php';
         $controller = new ProfileController();
-        $controller->view();
+        $userId = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
+        $controller->view($userId);
         break;
 
     case 'settings':
