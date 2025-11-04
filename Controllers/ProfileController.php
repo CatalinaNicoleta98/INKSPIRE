@@ -46,6 +46,14 @@ class ProfileController {
             ];
         }
 
+        // Add follower and following counts
+        $profile['followers_count'] = $this->followModel->countFollowers($userId);
+        $profile['following_count'] = $this->followModel->countFollowing($userId);
+
+        // Fetch detailed follower/following lists for hover dropdowns
+        $followersList = $this->followModel->getFollowersList($userId);
+        $followingList = $this->followModel->getFollowingList($userId);
+
         // Check follow and block status
         $isFollowing = $this->followModel->isFollowing($viewerId, $userId);
         $isBlocked = $this->blockModel->isBlocked($userId, $viewerId); // viewer blocked by profile owner

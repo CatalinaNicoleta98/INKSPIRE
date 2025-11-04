@@ -22,10 +22,48 @@
         <h2 class="text-2xl font-semibold text-gray-800 mt-3"><?= htmlspecialchars($profile['username']) ?></h2>
         <p class="text-gray-600 text-sm italic mt-1"><?= htmlspecialchars($profile['bio'] ?? 'No bio yet.') ?></p>
 
-        <div class="flex justify-center gap-10 mt-5 text-gray-700">
-          <div><strong class="text-indigo-600"><?= htmlspecialchars($profile['followers'] ?? 0) ?></strong><br><span class="text-sm">Followers</span></div>
-          <div><strong class="text-indigo-600"><?= htmlspecialchars($profile['following'] ?? 0) ?></strong><br><span class="text-sm">Following</span></div>
-          <div><strong class="text-indigo-600"><?= count($posts ?? []) ?></strong><br><span class="text-sm">Posts</span></div>
+        <div class="flex justify-center gap-10 mt-5 text-gray-700 relative">
+          <!-- Followers -->
+          <div class="group relative cursor-pointer">
+            <strong class="text-indigo-600"><?= htmlspecialchars($profile['followers_count'] ?? 0) ?></strong><br>
+            <span class="text-sm">Followers</span>
+
+            <?php if (!empty($followersList)): ?>
+              <div class="hidden group-hover:block absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-3 text-left">
+                <p class="text-xs text-gray-500 mb-2">Followers:</p>
+                <?php foreach ($followersList as $follower): ?>
+                  <a href="index.php?action=profile&user_id=<?= htmlspecialchars($follower['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
+                    <img src="<?= htmlspecialchars($follower['profile_picture'] ?? 'uploads/default.png') ?>" class="w-6 h-6 rounded-full object-cover">
+                    <span class="text-sm text-gray-700"><?= htmlspecialchars($follower['username']) ?></span>
+                  </a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+
+          <!-- Following -->
+          <div class="group relative cursor-pointer">
+            <strong class="text-indigo-600"><?= htmlspecialchars($profile['following_count'] ?? 0) ?></strong><br>
+            <span class="text-sm">Following</span>
+
+            <?php if (!empty($followingList)): ?>
+              <div class="hidden group-hover:block absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-3 text-left">
+                <p class="text-xs text-gray-500 mb-2">Following:</p>
+                <?php foreach ($followingList as $following): ?>
+                  <a href="index.php?action=profile&user_id=<?= htmlspecialchars($following['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
+                    <img src="<?= htmlspecialchars($following['profile_picture'] ?? 'uploads/default.png') ?>" class="w-6 h-6 rounded-full object-cover">
+                    <span class="text-sm text-gray-700"><?= htmlspecialchars($following['username']) ?></span>
+                  </a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+
+          <!-- Posts -->
+          <div>
+            <strong class="text-indigo-600"><?= count($posts ?? []) ?></strong><br>
+            <span class="text-sm">Posts</span>
+          </div>
         </div>
 
         <?php if ($profile['user_id'] !== $currentUser['user_id']): ?>
