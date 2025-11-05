@@ -4,6 +4,8 @@ require_once __DIR__ . '/../Models/ProfileModel.php';
 require_once __DIR__ . '/../Models/PostModel.php';
 require_once __DIR__ . '/../Models/FollowModel.php';
 require_once __DIR__ . '/../Models/BlockModel.php';
+require_once __DIR__ . '/../Models/LikeModel.php';
+require_once __DIR__ . '/../Models/CommentModel.php';
 
 
 class ProfileController {
@@ -11,12 +13,16 @@ class ProfileController {
     private $postModel;
     private $followModel;
     private $blockModel;
+    private $likeModel;
+    private $commentModel;
 
     public function __construct() {
         $this->profileModel = new ProfileModel();
         $this->postModel = new PostModel();
         $this->followModel = new FollowModel();
         $this->blockModel = new BlockModel();
+        $this->likeModel = new LikeModel();
+        $this->commentModel = new CommentModel();
     }
 
     public function view($userId = null) {
@@ -123,6 +129,9 @@ class ProfileController {
         // Auto-unfollow in both directions when blocking
         $this->followModel->unfollowUser($blockerId, $blockedId);
         $this->followModel->unfollowUser($blockedId, $blockerId);
+        // Delete all likes and comments between the two users
+        $this->likeModel->deleteInteractionsBetween($blockerId, $blockedId);
+        $this->commentModel->deleteInteractionsBetween($blockerId, $blockedId);
         header("Location: index.php?action=profile&user_id=" . $blockedId);
         exit();
     }

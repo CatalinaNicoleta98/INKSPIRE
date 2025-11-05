@@ -42,5 +42,17 @@ class LikeModel {
         $stmt->execute([':user_id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
+    // Delete all likes between two users (used for blocking)
+    public function deleteInteractionsBetween($userA, $userB) {
+        $query = "DELETE FROM `Like`
+                  WHERE post_id IN (
+                      SELECT p.post_id FROM Post p WHERE p.user_id IN (:userA, :userB)
+                  )
+                  AND user_id IN (:userA, :userB)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':userA', $userA);
+        $stmt->bindParam(':userB', $userB);
+        return $stmt->execute();
+    }
 }
 ?>

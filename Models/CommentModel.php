@@ -88,5 +88,18 @@ class CommentModel {
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? $row['post_id'] : null;
     }
+
+    // Delete all comments between two users (used for blocking)
+    public function deleteInteractionsBetween($userA, $userB) {
+        $query = "DELETE FROM `Comment`
+                  WHERE post_id IN (
+                      SELECT p.post_id FROM Post p WHERE p.user_id IN (:userA, :userB)
+                  )
+                  AND user_id IN (:userA, :userB)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':userA', $userA);
+        $stmt->bindParam(':userB', $userB);
+        return $stmt->execute();
+    }
 }
 ?>
