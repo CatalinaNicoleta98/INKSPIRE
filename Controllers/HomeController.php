@@ -2,14 +2,17 @@
 require_once __DIR__ . '/../helpers/Session.php';
 require_once __DIR__ . '/../Models/PostModel.php';
 require_once __DIR__ . '/../Models/ProfileModel.php';
+require_once __DIR__ . '/../Models/BlockModel.php';
 
 class HomeController {
     private $postModel;
     private $profileModel;
+    private $blockModel;
 
     public function __construct() {
         $this->postModel = new PostModel();
         $this->profileModel = new ProfileModel();
+        $this->blockModel = new BlockModel();
     }
 
     public function index() {
@@ -24,6 +27,12 @@ class HomeController {
 
         // Fetch posts only from followed users (not including self)
         $posts = $this->postModel->getPostsFromFollowedUsers($userId);
+
+        // Filter out posts from blocked or blocking users
+        $posts = array_filter($posts, function ($post) use ($userId) {
+            $blockModel = new BlockModel();
+            return !$blockModel->isEitherBlocked($userId, $post['user_id']);
+        });
 
         // Load comments for each post
         require_once __DIR__ . '/../Models/CommentModel.php';

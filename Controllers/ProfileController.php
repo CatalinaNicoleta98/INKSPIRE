@@ -5,6 +5,7 @@ require_once __DIR__ . '/../Models/PostModel.php';
 require_once __DIR__ . '/../Models/FollowModel.php';
 require_once __DIR__ . '/../Models/BlockModel.php';
 
+
 class ProfileController {
     private $profileModel;
     private $postModel;
@@ -31,6 +32,22 @@ class ProfileController {
         // Determine which profile to show
         if ($userId === null) {
             $userId = $viewerId;
+        }
+
+        // Check if either user has blocked the other
+        $isEitherBlocked = $this->blockModel->isEitherBlocked($viewerId, $userId);
+        if ($isEitherBlocked && $userId != $viewerId) {
+            // Render simple unavailable message
+            include __DIR__ . '/../Views/layout/Header.php';
+            echo '<div class="flex items-center justify-center min-h-screen bg-gray-100">
+                    <div class="text-center">
+                        <h2 class="text-2xl font-semibold text-gray-700 mb-4">This account is unavailable</h2>
+                        <p class="text-gray-500">You cannot view this profile.</p>
+                    </div>
+                  </div>';
+            include __DIR__ . '/../Views/layout/Sidebar.php';
+            include __DIR__ . '/../Views/layout/Rightbar.php';
+            exit();
         }
 
         // Get profile info
@@ -103,6 +120,9 @@ class ProfileController {
         if ($blockerId == $blockedId) return;
 
         $this->blockModel->blockUser($blockerId, $blockedId);
+        // Auto-unfollow in both directions when blocking
+        $this->followModel->unfollowUser($blockerId, $blockedId);
+        $this->followModel->unfollowUser($blockedId, $blockerId);
         header("Location: index.php?action=profile&user_id=" . $blockedId);
         exit();
     }
@@ -114,7 +134,7 @@ class ProfileController {
         if ($blockerId == $blockedId) return;
 
         $this->blockModel->unblockUser($blockerId, $blockedId);
-        header("Location: index.php?action=profile&user_id=" . $blockedId);
+        header("Location: index.php?action=settings&section=blocked");
         exit();
     }
 }

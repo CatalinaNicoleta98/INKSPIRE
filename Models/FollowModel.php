@@ -37,13 +37,18 @@ class FollowModel {
         return $stmt->fetch(PDO::FETCH_ASSOC) ? true : false;
     }
 
-    // Count followers for a user (exclude admin accounts)
+    // Count followers for a user (exclude admin and blocked users)
     public function countFollowers($userId) {
         $query = "SELECT COUNT(*) AS count
                   FROM Follow f
                   JOIN User u ON f.follower_id = u.user_id
                   WHERE f.following_id = :user_id
-                    AND (u.is_admin IS NULL OR u.is_admin = 0)";
+                    AND (u.is_admin IS NULL OR u.is_admin = 0)
+                    AND u.user_id NOT IN (
+                        SELECT blocked_id FROM Block WHERE blocker_id = :user_id
+                        UNION
+                        SELECT blocker_id FROM Block WHERE blocked_id = :user_id
+                    )";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
@@ -51,13 +56,18 @@ class FollowModel {
         return $result ? intval($result['count']) : 0;
     }
 
-    // Count following for a user (exclude admin accounts)
+    // Count following for a user (exclude admin and blocked users)
     public function countFollowing($userId) {
         $query = "SELECT COUNT(*) AS count
                   FROM Follow f
                   JOIN User u ON f.following_id = u.user_id
                   WHERE f.follower_id = :user_id
-                    AND (u.is_admin IS NULL OR u.is_admin = 0)";
+                    AND (u.is_admin IS NULL OR u.is_admin = 0)
+                    AND u.user_id NOT IN (
+                        SELECT blocked_id FROM Block WHERE blocker_id = :user_id
+                        UNION
+                        SELECT blocker_id FROM Block WHERE blocked_id = :user_id
+                    )";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
@@ -65,28 +75,38 @@ class FollowModel {
         return $result ? intval($result['count']) : 0;
     }
 
-    // Get detailed list of followers (for hover dropdown) — exclude admin accounts
+    // Get detailed list of followers (for hover dropdown) — exclude admin accounts and block relationships
     public function getFollowersList($userId) {
         $query = "SELECT u.user_id, u.username, p.profile_picture
                   FROM Follow f
                   JOIN User u ON f.follower_id = u.user_id
                   LEFT JOIN Profile p ON u.user_id = p.user_id
                   WHERE f.following_id = :user_id
-                    AND (u.is_admin IS NULL OR u.is_admin = 0)";
+                    AND (u.is_admin IS NULL OR u.is_admin = 0)
+                    AND u.user_id NOT IN (
+                        SELECT blocked_id FROM Block WHERE blocker_id = :user_id
+                        UNION
+                        SELECT blocker_id FROM Block WHERE blocked_id = :user_id
+                    )";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Get detailed list of following users (exclude admin accounts)
+    // Get detailed list of following users (exclude admin accounts and block relationships)
     public function getFollowingList($userId) {
         $query = "SELECT u.user_id, u.username, p.profile_picture
                   FROM Follow f
                   JOIN User u ON f.following_id = u.user_id
                   LEFT JOIN Profile p ON u.user_id = p.user_id
                   WHERE f.follower_id = :user_id
-                    AND (u.is_admin IS NULL OR u.is_admin = 0)";
+                    AND (u.is_admin IS NULL OR u.is_admin = 0)
+                    AND u.user_id NOT IN (
+                        SELECT blocked_id FROM Block WHERE blocker_id = :user_id
+                        UNION
+                        SELECT blocker_id FROM Block WHERE blocked_id = :user_id
+                    )";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();

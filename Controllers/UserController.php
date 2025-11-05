@@ -1,13 +1,15 @@
 <?php
 require_once __DIR__ . "/../Models/UserModel.php";
 require_once __DIR__ . "/../helpers/Session.php";
+require_once __DIR__ . "/../Models/BlockModel.php";
 
 class UserController {
     private $userModel;
+    private $blockModel;
 
     public function __construct() {
         $this->userModel = new UserModel();
-        
+        $this->blockModel = new BlockModel();
     }
 
     public function register() {
@@ -74,6 +76,49 @@ class UserController {
     public function logout() {
         Session::destroy();
         header("Location: index.php?action=login");
+        exit;
+    }
+
+    // Block another user
+    public function blockUser() {
+        $currentUser = Session::get('user');
+        if (!$currentUser) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        $blockedId = $_GET['user_id'] ?? null;
+        if ($blockedId && $blockedId != $currentUser['user_id']) {
+            $this->blockModel->blockUser($currentUser['user_id'], $blockedId);
+        }
+
+        header("Location: index.php?action=profile&user_id={$blockedId}");
+        exit;
+    }
+
+    // Unblock a user
+    public function unblockUser() {
+        $currentUser = Session::get('user');
+        if (!$currentUser) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        $blockedId = $_GET['user_id'] ?? null;
+        if ($blockedId) {
+            // Perform unblock action
+            $success = $this->blockModel->unblockUser($currentUser['user_id'], $blockedId);
+
+            // If unblock succeeded, remove from blocked list instantly (AJAX-friendly)
+            if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => $success]);
+                exit;
+            }
+        }
+
+        // Default redirect for non-AJAX requests
+        header("Location: index.php?action=settings&section=blocked");
         exit;
     }
 }

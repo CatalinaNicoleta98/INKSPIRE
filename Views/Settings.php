@@ -1,10 +1,15 @@
 <?php 
 require_once __DIR__ . '/../Models/ProfileModel.php';
+require_once __DIR__ . '/../Models/BlockModel.php';
 Session::start();
 $user = Session::get('user');
 
 $profileModel = new ProfileModel();
 $profile = $profileModel->getProfileByUserId($user['user_id']);
+
+$section = $_GET['section'] ?? 'account';
+$blockModel = new BlockModel();
+$blockedUsers = ($section === 'blocked') ? $blockModel->getBlockedUsers($user['user_id']) : [];
 
 $currentPic = !empty($profile['profile_picture']) ? htmlspecialchars($profile['profile_picture']) : 'uploads/default.png';
 $currentBio = htmlspecialchars($profile['bio'] ?? '');
@@ -30,6 +35,14 @@ $user = Session::get('user');
   <div class="w-full max-w-[600px] bg-white rounded-xl shadow-md p-8 mx-auto">
     <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Account Settings</h2>
 
+    <div class="flex justify-center gap-6 mb-6">
+      <a href="index.php?action=settings" 
+         class="text-indigo-600 font-medium hover:underline <?= $section === 'account' ? 'underline' : '' ?>">Account Settings</a>
+      <a href="index.php?action=settings&section=blocked" 
+         class="text-indigo-600 font-medium hover:underline <?= $section === 'blocked' ? 'underline' : '' ?>">Blocked Accounts</a>
+    </div>
+
+    <?php if ($section === 'account'): ?>
     <form method="POST" action="index.php?action=updateSettings" enctype="multipart/form-data" class="space-y-5">
       <div class="text-center">
         <label class="block text-gray-700 font-medium mb-2">Profile Picture</label>
@@ -84,6 +97,52 @@ $user = Session::get('user');
         </button>
       </div>
     </form>
+    <?php else: ?>
+      <div class="space-y-4">
+        <h3 class="text-xl font-semibold text-indigo-600 mb-4 text-center">Blocked Accounts</h3>
+
+        <?php if (!empty($blockedUsers)): ?>
+          <?php foreach ($blockedUsers as $blocked): ?>
+            <div class="flex items-center justify-between border border-indigo-100 rounded-lg p-3 bg-indigo-50 hover:bg-indigo-100 transition">
+              <div class="flex items-center gap-3">
+                <img src="<?= htmlspecialchars($blocked['profile_picture'] ?? 'uploads/default.png') ?>" 
+                     class="w-10 h-10 rounded-full object-cover border border-indigo-200">
+                <span class="font-medium text-gray-700"><?= htmlspecialchars($blocked['username']) ?></span>
+              </div>
+              <button 
+                class="unblock-btn text-sm bg-red-100 text-red-600 px-3 py-1 rounded-md hover:bg-red-200 transition" 
+                data-user-id="<?= htmlspecialchars($blocked['user_id']) ?>">
+                Unblock
+              </button>
+            </div>
+          <?php endforeach; ?>
+          <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.unblock-btn').forEach(button => {
+              button.addEventListener('click', () => {
+                const userId = button.getAttribute('data-user-id');
+
+                fetch(`index.php?action=unblockUser&user_id=${userId}&ajax=1`)
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.success) {
+                      // Fade out and remove the unblocked user element
+                      const container = button.closest('.flex.items-center');
+                      container.style.transition = 'opacity 0.3s';
+                      container.style.opacity = '0';
+                      setTimeout(() => container.remove(), 300);
+                    }
+                  })
+                  .catch(err => console.error('Unblock failed:', err));
+              });
+            });
+          });
+          </script>
+        <?php else: ?>
+          <p class="text-gray-500 text-center">You haven't blocked anyone yet.</p>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
   </div>
 </div>
 

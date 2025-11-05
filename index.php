@@ -63,6 +63,14 @@ switch ($action) {
         }
         break;
 
+    case 'blockUser':
+        $userController->blockUser();
+        break;
+
+    case 'unblockUser':
+        $userController->unblockUser();
+        break;
+
     case 'block':
         require_once __DIR__ . '/Controllers/ProfileController.php';
         $controller = new ProfileController();

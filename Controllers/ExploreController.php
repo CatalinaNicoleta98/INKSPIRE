@@ -23,11 +23,15 @@ class ExploreController {
         $user = Session::get('user');
         $userId = $user['user_id'];
 
-        // Get list of blocked user IDs
-        $blockedIds = $this->blockModel->getBlockedUsers($userId);
-
-        // Fetch all public posts excluding logged-in user and blocked users
-        $posts = $this->postModel->getAllPublicPosts($userId, $blockedIds);
+        // Fetch all public posts excluding posts from blocked or blocking users
+        $allPosts = $this->postModel->getAllPublicPosts($userId);
+        $posts = [];
+        foreach ($allPosts as $post) {
+            $postUserId = $post['user_id'];
+            if (!$this->blockModel->isEitherBlocked($userId, $postUserId)) {
+                $posts[] = $post;
+            }
+        }
 
         // Load comments for each post
         $commentModel = new CommentModel();
