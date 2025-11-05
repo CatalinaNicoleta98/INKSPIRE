@@ -9,6 +9,26 @@
   <meta charset="UTF-8">
   <title>Inkspire | Profile</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+  /* Dropdown styling for click-based toggle */
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0.5rem;
+    width: 14rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 0.75rem;
+    z-index: 9999;
+  }
+  .dropdown-menu.active {
+    display: block;
+  }
+  </style>
 </head>
 <body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
 
@@ -24,12 +44,11 @@
 
         <div class="flex justify-center gap-10 mt-5 text-gray-700 relative">
           <!-- Followers -->
-          <div class="group relative cursor-pointer">
+          <div class="relative cursor-pointer follower-toggle">
             <strong class="text-indigo-600"><?= htmlspecialchars($profile['followers_count'] ?? 0) ?></strong><br>
             <span class="text-sm">Followers</span>
-
             <?php if (!empty($followersList)): ?>
-              <div class="hidden group-hover:block absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-3 text-left">
+              <div class="dropdown-menu">
                 <p class="text-xs text-gray-500 mb-2">Followers:</p>
                 <?php foreach ($followersList as $follower): ?>
                   <a href="index.php?action=profile&user_id=<?= htmlspecialchars($follower['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
@@ -42,12 +61,11 @@
           </div>
 
           <!-- Following -->
-          <div class="group relative cursor-pointer">
+          <div class="relative cursor-pointer following-toggle">
             <strong class="text-indigo-600"><?= htmlspecialchars($profile['following_count'] ?? 0) ?></strong><br>
             <span class="text-sm">Following</span>
-
             <?php if (!empty($followingList)): ?>
-              <div class="hidden group-hover:block absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-20 p-3 text-left">
+              <div class="dropdown-menu">
                 <p class="text-xs text-gray-500 mb-2">Following:</p>
                 <?php foreach ($followingList as $following): ?>
                   <a href="index.php?action=profile&user_id=<?= htmlspecialchars($following['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
@@ -701,4 +719,33 @@ document.addEventListener('click', async (e) => {
 });
 </script>
 </body>
+</body>
+<script>
+// Toggle dropdowns on click (Followers & Following)
+document.addEventListener('DOMContentLoaded', () => {
+  const followerToggle = document.querySelector('.follower-toggle');
+  const followingToggle = document.querySelector('.following-toggle');
+  const followerDropdown = followerToggle?.querySelector('.dropdown-menu');
+  const followingDropdown = followingToggle?.querySelector('.dropdown-menu');
+
+  function closeAllDropdowns(e) {
+    if (!followerToggle.contains(e.target)) followerDropdown?.classList.remove('active');
+    if (!followingToggle.contains(e.target)) followingDropdown?.classList.remove('active');
+  }
+
+  followerToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    followerDropdown?.classList.toggle('active');
+    followingDropdown?.classList.remove('active');
+  });
+
+  followingToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    followingDropdown?.classList.toggle('active');
+    followerDropdown?.classList.remove('active');
+  });
+
+  document.addEventListener('click', closeAllDropdowns);
+});
+</script>
 </html>
