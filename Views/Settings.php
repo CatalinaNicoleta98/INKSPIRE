@@ -33,7 +33,7 @@ $user = Session::get('user');
 
 <div class="flex justify-center items-start w-full lg:px-[300px] md:px-[200px] sm:px-4 pt-[90px]">
   <div class="w-full max-w-[600px] bg-white rounded-xl shadow-md p-8 mx-auto">
-    <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Account Settings</h2>
+    <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Profile Settings</h2>
 
     <div class="flex justify-center gap-6 mb-6">
       <a href="index.php?action=settings" 
@@ -67,14 +67,14 @@ $user = Session::get('user');
 
       <div>
         <label class="block text-gray-700 font-medium mb-1">Username</label>
-        <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>" required 
-               class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>" readonly 
+               class="w-full border border-indigo-200 rounded-md px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed focus:ring-0 focus:outline-none">
       </div>
 
       <div>
         <label class="block text-gray-700 font-medium mb-1">Email</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" required 
-               class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" readonly 
+               class="w-full border border-indigo-200 rounded-md px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed focus:ring-0 focus:outline-none">
       </div>
 
       <div>

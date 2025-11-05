@@ -255,7 +255,10 @@ function renderComment(c, postId, level = 0) {
     <div class="comment-item relative bg-indigo-50 p-2 rounded-md shadow-sm mb-2" data-comment-id="${c.comment_id}">
       <div class="w-full">
         <p class="text-gray-700 text-sm whitespace-pre-wrap">${c.text}</p>
-        <p class="text-xs text-gray-500">@${c.username} • ${c.created_at}</p>
+        <p class="text-xs text-gray-500">
+          <a href="index.php?action=profile&user_id=${c.user_id}" 
+             class="text-indigo-600 hover:underline">@${c.username}</a> • ${c.created_at}
+        </p>
         <div class="flex gap-2 mt-1">
           <button class="reply-btn text-xs text-indigo-500" data-comment-id="${c.comment_id}" data-username="${c.username}" data-post-id="${postId}">↩️ Reply</button>
           ${repliesCount > 0
