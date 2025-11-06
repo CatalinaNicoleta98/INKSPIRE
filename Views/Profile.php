@@ -141,7 +141,8 @@
                     </div>
                   </div>
                 </div>
-              <div class="relative">
+              <?php if ($post['user_id'] === $currentUser['user_id']): ?>
+                <div class="relative">
                   <button class="post-options flex items-center justify-center w-7 h-7 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition"
                           data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>" title="Post settings">⚙️</button>
                   <div class="post-options-menu hidden absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-lg shadow-md z-10">
@@ -153,6 +154,7 @@
                     </button>
                   </div>
                 </div>
+              <?php endif; ?>
               </div>
 
               <div class="post-content-view" data-post-id="<?= $post['post_id'] ?>">
