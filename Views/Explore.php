@@ -1,5 +1,6 @@
 <?php require_once __DIR__ . '/../helpers/Session.php'; ?>
 <?php $user = Session::get('user'); ?>
+<?php $isLoggedIn = !empty($user) && isset($user['user_id']); ?>
 <?php include __DIR__ . '/layout/Header.php'; ?>
 
 <!DOCTYPE html>
@@ -28,10 +29,16 @@
                          alt="profile" class="w-8 h-8 rounded-full object-cover border border-indigo-200">
                     <div>
                       <p class="text-sm font-semibold">
-                        <a href="index.php?action=profile&user_id=<?= htmlspecialchars($post['user_id']) ?>" 
-                           class="text-gray-800 hover:text-indigo-600 hover:underline transition">
-                           <?= htmlspecialchars($post['username']) ?>
-                        </a>
+                        <?php if ($isLoggedIn): ?>
+                          <a href="index.php?action=profile&user_id=<?= htmlspecialchars($post['user_id']) ?>" 
+                             class="text-gray-800 hover:text-indigo-600 hover:underline transition">
+                             <?= htmlspecialchars($post['username']) ?>
+                          </a>
+                        <?php else: ?>
+                          <span class="guest-profile text-gray-800 hover:text-indigo-600 hover:underline cursor-pointer transition">
+                            <?= htmlspecialchars($post['username']) ?>
+                          </span>
+                        <?php endif; ?>
                       </p>
                       <div class="flex items-center gap-1 text-xs text-gray-500">
                         <span><?= date('M j, Y', strtotime($post['created_at'])) ?></span>
@@ -58,8 +65,13 @@
                 <?php endif; ?>
               </div>
               <div class="absolute bottom-3 right-3 bg-black/50 text-white rounded-full px-3 py-1 text-sm flex items-center gap-3">
-                <span class="like-btn cursor-pointer transition" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#f87171;' : '' ?>">❤️ <?= $post['likes'] ?></span>
-                <span class="comment-btn cursor-pointer" data-id="<?= $post['post_id'] ?>">💬 <?= $post['comment_count'] ?? count($post['comments'] ?? []) ?></span>
+                <?php if ($isLoggedIn): ?>
+                  <span class="like-btn cursor-pointer transition" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#f87171;' : '' ?>">❤️ <?= $post['likes'] ?></span>
+                  <span class="comment-btn cursor-pointer" data-id="<?= $post['post_id'] ?>">💬 <?= $post['comment_count'] ?? count($post['comments'] ?? []) ?></span>
+                <?php else: ?>
+                  <span class="guest-like cursor-pointer transition opacity-80 hover:opacity-100">❤️ <?= $post['likes'] ?></span>
+                  <span class="guest-comment cursor-pointer opacity-80 hover:opacity-100">💬 <?= $post['comment_count'] ?? count($post['comments'] ?? []) ?></span>
+                <?php endif; ?>
               </div>
             </div>
           <?php endforeach; ?>
@@ -193,6 +205,37 @@
         }
       });
     }
+</script>
+
+  <!-- Guest Login/Register Modal -->
+  <div id="guestModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
+    <div class="bg-white rounded-lg p-8 text-center shadow-lg max-w-sm w-full">
+      <h3 class="text-lg font-semibold text-indigo-600 mb-3">Login Required</h3>
+      <p class="text-gray-600 mb-6">Please log in or register to like posts, comment, or view user profiles.</p>
+      <div class="flex justify-center gap-4">
+        <button onclick="window.location='index.php?action=login'" class="bg-gradient-to-r from-indigo-400 to-purple-400 text-white px-4 py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all">Login / Register</button>
+        <button id="closeGuestModal" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-all">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const guestModal = document.getElementById('guestModal');
+    const closeGuestModal = document.getElementById('closeGuestModal');
+
+    document.querySelectorAll('.guest-like, .guest-comment, .guest-profile').forEach(btn => {
+      btn.addEventListener('click', () => {
+        guestModal.classList.remove('hidden');
+      });
+    });
+
+    if (closeGuestModal) {
+      closeGuestModal.addEventListener('click', () => guestModal.classList.add('hidden'));
+    }
+
+    window.addEventListener('click', (e) => {
+      if (e.target === guestModal) guestModal.classList.add('hidden');
+    });
   </script>
 </body>
 </html>

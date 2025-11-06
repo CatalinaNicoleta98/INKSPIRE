@@ -1,12 +1,20 @@
+<?php
+  require_once __DIR__ . '/../../helpers/Session.php';
+  $isLoggedIn = Session::isLoggedIn();
+?>
 <div class="hidden md:flex flex-col fixed top-[70px] left-0 w-[220px] h-[calc(100%-70px)] bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 border-r border-purple-100 shadow-md p-4 z-20">
   <h3 class="text-lg font-semibold text-indigo-500 mb-4">Navigation</h3>
-  <button onclick="window.location='index.php?action=home'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🏠 Home</button>
-  <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
-  <button onclick="window.location='index.php?action=profile'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">👤 Profile</button>
-  <button onclick="window.location='index.php?action=settings'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">⚙️ Settings</button>
-  <button onclick="window.location='index.php?action=logout'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🚪 Logout</button>
-  
-  <button id="createPostBtn" class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">➕ Create Post</button>
+  <?php if ($isLoggedIn): ?>
+    <button onclick="window.location='index.php?action=home'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🏠 Home</button>
+    <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
+    <button onclick="window.location='index.php?action=profile'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">👤 Profile</button>
+    <button onclick="window.location='index.php?action=settings'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">⚙️ Settings</button>
+    <button onclick="window.location='index.php?action=logout'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🚪 Logout</button>
+    <button id="createPostBtn" class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">➕ Create Post</button>
+  <?php else: ?>
+    <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
+    <button onclick="window.location='index.php?action=login'" class="w-full text-left py-2 px-3 mt-auto rounded-md bg-gradient-to-r from-indigo-400 to-purple-400 text-white hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">🔐 Login / Register</button>
+  <?php endif; ?>
 </div>
 
 <script>
