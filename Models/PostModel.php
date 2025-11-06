@@ -29,11 +29,13 @@ class PostModel {
         }
     }
 
-    // Get all posts (used for Explore)
+    // Get all posts (Explore, generic)
     public function getAllPosts() {
         $query = "SELECT p.*, u.username, pr.profile_picture,
                          (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                         (SELECT COUNT(*) FROM `Comment` c 
+                          WHERE c.post_id = p.post_id 
+                          OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
                   FROM Post p
                   JOIN User u ON p.user_id = u.user_id
                   LEFT JOIN Profile pr ON u.user_id = pr.user_id
@@ -53,14 +55,16 @@ class PostModel {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Get posts for multiple users (Home feed)
+    // Get posts for multiple users (Home)
     public function getPostsForUsers($userIds) {
         if (empty($userIds)) return [];
 
         $placeholders = implode(',', array_fill(0, count($userIds), '?'));
         $sql = "SELECT p.*, u.username, pr.profile_picture,
                        (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                       (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                       (SELECT COUNT(*) FROM `Comment` c 
+                        WHERE c.post_id = p.post_id 
+                        OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
                 FROM Post p
                 JOIN User u ON p.user_id = u.user_id
                 LEFT JOIN Profile pr ON u.user_id = pr.user_id
@@ -75,7 +79,9 @@ class PostModel {
     public function getPostsByUser($userId) {
         $query = "SELECT p.*, u.username, pr.profile_picture,
                          (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                         (SELECT COUNT(*) FROM `Comment` c 
+                          WHERE c.post_id = p.post_id 
+                          OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
                   FROM Post p
                   JOIN User u ON p.user_id = u.user_id
                   LEFT JOIN Profile pr ON u.user_id = pr.user_id
@@ -87,7 +93,7 @@ class PostModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // User edits their post title/description
+    // Update post title/description
     public function updatePost($postId, $userId, $title, $description) {
         try {
             $query = "UPDATE Post 
@@ -107,7 +113,7 @@ class PostModel {
         }
     }
 
-    // User deletes their post
+    // Delete a post
     public function deletePost($postId, $userId) {
         try {
             $query = "DELETE FROM Post WHERE post_id = :post_id AND user_id = :user_id";
@@ -120,7 +126,7 @@ class PostModel {
         }
     }
 
-    // User toggles their post's privacy (public/private)
+    // Toggle post privacy
     public function togglePrivacy($postId, $userId, $isPublic) {
         try {
             $query = "UPDATE Post SET is_public = :is_public WHERE post_id = :post_id AND user_id = :user_id";
@@ -137,15 +143,26 @@ class PostModel {
         }
     }
 
-    // Get posts from followed users (for Home feed)
+    // ✅ Unified: Works for both DB types (Follow table uses either user_id or profile_id)
     public function getPostsFromFollowedUsers($userId) {
+        // Attempt profile-based relationship, fallback to user_id
         $query = "SELECT p.*, u.username, pr.profile_picture,
                          (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                         (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                         (SELECT COUNT(*) FROM `Comment` c 
+                          WHERE c.post_id = p.post_id 
+                          OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
                   FROM Post p
                   JOIN User u ON p.user_id = u.user_id
                   LEFT JOIN Profile pr ON u.user_id = pr.user_id
-                  WHERE p.user_id IN (SELECT following_id FROM Follow WHERE follower_id = :user_id)
+                  WHERE p.user_id IN (
+                      SELECT CASE 
+                          WHEN EXISTS (SELECT 1 FROM Profile WHERE Profile.profile_id = f.following_id)
+                          THEN (SELECT user_id FROM Profile WHERE profile_id = f.following_id)
+                          ELSE f.following_id
+                      END
+                      FROM Follow f
+                      WHERE f.follower_id = :user_id
+                  )
                   ORDER BY p.created_at DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
@@ -153,24 +170,34 @@ class PostModel {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Get all public posts (for Explore feed), excluding logged-in user and blocked users
-    public function getAllPublicPosts($excludeUserId, $blockedIds = []) {
+    // ✅ Unified: Get all public posts (Explore feed)
+    public function getAllPublicPosts($excludeUserId = null, $blockedIds = []) {
         $blockedCondition = '';
         if (!empty($blockedIds)) {
             $placeholders = implode(',', array_fill(0, count($blockedIds), '?'));
             $blockedCondition = "AND p.user_id NOT IN ($placeholders)";
         }
 
+        $params = [];
+        $where = "p.is_public = 1";
+        if ($excludeUserId) {
+            $where .= " AND p.user_id != ?";
+            $params[] = $excludeUserId;
+        }
+
+        $params = array_merge($params, $blockedIds);
+
         $sql = "SELECT p.*, u.username, pr.profile_picture,
                        (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
-                       (SELECT COUNT(*) FROM `Comment` c WHERE c.post_id = p.post_id OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                       (SELECT COUNT(*) FROM `Comment` c 
+                        WHERE c.post_id = p.post_id 
+                        OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
                 FROM Post p
                 JOIN User u ON p.user_id = u.user_id
                 LEFT JOIN Profile pr ON u.user_id = pr.user_id
-                WHERE p.is_public = 1 AND p.user_id != ? $blockedCondition
+                WHERE $where $blockedCondition
                 ORDER BY p.created_at DESC";
-
-        $params = array_merge([$excludeUserId], $blockedIds);
+                
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
