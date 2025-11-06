@@ -15,22 +15,25 @@ class ExploreController {
 
     public function index() {
         Session::start();
-        if (!Session::isLoggedIn()) {
-            header('Location: index.php?action=login');
-            exit();
-        }
+        // if (!Session::isLoggedIn()) {
+        //     header('Location: index.php?action=login');
+        //     exit();
+        // }
 
         $user = Session::get('user');
-        $userId = $user['user_id'];
+        $userId = $user['user_id'] ?? null;
 
-        // Fetch all public posts excluding posts from blocked or blocking users
-        $allPosts = $this->postModel->getAllPublicPosts($userId);
-        $posts = [];
-        foreach ($allPosts as $post) {
-            $postUserId = $post['user_id'];
-            if (!$this->blockModel->isEitherBlocked($userId, $postUserId)) {
-                $posts[] = $post;
+        if ($userId) {
+            $allPosts = $this->postModel->getAllPublicPosts($userId);
+            $posts = [];
+            foreach ($allPosts as $post) {
+                $postUserId = $post['user_id'];
+                if (!$this->blockModel->isEitherBlocked($userId, $postUserId)) {
+                    $posts[] = $post;
+                }
             }
+        } else {
+            $posts = $this->postModel->getAllPublicPosts(null);
         }
 
         // Load comments for each post

@@ -15,17 +15,24 @@ $commentController = new CommentController();
 // Get the logged-in user from the session
 $user = Session::get('user');
 
-// If no action specified, redirect based on login state
-if (!isset($_GET['action'])) {
-    if (isset($_SESSION['user']['user_id'])) {
+// Determine current action
+$action = isset($_GET['action']) ? $_GET['action'] : '';
+
+// Allow guests to access Explore, Login, and Register
+if (!Session::isLoggedIn() && !in_array($action, ['explore', 'login', 'register', ''])) {
+    header("Location: index.php?action=login");
+    exit;
+}
+
+// Default landing page: logged-in users go home, guests go to explore
+if (empty($action)) {
+    if (Session::isLoggedIn()) {
         header("Location: index.php?action=home");
     } else {
         header("Location: index.php?action=explore");
     }
     exit;
 }
-
-$action = $_GET['action'];
 
 switch ($action) {
     case 'home':

@@ -75,7 +75,7 @@ class UserController {
 
     public function logout() {
         Session::destroy();
-        header("Location: index.php?action=login");
+        header("Location: index.php?action=explore");
         exit;
     }
 
