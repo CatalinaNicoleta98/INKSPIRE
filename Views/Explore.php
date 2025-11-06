@@ -220,11 +220,23 @@
   </div>
 
   <script>
+  document.addEventListener('DOMContentLoaded', () => {
     const guestModal = document.getElementById('guestModal');
     const closeGuestModal = document.getElementById('closeGuestModal');
 
     document.querySelectorAll('.guest-like, .guest-comment, .guest-profile').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent interference from other listeners
+        const modalText = guestModal.querySelector('p');
+        
+        if (btn.classList.contains('guest-like')) {
+          modalText.textContent = 'Please log in or register to like posts.';
+        } else if (btn.classList.contains('guest-comment')) {
+          modalText.textContent = 'Please log in or register to view or post comments.';
+        } else {
+          modalText.textContent = 'Please log in or register to view user profiles.';
+        }
+        
         guestModal.classList.remove('hidden');
       });
     });
@@ -236,6 +248,7 @@
     window.addEventListener('click', (e) => {
       if (e.target === guestModal) guestModal.classList.add('hidden');
     });
+  });
   </script>
 </body>
 </html>
