@@ -46,15 +46,22 @@ class SettingsController {
             $fileName = time() . '_' . basename($_FILES['profile_picture']['name']);
             $targetFile = $targetDir . $fileName;
             $fileTmp = $_FILES['profile_picture']['tmp_name'];
-            $fileMime = mime_content_type($fileTmp);
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-            if (in_array($fileMime, $allowedTypes) && move_uploaded_file($fileTmp, $targetFile)) {
+            // Only allow real JPEG and PNG images (no GIF or disguised files)
+            $allowedTypes = ['image/jpeg', 'image/png'];
+
+            // Double-check MIME type using finfo for reliability
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $detectedMime = $finfo->file($fileTmp);
+
+            if (in_array($detectedMime, $allowedTypes, true) && move_uploaded_file($fileTmp, $targetFile)) {
                 // Resize the uploaded profile picture to 512x512 max
                 ImageResizer::resizeImage($targetFile, 512, 512);
                 $profilePicture = 'uploads/' . $fileName;
             } else {
-                error_log("Invalid or failed image upload for user ID: " . $userId);
+                // Log and remove invalid file for safety
+                @unlink($targetFile);
+                error_log("⚠️ Invalid or potentially fake image upload blocked for user ID: " . $userId);
             }
         }
 
