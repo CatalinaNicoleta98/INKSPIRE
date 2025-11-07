@@ -144,6 +144,8 @@
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     document.querySelectorAll('.post img').forEach(img => {
+      // Skip profile pictures (avatars)
+      if (img.closest('.flex.items-center.gap-3')) return;
       img.addEventListener('click', () => {
         lightboxImg.src = img.src;
         lightbox.classList.remove('hidden');
