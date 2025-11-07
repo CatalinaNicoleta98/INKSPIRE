@@ -37,8 +37,16 @@
 
       <!-- Profile Header -->
       <div class="bg-white rounded-xl shadow-md p-6 text-center">
-        <img src="<?= htmlspecialchars($profile['profile_picture'] ?? 'uploads/default.png') ?>" alt="Profile Picture"
-             class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-indigo-200 shadow-sm">
+        <div class="relative">
+          <img src="<?= htmlspecialchars($profile['profile_picture'] ?? 'uploads/default.png') ?>" alt="Profile Picture"
+               class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-indigo-200 shadow-sm cursor-pointer"
+               id="profilePic">
+        </div>
+        <!-- Lightbox Modal -->
+        <div id="profilePicLightbox" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <img src="<?= htmlspecialchars($profile['profile_picture'] ?? 'uploads/default.png') ?>" alt="Enlarged Profile Picture"
+               class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl border-4 border-white" id="profilePicEnlarged">
+        </div>
         <h2 class="text-2xl font-semibold text-gray-800 mt-3"><?= htmlspecialchars($profile['username']) ?></h2>
         <p class="text-gray-600 text-sm italic mt-1"><?= htmlspecialchars($profile['bio'] ?? 'No bio yet.') ?></p>
 
@@ -754,7 +762,24 @@ document.addEventListener('click', async (e) => {
   }
 });
 </script>
-</body>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const profilePic = document.getElementById('profilePic');
+  const lightbox = document.getElementById('profilePicLightbox');
+  const enlargedPic = document.getElementById('profilePicEnlarged');
+
+  if (profilePic && lightbox && enlargedPic) {
+    profilePic.addEventListener('click', () => {
+      enlargedPic.src = profilePic.src;
+      lightbox.classList.remove('hidden');
+    });
+
+    lightbox.addEventListener('click', () => {
+      lightbox.classList.add('hidden');
+    });
+  }
+});
+</script>
 </body>
 <script>
 // Toggle dropdowns on click (Followers & Following)
