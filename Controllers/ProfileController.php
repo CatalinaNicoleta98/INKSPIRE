@@ -100,8 +100,42 @@ class ProfileController {
             $canViewPosts = true;
         }
 
-        // Load posts conditionally
-        $posts = $canViewPosts ? $this->postModel->getPostsByUser($userId) : [];
+        // Load posts conditionally:
+        // - If viewer can view posts (owner, public profile, or follower), show all posts.
+        // - Otherwise (private profile, non-follower), show only public posts.
+        if ($canViewPosts) {
+            $posts = $this->postModel->getPostsByUser($userId);
+        } else {
+            // Fallback to public posts only (so private profiles still show public content)
+            if (method_exists($this->postModel, 'getPublicPostsByUser')) {
+                $posts = $this->postModel->getPublicPostsByUser($userId);
+            } else {
+                // If the method does not exist, load all and filter to public on the PHP side.
+                $allPosts = $this->postModel->getPostsByUser($userId);
+                $posts = array_values(array_filter($allPosts, function($p) {
+                    // Support multiple schema variations:
+                    // - boolean/int flag: is_public == 1
+                    // - string flags: visibility == 'public' or privacy == 'public'
+                    if (isset($p['is_public'])) {
+                        return (int)$p['is_public'] === 1;
+                    }
+                    if (isset($p['visibility'])) {
+                        return strtolower((string)$p['visibility']) === 'public';
+                    }
+                    if (isset($p['privacy'])) {
+                        return strtolower((string)$p['privacy']) === 'public';
+                    }
+                    // If no visibility field exists, be conservative and hide it
+                    return false;
+                }));
+            }
+        }
+        if (!is_array($posts)) { $posts = []; }
+        
+        // Flags for the view
+        // On private profiles, only followers (or the owner) should see followers/following lists.
+        $canSeeSocialLists = ($profile['is_private'] == 0) || ($userId == $viewerId) || ($isFollowing && !$isBlocked);
+        $showPrivateNotice = ($profile['is_private'] == 1) && !$isFollowing && ($userId != $viewerId);
 
         include __DIR__ . '/../Views/Profile.php';
     }

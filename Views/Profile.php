@@ -51,39 +51,45 @@
         <p class="text-gray-600 text-sm italic mt-1"><?= htmlspecialchars($profile['bio'] ?? 'No bio yet.') ?></p>
 
         <div class="flex justify-center gap-10 mt-5 text-gray-700 relative">
-          <!-- Followers -->
-          <div class="relative cursor-pointer follower-toggle">
-            <strong class="text-indigo-600"><?= htmlspecialchars($profile['followers_count'] ?? 0) ?></strong><br>
-            <span class="text-sm">Followers</span>
-            <?php if (!empty($followersList)): ?>
-              <div class="dropdown-menu">
-                <p class="text-xs text-gray-500 mb-2">Followers:</p>
-                <?php foreach ($followersList as $follower): ?>
-                  <a href="index.php?action=profile&user_id=<?= htmlspecialchars($follower['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
-                    <img src="<?= htmlspecialchars($follower['profile_picture'] ?? 'uploads/default.png') ?>" class="w-6 h-6 rounded-full object-cover">
-                    <span class="text-sm text-gray-700"><?= htmlspecialchars($follower['username']) ?></span>
-                  </a>
-                <?php endforeach; ?>
-              </div>
-            <?php endif; ?>
-          </div>
+          <?php if (!empty($canSeeSocialLists)): ?>
+            <!-- Followers -->
+            <div class="relative cursor-pointer follower-toggle">
+              <strong class="text-indigo-600"><?= htmlspecialchars($profile['followers_count'] ?? 0) ?></strong><br>
+              <span class="text-sm">Followers</span>
+              <?php if (!empty($followersList)): ?>
+                <div class="dropdown-menu">
+                  <p class="text-xs text-gray-500 mb-2">Followers:</p>
+                  <?php foreach ($followersList as $follower): ?>
+                    <a href="index.php?action=profile&amp;user_id=<?= htmlspecialchars($follower['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
+                      <img src="<?= htmlspecialchars($follower['profile_picture'] ?? 'uploads/default.png') ?>" class="w-6 h-6 rounded-full object-cover">
+                      <span class="text-sm text-gray-700"><?= htmlspecialchars($follower['username']) ?></span>
+                    </a>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
+            </div>
 
-          <!-- Following -->
-          <div class="relative cursor-pointer following-toggle">
-            <strong class="text-indigo-600"><?= htmlspecialchars($profile['following_count'] ?? 0) ?></strong><br>
-            <span class="text-sm">Following</span>
-            <?php if (!empty($followingList)): ?>
-              <div class="dropdown-menu">
-                <p class="text-xs text-gray-500 mb-2">Following:</p>
-                <?php foreach ($followingList as $following): ?>
-                  <a href="index.php?action=profile&user_id=<?= htmlspecialchars($following['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
-                    <img src="<?= htmlspecialchars($following['profile_picture'] ?? 'uploads/default.png') ?>" class="w-6 h-6 rounded-full object-cover">
-                    <span class="text-sm text-gray-700"><?= htmlspecialchars($following['username']) ?></span>
-                  </a>
-                <?php endforeach; ?>
-              </div>
-            <?php endif; ?>
-          </div>
+            <!-- Following -->
+            <div class="relative cursor-pointer following-toggle">
+              <strong class="text-indigo-600"><?= htmlspecialchars($profile['following_count'] ?? 0) ?></strong><br>
+              <span class="text-sm">Following</span>
+              <?php if (!empty($followingList)): ?>
+                <div class="dropdown-menu">
+                  <p class="text-xs text-gray-500 mb-2">Following:</p>
+                  <?php foreach ($followingList as $following): ?>
+                    <a href="index.php?action=profile&amp;user_id=<?= htmlspecialchars($following['user_id']) ?>" class="flex items-center gap-2 mb-2 hover:bg-indigo-50 p-1 rounded">
+                      <img src="<?= htmlspecialchars($following['profile_picture'] ?? 'uploads/default.png') ?>" class="w-6 h-6 rounded-full object-cover">
+                      <span class="text-sm text-gray-700"><?= htmlspecialchars($following['username']) ?></span>
+                    </a>
+                  <?php endforeach; ?>
+                </div>
+              <?php endif; ?>
+            </div>
+          <?php else: ?>
+            <div class="flex items-center">
+              <span class="text-sm text-gray-500 italic">Followers and following are hidden for private profiles.</span>
+            </div>
+          <?php endif; ?>
 
           <!-- Posts -->
           <div>
@@ -122,10 +128,12 @@
           </div>
         <?php endif; ?>
 
-        <?php if (!$canViewPosts): ?>
-          <p class="text-gray-500 italic mt-6">This profile is private. Follow to see their posts.</p>
-        <?php endif; ?>
       </div>
+
+      <?php if (!empty($showPrivateNotice)): ?>
+        <p class="text-gray-500 italic mt-6">This profile is private. Only public posts are visible. Follow to see all posts, followers, and following.</p>
+        <p class="text-center text-sm text-gray-500 italic mb-4">Showing public posts only.</p>
+      <?php endif; ?>
 
       <!-- Posts Feed -->
       <div class="space-y-6">
