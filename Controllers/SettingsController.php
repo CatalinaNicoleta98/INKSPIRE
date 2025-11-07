@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../helpers/Session.php';
+require_once __DIR__ . '/../helpers/ImageResizer.php';
 require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Models/ProfileModel.php';
 
@@ -49,6 +50,8 @@ class SettingsController {
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
             if (in_array($fileMime, $allowedTypes) && move_uploaded_file($fileTmp, $targetFile)) {
+                // Resize the uploaded profile picture to 512x512 max
+                ImageResizer::resizeImage($targetFile, 512, 512);
                 $profilePicture = 'uploads/' . $fileName;
             } else {
                 error_log("Invalid or failed image upload for user ID: " . $userId);
