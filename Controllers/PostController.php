@@ -216,6 +216,11 @@ class PostController {
     }
 
     private function resizeImage($filePath, $maxWidth = 1200, $maxHeight = 1200) {
+        // Prevent enormous original files (over ~20MB)
+        if (filesize($filePath) > 20 * 1024 * 1024) {
+            @unlink($filePath);
+            throw new RuntimeException('⚠️ Image too large. Maximum 20MB.');
+        }
         [$width, $height, $type] = getimagesize($filePath);
 
         // Avoid invalid sizes (e.g., 0x0)
@@ -285,6 +290,13 @@ class PostController {
             case IMAGETYPE_JPEG: imagejpeg($dst, $filePath, 90); break;
             case IMAGETYPE_PNG: imagepng($dst, $filePath, 9); break;
             case IMAGETYPE_GIF: imagegif($dst, $filePath); break;
+        }
+
+        // Ensure final file isn’t still absurdly large
+        if (filesize($filePath) > 5 * 1024 * 1024) { // cap final to 5MB
+            if ($type == IMAGETYPE_JPEG) {
+                imagejpeg($dst, $filePath, 80);
+            }
         }
 
         // Clean up
