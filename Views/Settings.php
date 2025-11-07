@@ -37,7 +37,7 @@ $user = Session::get('user');
 
     <div class="flex justify-center gap-6 mb-6">
       <a href="index.php?action=settings" 
-         class="text-indigo-600 font-medium hover:underline <?= $section === 'account' ? 'underline' : '' ?>">Account Settings</a>
+         class="text-indigo-600 font-medium hover:underline <?= $section === 'account' ? 'underline' : '' ?>">Profile Settings</a>
       <a href="index.php?action=settings&section=blocked" 
          class="text-indigo-600 font-medium hover:underline <?= $section === 'blocked' ? 'underline' : '' ?>">Blocked Accounts</a>
     </div>
