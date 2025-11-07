@@ -110,6 +110,12 @@ switch ($action) {
         $controller->update();
         break;
 
+    case 'deleteProfilePicture':
+        require_once __DIR__ . '/Controllers/SettingsController.php';
+        $controller = new SettingsController();
+        $controller->deleteProfilePicture();
+        break;
+
     case 'register':
         $userController->register();
         break;

@@ -81,5 +81,35 @@ class SettingsController {
         header('Location: index.php?action=settings&success=1');
         exit();
     }
+
+    public function deleteProfilePicture() {
+        Session::start();
+        if (!Session::isLoggedIn()) {
+            echo json_encode(['success' => false, 'error' => 'Not logged in']);
+            exit();
+        }
+
+        $user = Session::get('user');
+        $userId = $user['user_id'];
+
+        $profile = $this->profileModel->getProfileByUserId($userId);
+        $currentPicture = $profile['profile_picture'] ?? 'uploads/default.png';
+        $defaultPicture = 'uploads/default.png';
+
+        // Delete current picture file if it exists and is not the default
+        if ($currentPicture !== $defaultPicture && file_exists(__DIR__ . '/../' . $currentPicture)) {
+            unlink(__DIR__ . '/../' . $currentPicture);
+        }
+
+        // Update the profile picture in the database to the default one
+        $this->profileModel->updateProfileInfo($userId, $profile['bio'] ?? '', $defaultPicture, $profile['is_private'] ?? 0);
+
+        // Update session
+        $user['profile_picture'] = $defaultPicture;
+        Session::set('user', $user);
+
+        echo json_encode(['success' => true]);
+        exit();
+    }
 }
 ?>

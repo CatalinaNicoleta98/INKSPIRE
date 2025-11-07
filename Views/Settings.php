@@ -53,6 +53,26 @@ $user = Session::get('user');
         <input type="file" name="profile_picture" accept="image/*" 
                class="block mx-auto text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer"
                onchange="previewProfilePicture(event)">
+        <div class="text-center mt-3">
+          <button type="button"
+                  onclick="openDeleteModal()"
+                  class="text-sm bg-red-100 text-red-600 px-4 py-2 rounded-md hover:bg-red-200 transition">
+            Delete Profile Picture
+          </button>
+        </div>
+
+        <!-- Modal -->
+        <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg p-6 shadow-lg text-center max-w-sm w-full">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Are you sure you want to delete your profile picture?</h3>
+            <div class="flex justify-center gap-4">
+              <button onclick="confirmDeletePicture()" 
+                      class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">Yes, Delete</button>
+              <button onclick="closeDeleteModal()" 
+                      class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancel</button>
+            </div>
+          </div>
+        </div>
       </div>
       <script>
         function previewProfilePicture(event) {
@@ -145,6 +165,30 @@ $user = Session::get('user');
     <?php endif; ?>
   </div>
 </div>
+
+<script>
+function openDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.add('hidden');
+}
+
+function confirmDeletePicture() {
+  fetch('index.php?action=deleteProfilePicture', { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('profilePreview').src = 'uploads/default.png';
+        closeDeleteModal();
+      } else {
+        alert('Failed to delete profile picture.');
+      }
+    })
+    .catch(err => console.error(err));
+}
+</script>
 
 </body>
 </html>
