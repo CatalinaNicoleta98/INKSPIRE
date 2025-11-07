@@ -7,7 +7,6 @@ require_once __DIR__ . '/../Models/BlockModel.php';
 require_once __DIR__ . '/../Models/LikeModel.php';
 require_once __DIR__ . '/../Models/CommentModel.php';
 
-
 class ProfileController {
     private $profileModel;
     private $postModel;
@@ -43,16 +42,26 @@ class ProfileController {
         // Check if either user has blocked the other
         $isEitherBlocked = $this->blockModel->isEitherBlocked($viewerId, $userId);
         if ($isEitherBlocked && $userId != $viewerId) {
-            // Render simple unavailable message
-            include __DIR__ . '/../Views/layout/Header.php';
-            echo '<div class="flex items-center justify-center min-h-screen bg-gray-100">
-                    <div class="text-center">
-                        <h2 class="text-2xl font-semibold text-gray-700 mb-4">This account is unavailable</h2>
-                        <p class="text-gray-500">You cannot view this profile.</p>
-                    </div>
-                  </div>';
-            include __DIR__ . '/../Views/layout/Sidebar.php';
-            include __DIR__ . '/../Views/layout/Rightbar.php';
+            // ✅ Fixed: render full HTML document with Tailwind CDN
+            echo '
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Profile Unavailable | Inkspire</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+            </head>
+            <body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen flex items-center justify-center">
+                <div class="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md mx-auto">
+                    <h1 class="text-3xl font-semibold text-gray-800 mb-3">🚫 Profile Unavailable</h1>
+                    <p class="text-gray-600 mb-6">You cannot view this profile.</p>
+                    <a href="index.php?action=feed" class="inline-block bg-indigo-500 text-white px-5 py-2 rounded-md hover:bg-indigo-600 transition">
+                        Go back
+                    </a>
+                </div>
+            </body>
+            </html>';
             exit();
         }
 
