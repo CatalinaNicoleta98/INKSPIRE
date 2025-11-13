@@ -40,6 +40,15 @@ $action = $_GET['action'] ?? 'login';
             </svg>
           </button>
         </div>
+        <ul class="mt-2 text-xs space-y-1">
+          <li id="req-length" class="text-gray-500">• At least 8 characters</li>
+          <li id="req-upper" class="text-gray-500">• At least one uppercase letter</li>
+          <li id="req-lower" class="text-gray-500">• At least one lowercase letter</li>
+          <li id="req-number" class="text-gray-500">• At least one number</li>
+          <li id="req-special" class="text-gray-500">• At least one special character (!@#$%^&amp;*)</li>
+        </ul>
+        <input type="password" name="password_confirm" id="registerPasswordConfirm" placeholder="Confirm Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none mt-3">
+        <p id="passwordMatchHint" class="text-xs mt-1 text-gray-500"></p>
         <label class="block text-gray-700 text-sm mt-2">Date of Birth</label>
         <input type="date" name="dob" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md mt-2">Register</button>
@@ -111,5 +120,76 @@ $action = $_GET['action'] ?? 'login';
     input.type = hide ? 'text' : 'password';
     btn.innerHTML = hide ? eyeClosed : eyeOpen;
   });
+
+  // Live password strength + match validation for register form
+  const registerPasswordInput = document.getElementById('registerPassword');
+  const registerPasswordConfirmInput = document.getElementById('registerPasswordConfirm');
+  const reqLength = document.getElementById('req-length');
+  const reqUpper = document.getElementById('req-upper');
+  const reqLower = document.getElementById('req-lower');
+  const reqNumber = document.getElementById('req-number');
+  const reqSpecial = document.getElementById('req-special');
+  const passwordMatchHint = document.getElementById('passwordMatchHint');
+
+  function setRequirement(el, satisfied) {
+    if (!el) return;
+    if (satisfied) {
+      el.classList.remove('text-gray-500', 'text-red-500');
+      el.classList.add('text-green-600');
+    } else {
+      el.classList.remove('text-green-600');
+      el.classList.add('text-gray-500');
+    }
+  }
+
+  function updatePasswordRequirements() {
+    if (!registerPasswordInput) return;
+    const pwd = registerPasswordInput.value || '';
+    const hasMinLength = pwd.length >= 8;
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+
+    setRequirement(reqLength, hasMinLength);
+    setRequirement(reqUpper, hasUpper);
+    setRequirement(reqLower, hasLower);
+    setRequirement(reqNumber, hasNumber);
+    setRequirement(reqSpecial, hasSpecial);
+  }
+
+  function updatePasswordMatch() {
+    if (!registerPasswordInput || !registerPasswordConfirmInput || !passwordMatchHint) return;
+    const pwd = registerPasswordInput.value || '';
+    const confirmPwd = registerPasswordConfirmInput.value || '';
+
+    if (!confirmPwd && !pwd) {
+      passwordMatchHint.textContent = '';
+      passwordMatchHint.classList.remove('text-red-500', 'text-green-600');
+      passwordMatchHint.classList.add('text-gray-500');
+      return;
+    }
+
+    if (confirmPwd && pwd === confirmPwd) {
+      passwordMatchHint.textContent = 'Passwords match.';
+      passwordMatchHint.classList.remove('text-gray-500', 'text-red-500');
+      passwordMatchHint.classList.add('text-green-600');
+    } else if (confirmPwd) {
+      passwordMatchHint.textContent = 'Passwords do not match.';
+      passwordMatchHint.classList.remove('text-gray-500', 'text-green-600');
+      passwordMatchHint.classList.add('text-red-500');
+    }
+  }
+
+  if (registerPasswordInput) {
+    registerPasswordInput.addEventListener('input', function () {
+      updatePasswordRequirements();
+      updatePasswordMatch();
+    });
+  }
+  if (registerPasswordConfirmInput) {
+    registerPasswordConfirmInput.addEventListener('input', updatePasswordMatch);
+  }
+  updatePasswordRequirements();
 </script>
 </html>

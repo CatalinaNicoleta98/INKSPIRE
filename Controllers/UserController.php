@@ -21,6 +21,29 @@ class UserController {
             $password = $_POST['password'] ?? '';
             $dob = $_POST['dob'] ?? ''; // date of birth from the form
 
+            // Confirm password
+            $passwordConfirm = $_POST['password_confirm'] ?? '';
+
+            // Backend password match validation
+            if ($password !== $passwordConfirm) {
+                $error = "Passwords do not match.";
+                include __DIR__ . '/../Views/User.php';
+                return;
+            }
+
+            // Strong password validation
+            $hasMinLength = strlen($password) >= 8;
+            $hasUpper = preg_match('/[A-Z]/', $password);
+            $hasLower = preg_match('/[a-z]/', $password);
+            $hasNumber = preg_match('/[0-9]/', $password);
+            $hasSpecial = preg_match('/[^A-Za-z0-9]/', $password);
+
+            if (!($hasMinLength && $hasUpper && $hasLower && $hasNumber && $hasSpecial)) {
+                $error = "Password must be at least 8 characters long and include upper, lower, number and special character.";
+                include __DIR__ . '/../Views/User.php';
+                return;
+            }
+
             // Try to register and handle all possible outcomes (show clear messages for the user)
             $result = $this->userModel->register($firstName, $lastName, $email, $username, $password, $dob);
 
