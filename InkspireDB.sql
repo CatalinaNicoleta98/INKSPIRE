@@ -41,8 +41,8 @@ CREATE TABLE Profile
 CREATE TABLE Post
 (
     post_id     INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-    title       VARCHAR(200),
-    description TEXT,
+    title       VARCHAR(50),
+    description VARCHAR(1000),
     text        TEXT,
     image_url   VARCHAR(255),
     is_sticky   TINYINT(1) DEFAULT 0,
