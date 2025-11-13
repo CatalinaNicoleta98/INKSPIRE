@@ -134,6 +134,10 @@ switch ($action) {
         $userController->logout();
         break;
 
+    case 'getSuggestedUsers':
+        $userController->getSuggestedUsers();
+        break;
+
     case 'createPost':
         $postController->create();
         // After creating a post, go to Explore

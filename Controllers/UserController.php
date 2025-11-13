@@ -144,5 +144,26 @@ class UserController {
         header("Location: index.php?action=settings&section=blocked");
         exit;
     }
+    // Fetch suggested accounts for Rightbar (JSON)
+    public function getSuggestedUsers() {
+        Session::start();
+        $currentUser = Session::get('user');
+
+        // Must be logged in to get suggestions
+        if (!$currentUser) {
+            header('Content-Type: application/json');
+            echo json_encode(['users' => []]);
+            exit;
+        }
+
+        $userId = $currentUser['user_id'];
+
+        // Load model and fetch suggestions
+        $suggested = $this->userModel->getSuggestedUsers($userId, 5);
+
+        header('Content-Type: application/json');
+        echo json_encode(['users' => $suggested]);
+        exit;
+    }
 }
 ?>

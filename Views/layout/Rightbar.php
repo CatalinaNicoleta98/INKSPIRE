@@ -24,40 +24,56 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('suggestedAccounts');
-  setTimeout(() => {
+    const container = document.getElementById('suggestedAccounts');
+
     <?php if ($isLoggedIn): ?>
-    container.innerHTML = `
-      <div class="flex justify-between items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-        <strong class="text-gray-700">@artlover</strong>
-        <button class="bg-indigo-400 text-white text-xs px-3 py-1 rounded-full hover:bg-indigo-500 transition">Follow</button>
-      </div>
-      <div class="flex justify-between items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-        <strong class="text-gray-700">@photoqueen</strong>
-        <button class="bg-indigo-400 text-white text-xs px-3 py-1 rounded-full hover:bg-indigo-500 transition">Follow</button>
-      </div>
-      <div class="flex justify-between items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-        <strong class="text-gray-700">@digitaldreams</strong>
-        <button class="bg-indigo-400 text-white text-xs px-3 py-1 rounded-full hover:bg-indigo-500 transition">Follow</button>
-      </div>
-    `;
+    fetch('index.php?action=getSuggestedUsers')
+      .then(response => response.json())
+      .then(data => {
+          container.innerHTML = '';
+
+          if (!data.users || data.users.length === 0) {
+              container.innerHTML = `<p class="text-gray-400 text-sm">No suggestions available.</p>`;
+              return;
+          }
+
+          data.users.forEach(user => {
+              const profilePic = user.profile_picture || 'uploads/default.png';
+              const bio = user.bio || '';
+              const bioPreview = bio.length > 0 
+                  ? (bio.length > 40 ? bio.substring(0, 40) + '…' : bio) 
+                  : '';
+
+              container.innerHTML += `
+                  <a href="index.php?action=profile&user_id=${user.user_id}" 
+                     class="flex items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md hover:bg-indigo-50 transition duration-200 cursor-pointer group">
+                      <img src="${profilePic}" class="w-10 h-10 rounded-full object-cover mr-3 border border-indigo-100 group-hover:border-indigo-300">
+                      <div class="flex flex-col">
+                        <span class="font-semibold text-gray-800 group-hover:text-indigo-600">@${user.username}</span>
+                        ${bioPreview ? `<span class="text-xs text-gray-500 mt-0.5">${bioPreview}</span>` : ''}
+                      </div>
+                  </a>
+              `;
+          });
+      })
+      .catch(err => {
+          console.error(err);
+          container.innerHTML = `<p class="text-red-500 text-sm">Failed to load suggestions.</p>`;
+      });
+
     <?php else: ?>
+    // Guest users see static suggestions that open the login modal
     container.innerHTML = `
-      <div class="flex justify-between items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-        <strong class="guest-profile text-gray-700 cursor-pointer hover:text-indigo-600">@artlover</strong>
-        <button class="guest-follow bg-indigo-300 text-white text-xs px-3 py-1 rounded-full hover:bg-indigo-400 transition opacity-80">Follow</button>
-      </div>
-      <div class="flex justify-between items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-        <strong class="guest-profile text-gray-700 cursor-pointer hover:text-indigo-600">@photoqueen</strong>
-        <button class="guest-follow bg-indigo-300 text-white text-xs px-3 py-1 rounded-full hover:bg-indigo-400 transition opacity-80">Follow</button>
-      </div>
-      <div class="flex justify-between items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-        <strong class="guest-profile text-gray-700 cursor-pointer hover:text-indigo-600">@digitaldreams</strong>
-        <button class="guest-follow bg-indigo-300 text-white text-xs px-3 py-1 rounded-full hover:bg-indigo-400 transition opacity-80">Follow</button>
-      </div>
+        <div class="flex items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
+          <img src="uploads/default.png" class="w-10 h-10 rounded-full object-cover mr-3 guest-profile">
+          <strong class="guest-profile text-gray-700 cursor-pointer hover:text-indigo-600">@guest1</strong>
+        </div>
+        <div class="flex items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
+          <img src="uploads/default.png" class="w-10 h-10 rounded-full object-cover mr-3 guest-profile">
+          <strong class="guest-profile text-gray-700 cursor-pointer hover:text-indigo-600">@guest2</strong>
+        </div>
     `;
     <?php endif; ?>
-  }, 1000);
 });
 </script>
 
@@ -77,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const guestModal = document.getElementById('guestModal');
 const closeGuestModal = document.getElementById('closeGuestModal');
 document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('guest-follow') || e.target.classList.contains('guest-profile')) {
+  if (e.target.classList.contains('guest-profile')) {
     guestModal.classList.remove('hidden');
   }
 });

@@ -132,6 +132,34 @@ class UserModel {
             return false;
         }
     }
+    // Fetch suggested users (exclude self and users already followed)
+    public function getSuggestedUsers($currentUserId, $limit = 5) {
+        try {
+            $query = "
+                SELECT u.user_id, u.username, p.profile_picture
+                FROM User u
+                INNER JOIN Profile p ON u.user_id = p.user_id
+                WHERE u.user_id != :currentUserId
+                  AND u.user_id NOT IN (
+                      SELECT following_id 
+                      FROM Follow 
+                      WHERE follower_id = :currentUserId
+                  )
+                ORDER BY RAND()
+                LIMIT :limit
+            ";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':currentUserId', $currentUserId, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
 }
 }
 ?>
