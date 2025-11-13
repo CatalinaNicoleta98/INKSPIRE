@@ -111,5 +111,48 @@ class SettingsController {
         echo json_encode(['success' => true]);
         exit();
     }
+    public function deleteAccount() {
+        Session::start();
+        if (!Session::isLoggedIn()) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'You must be logged in.']);
+            exit();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Invalid request method.']);
+            exit();
+        }
+
+        $user = Session::get('user');
+        $userId = $user['user_id'];
+        $password = $_POST['password'] ?? '';
+
+        if (empty($password)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Password is required.']);
+            exit();
+        }
+
+        // Verify password
+        if (!$this->userModel->verifyPasswordById($userId, $password)) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Incorrect password.']);
+            exit();
+        }
+
+        // Delete user (CASCADE will remove profile, posts, likes, comments, follows)
+        if ($this->userModel->deleteUserById($userId)) {
+            Session::destroy();
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+            exit();
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Account deletion failed.']);
+            exit();
+        }
+    }
 }
 ?>

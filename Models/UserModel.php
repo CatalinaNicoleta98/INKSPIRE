@@ -104,6 +104,34 @@ class UserModel {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+    // Verify password for a user by ID
+    public function verifyPasswordById($userId, $password) {
+        try {
+            $query = "SELECT password FROM User WHERE user_id = :user_id LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':user_id' => $userId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                return false;
+            }
+
+            return password_verify($password, $row['password']);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // Delete user by ID (cascade will remove profile, posts, comments, likes, follows)
+    public function deleteUserById($userId) {
+        try {
+            $query = "DELETE FROM User WHERE user_id = :user_id";
+            $stmt = $this->conn->prepare($query);
+            return $stmt->execute([':user_id' => $userId]);
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
 }
 }
 ?>

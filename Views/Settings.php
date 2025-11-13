@@ -116,6 +116,19 @@ $user = Session::get('user');
           Save Changes
         </button>
       </div>
+      <div class="mt-8 border-t border-red-100 pt-6">
+        <h3 class="text-lg font-semibold text-red-600 mb-2 text-center">Danger Zone</h3>
+        <p class="text-gray-600 text-sm mb-4 text-center">
+          Deleting your account will permanently remove your profile, posts, comments, likes and follows. This action cannot be undone.
+        </p>
+        <div class="text-center">
+          <button type="button"
+                  onclick="openDeleteAccountModal()"
+                  class="bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600 transition shadow-sm">
+            Delete Account
+          </button>
+        </div>
+      </div>
     </form>
     <?php else: ?>
       <div class="space-y-4">
@@ -189,6 +202,73 @@ function confirmDeletePicture() {
     .catch(err => console.error(err));
 }
 </script>
+
+<script>
+function openDeleteAccountModal() {
+  const err = document.getElementById('deleteAccountError');
+  const input = document.getElementById('deleteAccountPassword');
+  if (input) input.value = '';
+  if (err) {
+    err.textContent = '';
+    err.classList.add('hidden');
+  }
+  document.getElementById('deleteAccountModal').classList.remove('hidden');
+}
+
+function closeDeleteAccountModal() {
+  document.getElementById('deleteAccountModal').classList.add('hidden');
+}
+
+function confirmDeleteAccount() {
+  const passwordInput = document.getElementById('deleteAccountPassword');
+  const errorEl = document.getElementById('deleteAccountError');
+  const password = passwordInput.value.trim();
+
+  if (!password) {
+    errorEl.textContent = 'Please enter your password to continue.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  fetch('index.php?action=deleteAccount', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'password=' + encodeURIComponent(password)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      window.location.href = 'index.php?action=user';
+    } else {
+      errorEl.textContent = data.error || 'Failed to delete account.';
+      errorEl.classList.remove('hidden');
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    errorEl.textContent = 'Network error. Please try again.';
+    errorEl.classList.remove('hidden');
+  });
+}
+</script>
+
+<div id="deleteAccountModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 shadow-lg text-center max-w-sm w-full">
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Delete your account?</h3>
+    <p class="text-sm text-gray-600 mb-4">
+      This will permanently delete your account, profile, posts, comments, likes and follows. This action cannot be undone.
+    </p>
+    <div class="mb-4 text-left">
+      <label for="deleteAccountPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm your password</label>
+      <input type="password" id="deleteAccountPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-red-300 focus:outline-none" placeholder="Enter your password">
+      <p id="deleteAccountError" class="text-xs text-red-500 mt-1 hidden"></p>
+    </div>
+    <div class="flex justify-center gap-3">
+      <button onclick="confirmDeleteAccount()" class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">Delete permanently</button>
+      <button onclick="closeDeleteAccountModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition">Cancel</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
