@@ -153,6 +153,19 @@ class PostController {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // CSRF token validation
+            Session::start();
+            $sessionToken = $_SESSION['post_token'] ?? null;
+            $formToken = $_POST['token'] ?? null;
+
+            if (!$sessionToken || !$formToken || !hash_equals($sessionToken, $formToken)) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => '⚠️ Invalid or expired submission token.']);
+                exit;
+            }
+
+            // Consume token so it cannot be reused
+            unset($_SESSION['post_token']);
             $title = trim($_POST['title'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $tags = trim($_POST['tags'] ?? '');

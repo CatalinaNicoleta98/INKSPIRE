@@ -1,6 +1,9 @@
 <?php
   require_once __DIR__ . '/../../helpers/Session.php';
   $isLoggedIn = Session::isLoggedIn();
+  if (!isset($_SESSION['post_token'])) {
+      $_SESSION['post_token'] = bin2hex(random_bytes(32));
+  }
 ?>
 <div class="hidden md:flex flex-col fixed top-[70px] left-0 w-[220px] h-[calc(100%-70px)] bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 border-r border-purple-100 shadow-md p-4 z-20">
   <h3 class="text-lg font-semibold text-indigo-500 mb-4">Navigation</h3>
@@ -41,6 +44,7 @@
             <span id="closeModal" class="float-right text-gray-500 cursor-pointer text-2xl">&times;</span>
             <h3 class="text-xl font-semibold text-indigo-500 mb-4">Create New Post</h3>
             <form id="createPostForm" enctype="multipart/form-data" class="space-y-3">
+              <input type="hidden" name="token" value="<?= $_SESSION['post_token'] ?>">
               <input type="text" name="title" placeholder="Title" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
               <textarea name="description" placeholder="Description" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"></textarea>
               <input type="text" name="tags" placeholder="Tags (comma-separated)" class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">

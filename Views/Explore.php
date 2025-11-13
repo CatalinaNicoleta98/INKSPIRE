@@ -86,22 +86,6 @@
   </div>
 
 
-  <!-- Post Modal -->
-  <div id="postModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-    <div class="bg-white rounded-lg w-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-lg">
-      <span id="closeModal" class="float-right text-gray-500 cursor-pointer text-2xl">&times;</span>
-      <h3 class="text-xl font-semibold text-indigo-500 mb-4">Create New Post</h3>
-      <form id="createPostForm" method="POST" action="index.php?action=createPost" enctype="multipart/form-data" class="space-y-3">
-        <input type="text" name="title" placeholder="Title" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-        <textarea name="description" placeholder="Description" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none"></textarea>
-        <input type="text" name="tags" placeholder="Tags (comma-separated)" class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-        <input type="file" name="image" accept="image/*" class="w-full text-sm text-gray-600">
-        <button type="button" id="submitPostBtn" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white rounded-md py-2 hover:from-indigo-500 hover:to-purple-500 transition">Post</button>
-      </form>
-      <p id="postError" class="text-center text-red-500 text-sm font-medium hidden"></p>
-    </div>
-  </div>
-
   <!-- Lightbox -->
   <div id="lightbox" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[1000]">
     <img id="lightboxImg" src="" alt="Full image" class="max-w-[90%] max-h-[90%] rounded-lg shadow-lg">
@@ -170,43 +154,6 @@
       });
     });
 
-    // Handle post creation via AJAX to display validation errors in modal
-    const createPostForm = document.getElementById('createPostForm');
-    const submitPostBtn = document.getElementById('submitPostBtn');
-    if (createPostForm && submitPostBtn) {
-      submitPostBtn.addEventListener('click', async () => {
-        const errorEl = document.getElementById('postError');
-        if (errorEl) {
-          errorEl.textContent = '';
-          errorEl.classList.add('hidden');
-        }
-
-        const formData = new FormData(createPostForm);
-        try {
-          const res = await fetch('index.php?action=createPost', { method: 'POST', body: formData });
-          const data = await res.json();
-
-          if (data.success) {
-            location.reload();
-          } else if (data.error) {
-            if (errorEl) {
-              errorEl.textContent = data.error;
-              errorEl.classList.remove('hidden');
-            }
-          } else {
-            if (errorEl) {
-              errorEl.textContent = '⚠️ Unexpected error. Please try again.';
-              errorEl.classList.remove('hidden');
-            }
-          }
-        } catch (err) {
-          if (errorEl) {
-            errorEl.textContent = '⚠️ Network or server error. Please try again.';
-            errorEl.classList.remove('hidden');
-          }
-        }
-      });
-    }
 </script>
 
   <!-- Guest Login/Register Modal -->
