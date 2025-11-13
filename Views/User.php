@@ -31,7 +31,15 @@ $action = $_GET['action'] ?? 'login';
         <input type="text" name="last_name" placeholder="Last Name" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
         <input type="email" name="email" placeholder="Email" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
         <input type="text" name="username" placeholder="Username" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-        <input type="password" name="password" placeholder="Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <div class="relative">
+          <input type="password" name="password" id="registerPassword" placeholder="Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+          <button type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 password-toggle" data-target="registerPassword">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
         <label class="block text-gray-700 text-sm mt-2">Date of Birth</label>
         <input type="date" name="dob" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md mt-2">Register</button>
@@ -42,7 +50,15 @@ $action = $_GET['action'] ?? 'login';
       <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Welcome Back</h2>
       <form method="POST" action="index.php?action=login" class="space-y-4">
         <input type="text" name="username" placeholder="Username" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-        <input type="password" name="password" placeholder="Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <div class="relative">
+          <input type="password" name="password" id="loginPassword" placeholder="Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+          <button type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 password-toggle" data-target="loginPassword">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md">Login</button>
       </form>
       <p class="text-center text-sm text-gray-600 mt-4">No account? <a href="index.php?action=register" class="text-indigo-500 hover:underline">Register here</a></p>
@@ -67,4 +83,33 @@ $action = $_GET['action'] ?? 'login';
   </div>
 
 </body>
+<script>
+  const eyeOpen = `
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+      <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `;
+
+  const eyeClosed = `
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18"/>
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.584 10.587A3 3 0 0113.412 13.41M6.883 6.883C4.943 8.173 3.5 10.063 2.458 12c1.274 4.057 5.065 7 9.542 7 1.466 0 2.853-.294 4.104-.828"/>
+      <path stroke-linecap="round" stroke-linejoin="round" d="M17.117 17.117C19.057 15.827 20.5 13.937 21.542 12c-1.274-4.057-5.065-7-9.542-7-1.466 0-2.853.294-4.104.828"/>
+    </svg>
+  `;
+
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.password-toggle');
+    if (!btn) return;
+
+    const targetId = btn.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+    if (!input) return;
+
+    const hide = input.type === 'password';
+    input.type = hide ? 'text' : 'password';
+    btn.innerHTML = hide ? eyeClosed : eyeOpen;
+  });
+</script>
 </html>
