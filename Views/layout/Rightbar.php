@@ -9,10 +9,12 @@
     <input 
       type="text" 
       name="q" 
+      autocomplete="off"
       placeholder="Search posts or users..." 
       class="w-full px-3 py-2 border border-indigo-200 rounded-md text-sm focus:ring-2 focus:ring-indigo-300 focus:outline-none placeholder-gray-400"
     >
   </form>
+  <div id="searchSuggestions" class="hidden bg-white border border-indigo-100 rounded-md shadow-md text-sm p-2 space-y-2 max-h-64 overflow-y-auto mt-1"></div>
 
   <hr class="my-5 border-indigo-100">
 
@@ -24,6 +26,84 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Live search suggestions
+    const searchInput = document.querySelector('input[name="q"]');
+    const suggestionBox = document.getElementById('searchSuggestions');
+
+    if (searchInput && suggestionBox) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim();
+
+        if (!q) {
+          suggestionBox.classList.add('hidden');
+          suggestionBox.innerHTML = '';
+          return;
+        }
+
+        fetch(`index.php?action=searchSuggestions&q=${encodeURIComponent(q)}`)
+          .then(res => res.json())
+          .then(data => {
+            let html = '';
+
+            // "Search for ..." item
+            html += `
+              <a href="index.php?action=search&amp;q=${encodeURIComponent(q)}"
+                 class="block px-3 py-2 text-indigo-600 font-semibold hover:bg-indigo-50 rounded-md">
+                Search for "${q}"
+              </a>
+              <hr class="my-2 border-indigo-100">
+            `;
+
+            let hasResults = false;
+
+            if (data.users && data.users.length > 0) {
+              hasResults = true;
+              html += `<div class="text-xs font-semibold text-gray-500 px-2 mb-1">Users</div>`;
+              data.users.forEach(u => {
+                html += `
+                  <a href="index.php?action=profile&amp;user_id=${u.user_id}"
+                     class="block px-3 py-1 hover:bg-indigo-50 rounded-md cursor-pointer">
+                    @${u.username}
+                  </a>
+                `;
+              });
+            }
+
+
+            if (data.tags && data.tags.length > 0) {
+              hasResults = true;
+              html += `<div class="text-xs font-semibold text-gray-500 px-2 mt-2 mb-1">Tags</div>`;
+              data.tags.forEach(t => {
+                html += `
+                  <a href="index.php?action=search&amp;type=tags&amp;q=${encodeURIComponent(t.tags)}"
+                     class="block px-3 py-1 hover:bg-indigo-50 rounded-md cursor-pointer">
+                    #${t.tags}
+                  </a>
+                `;
+              });
+            }
+
+            if (!hasResults) {
+              html += `<div class="px-3 py-2 text-gray-400 text-sm">No results</div>`;
+            }
+
+            suggestionBox.innerHTML = html;
+            suggestionBox.classList.remove('hidden');
+          })
+          .catch(() => {
+            suggestionBox.innerHTML = `<div class="px-3 py-2 text-red-500 text-sm">Search failed.</div>`;
+            suggestionBox.classList.remove('hidden');
+          });
+      });
+
+      // Hide suggestions when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+          suggestionBox.classList.add('hidden');
+        }
+      });
+    }
+
     const container = document.getElementById('suggestedAccounts');
 
     <?php if ($isLoggedIn): ?>

@@ -5,12 +5,14 @@ require_once __DIR__ . '/Controllers/UserController.php';
 require_once __DIR__ . '/Controllers/PostController.php';
 require_once __DIR__ . '/Controllers/LikeController.php';
 require_once __DIR__ . '/Controllers/CommentController.php';
+require_once __DIR__ . '/Controllers/SearchController.php';
 
 // Create controllers
 $userController = new UserController();
 $postController = new PostController();
 $likeController = new LikeController();
 $commentController = new CommentController();
+$searchController = new SearchController();
 
 // Get the logged-in user from the session
 $user = Session::get('user');
@@ -35,6 +37,13 @@ if (empty($action)) {
 }
 
 switch ($action) {
+    case 'searchSuggestions':
+        $searchController->suggestions();
+        break;
+
+    case 'search':
+        $searchController->results();
+        break;
     case 'home':
         require_once __DIR__ . '/Controllers/HomeController.php';
         $controller = new HomeController();
