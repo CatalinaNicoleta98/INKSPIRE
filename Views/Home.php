@@ -59,11 +59,11 @@
                 </div>
               </div>
             <?php endif; ?>
-            <h3 class="text-lg font-semibold text-gray-800">
+            <h3 class="text-lg font-semibold text-gray-800 break-words">
               <?= htmlspecialchars(is_array($post['title']) ? implode(', ', $post['title']) : $post['title']) ?>
             </h3>
 
-            <p class="text-gray-600 text-sm mt-1">
+            <p class="text-gray-600 text-sm mt-1 break-words">
               <?= htmlspecialchars(is_array($post['description']) ? implode(', ', $post['description']) : $post['description']) ?>
             </p>
 

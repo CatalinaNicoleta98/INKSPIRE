@@ -53,11 +53,11 @@
                 </div>
 
                 <?php if (!empty($post['title'])): ?>
-                  <h3 class="font-semibold text-indigo-600 text-lg mb-1"><?= htmlspecialchars($post['title']) ?></h3>
+                  <h3 class="font-semibold text-indigo-600 text-lg mb-1 break-words"><?= htmlspecialchars($post['title']) ?></h3>
                 <?php endif; ?>
 
                 <?php if (!empty($post['description'])): ?>
-                  <p class="text-gray-700 text-sm mb-2"><?= htmlspecialchars($post['description']) ?></p>
+                  <p class="text-gray-700 text-sm mb-2 break-words"><?= htmlspecialchars($post['description']) ?></p>
                 <?php endif; ?>
 
                 <?php if (!empty($post['tags'])): ?>

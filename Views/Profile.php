@@ -174,11 +174,11 @@
               </div>
 
               <div class="post-content-view" data-post-id="<?= $post['post_id'] ?>">
-                <h3 class="text-lg font-semibold text-gray-800 post-title"><?= htmlspecialchars($post['title'] ?? 'Untitled') ?></h3>
+                <h3 class="text-lg font-semibold text-gray-800 post-title break-words"><?= htmlspecialchars($post['title'] ?? 'Untitled') ?></h3>
                 <?php if (!empty($post['description'])): ?>
-                  <p class="text-gray-600 text-sm mt-1 post-desc"><?= htmlspecialchars($post['description']) ?></p>
+                  <p class="text-gray-600 text-sm mt-1 post-desc break-words"><?= htmlspecialchars($post['description']) ?></p>
                 <?php else: ?>
-                  <p class="text-gray-600 text-sm mt-1 post-desc"></p>
+                  <p class="text-gray-600 text-sm mt-1 post-desc break-words"></p>
                 <?php endif; ?>
               </div>
               <!-- Inline edit form (hidden by default) -->
