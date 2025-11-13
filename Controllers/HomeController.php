@@ -25,8 +25,15 @@ class HomeController {
         $user = Session::get('user');
         $userId = $user['user_id'];
 
-        // Fetch posts only from followed users (not including self)
+        // Fetch posts from followed users
         $posts = $this->postModel->getPostsFromFollowedUsers($userId);
+
+        // Also fetch the logged‑in user's own posts
+        if (method_exists($this->postModel, 'getPostsByUser')) {
+            $selfPosts = $this->postModel->getPostsByUser($userId);
+            // Merge and sort by newest first
+            $posts = array_merge($selfPosts, $posts);
+        }
 
         // Filter out posts from blocked or blocking users
         $posts = array_filter($posts, function ($post) use ($userId) {
