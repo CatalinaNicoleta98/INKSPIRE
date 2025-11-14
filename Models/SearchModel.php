@@ -13,9 +13,10 @@ class SearchModel {
     // Search usernames
     public function searchUsers($q, $limit = 5) {
         $stmt = $this->conn->prepare("
-            SELECT user_id, username 
-            FROM User 
-            WHERE username LIKE :q 
+            SELECT u.user_id, u.username, p.profile_picture
+            FROM User u
+            JOIN Profile p ON u.user_id = p.user_id
+            WHERE u.username LIKE :q
             LIMIT :limit
         ");
         $stmt->bindValue(':q', '%' . $q . '%', PDO::PARAM_STR);
@@ -44,6 +45,32 @@ class SearchModel {
             SELECT DISTINCT tags 
             FROM Post 
             WHERE tags LIKE :q 
+            LIMIT :limit
+        ");
+        $stmt->bindValue(':q', '%' . $q . '%', PDO::PARAM_STR);
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Search posts by matching tags, return full basic post data
+    public function searchPostsByTag($q, $limit = 50) {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                p.post_id,
+                p.user_id,
+                p.title,
+                p.description,
+                p.image_url,
+                p.tags,
+                p.created_at,
+                p.is_public,
+                u.username,
+                pr.profile_picture
+            FROM Post p
+            JOIN User u ON p.user_id = u.user_id
+            JOIN Profile pr ON p.user_id = pr.user_id
+            WHERE p.tags LIKE :q
             LIMIT :limit
         ");
         $stmt->bindValue(':q', '%' . $q . '%', PDO::PARAM_STR);
