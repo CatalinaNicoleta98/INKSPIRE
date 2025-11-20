@@ -16,12 +16,12 @@ class NotificationController
     /* Show notifications list */
     public function index()
     {
-        if (!isset($_SESSION['user_id'])) {
+        if (!isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=login");
             return;
         }
 
-        $user_id = $_SESSION['user_id'];
+        $user_id = $_SESSION['user']['user_id'];
         $notifications = $this->notificationModel->getNotificationsByUser($user_id);
 
         // Mark all notifications as read when viewing the page
@@ -33,7 +33,7 @@ class NotificationController
     /* Process click on notification */
     public function view()
     {
-        if (!isset($_SESSION['user_id'])) {
+        if (!isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=login");
             return;
         }
@@ -44,7 +44,7 @@ class NotificationController
         }
 
         $notification_id = intval($_GET['id']);
-        $user_id = $_SESSION['user_id'];
+        $user_id = $_SESSION['user']['user_id'];
 
         $notif = $this->notificationModel->getNotification($notification_id);
 
@@ -70,8 +70,14 @@ class NotificationController
 
             case 'follow':
                 // actor_id = follower → their profile should open
-                $profileId = $this->profileModel->getProfileIdByUser($notif['actor_id']);
-                header("Location: index.php?action=profile&id=" . $profileId);
+                $profile = $this->profileModel->getProfileByUserId($notif['actor_id']);
+                $profileId = $profile['profile_id'] ?? null;
+
+                if ($profileId) {
+                    header("Location: index.php?action=profile&user_id=" . $profileId);
+                } else {
+                    header("Location: index.php?action=notifications");
+                }
                 break;
 
             default:
