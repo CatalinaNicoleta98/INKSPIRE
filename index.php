@@ -6,6 +6,8 @@ require_once __DIR__ . '/Controllers/PostController.php';
 require_once __DIR__ . '/Controllers/LikeController.php';
 require_once __DIR__ . '/Controllers/CommentController.php';
 require_once __DIR__ . '/Controllers/SearchController.php';
+require_once __DIR__ . '/Models/NotificationModel.php';
+require_once __DIR__ . '/Models/ProfileModel.php';
 
 // Create controllers
 $userController = new UserController();
@@ -21,7 +23,7 @@ $user = Session::get('user');
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 // Allow guests to access Explore, Login, and Register
-if (!Session::isLoggedIn() && !in_array($action, ['explore', 'login', 'register', ''])) {
+if (!Session::isLoggedIn() && !in_array($action, ['explore', 'login', 'register', 'notifications', 'viewNotification', ''])) {
     header("Location: index.php?action=login");
     exit;
 }
@@ -201,6 +203,18 @@ switch ($action) {
     // edit existing comment
     case 'editComment':
         $commentController->editComment();
+        break;
+
+    case 'notifications':
+        require_once __DIR__ . '/Controllers/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        $controller->index();
+        break;
+
+    case 'viewNotification':
+        require_once __DIR__ . '/Controllers/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        $controller->view();
         break;
 
     default:
