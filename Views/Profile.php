@@ -8,7 +8,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Inkspire | Profile</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
   <style>
   /* Dropdown styling for click-based toggle */
   .dropdown-menu {

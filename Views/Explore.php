@@ -8,7 +8,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Inkspire | Explore</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
 </head>
 <body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen pt-[70px]">
   <div class="flex justify-center items-center  w-full lg:pr-[250px] md:px-[200px] sm:px-4 box-border">
