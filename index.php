@@ -222,6 +222,36 @@ switch ($action) {
         $controller->view();
         break;
 
+    case 'markNotificationRead':
+        require_once __DIR__ . '/Controllers/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        $controller->markNotificationRead();
+        exit;
+
+    case 'markNotificationUnread':
+        require_once __DIR__ . '/Controllers/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        $controller->markNotificationUnread();
+        exit;
+
+    case 'markAllNotificationsRead':
+        require_once __DIR__ . '/Controllers/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        $controller->markAllNotificationsRead();
+        exit;
+
+    case 'deleteNotification':
+        require_once __DIR__ . '/Controllers/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        $controller->deleteNotification();
+        exit;
+
+    case 'deleteAllNotifications':
+        require_once __DIR__ . '/Controllers/NotificationController.php';
+        $controller = new NotificationController($pdo);
+        $controller->deleteAllNotifications();
+        exit;
+
     default:
         if (isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=home");

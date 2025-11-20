@@ -85,4 +85,92 @@ class NotificationController
                 break;
         }
     }
+    /* Mark a single notification as read */
+    public function markNotificationRead()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user']['user_id'], $_GET['id'])) {
+            echo json_encode(['success' => false, 'error' => 'invalid_request']);
+            return;
+        }
+
+        $notification_id = intval($_GET['id']);
+        $user_id = $_SESSION['user']['user_id'];
+
+        $this->notificationModel->markAsRead($notification_id, $user_id);
+        $unread = $this->notificationModel->getUnreadCount($user_id);
+
+        echo json_encode(['success' => true, 'unread' => $unread]);
+    }
+
+    /* Mark a single notification as unread */
+    public function markNotificationUnread()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user']['user_id'], $_GET['id'])) {
+            echo json_encode(['success' => false, 'error' => 'invalid_request']);
+            return;
+        }
+
+        $notification_id = intval($_GET['id']);
+        $user_id = $_SESSION['user']['user_id'];
+
+        $this->notificationModel->markAsUnread($notification_id, $user_id);
+        $unread = $this->notificationModel->getUnreadCount($user_id);
+
+        echo json_encode(['success' => true, 'unread' => $unread]);
+    }
+
+    /* Mark all as read */
+    public function markAllNotificationsRead()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user']['user_id'])) {
+            echo json_encode(['success' => false, 'error' => 'invalid_request']);
+            return;
+        }
+
+        $user_id = $_SESSION['user']['user_id'];
+        $this->notificationModel->markAllAsRead($user_id);
+
+        echo json_encode(['success' => true, 'unread' => 0]);
+    }
+
+    /* Delete a single notification */
+    public function deleteNotification()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user']['user_id'], $_GET['id'])) {
+            echo json_encode(['success' => false, 'error' => 'invalid_request']);
+            return;
+        }
+
+        $notification_id = intval($_GET['id']);
+        $user_id = $_SESSION['user']['user_id'];
+
+        $this->notificationModel->deleteNotification($notification_id, $user_id);
+        $unread = $this->notificationModel->getUnreadCount($user_id);
+
+        echo json_encode(['success' => true, 'unread' => $unread]);
+    }
+
+    /* Delete all notifications */
+    public function deleteAllNotifications()
+    {
+        header('Content-Type: application/json');
+
+        if (!isset($_SESSION['user']['user_id'])) {
+            echo json_encode(['success' => false, 'error' => 'invalid_request']);
+            return;
+        }
+
+        $user_id = $_SESSION['user']['user_id'];
+        $this->notificationModel->deleteAllNotifications($user_id);
+
+        echo json_encode(['success' => true, 'unread' => 0]);
+    }
 }

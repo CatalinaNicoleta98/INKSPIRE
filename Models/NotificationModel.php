@@ -104,5 +104,40 @@ class NotificationModel
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+    /* Mark ONE notification as unread */
+    public function markAsUnread($notification_id, $user_id)
+    {
+        $stmt = $this->db->prepare("
+            UPDATE Notification
+            SET is_read = 0
+            WHERE notification_id = :nid AND user_id = :uid
+        ");
+        $stmt->bindParam(":nid", $notification_id);
+        $stmt->bindParam(":uid", $user_id);
+        return $stmt->execute();
+    }
+
+    /* Delete ONE notification */
+    public function deleteNotification($notification_id, $user_id)
+    {
+        $stmt = $this->db->prepare("
+            DELETE FROM Notification
+            WHERE notification_id = :nid AND user_id = :uid
+        ");
+        $stmt->bindParam(":nid", $notification_id);
+        $stmt->bindParam(":uid", $user_id);
+        return $stmt->execute();
+    }
+
+    /* Delete ALL notifications for a user */
+    public function deleteAllNotifications($user_id)
+    {
+        $stmt = $this->db->prepare("
+            DELETE FROM Notification
+            WHERE user_id = :uid
+        ");
+        $stmt->bindParam(":uid", $user_id);
+        return $stmt->execute();
+    }
 }
 ?>

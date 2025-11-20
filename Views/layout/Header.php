@@ -34,6 +34,18 @@ $profilePic = !empty($loggedInUser['profile_picture'])
               $unread = $notifModel->getUnreadCount($loggedInUser['user_id']);
               $notifications = $notifModel->getNotificationsByUser($loggedInUser['user_id']);
           }
+
+          $unreadNotifications = [];
+          $readNotifications = [];
+          if (!empty($notifications)) {
+              foreach ($notifications as $n) {
+                  if (empty($n['is_read'])) {
+                      $unreadNotifications[] = $n;
+                  } else {
+                      $readNotifications[] = $n;
+                  }
+              }
+          }
       ?>
 
       <div class="flex items-center gap-4">
@@ -62,39 +74,96 @@ $profilePic = !empty($loggedInUser['profile_picture'])
                 No notifications at the moment.
               </p>
             <?php else: ?>
+              <!-- Header with bulk actions -->
+              <div class="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
+                <span class="text-sm font-semibold text-gray-700">Notifications</span>
+                <div class="flex items-center gap-2 text-xs">
+                  <button class="js-mark-all-read text-indigo-600 hover:underline">Mark all read</button>
+                  <span class="text-gray-300">|</span>
+                  <button class="js-clear-all text-red-500 hover:underline">Clear all</button>
+                </div>
+              </div>
+
               <div class="max-h-80 overflow-y-auto">
-                <?php foreach ($notifications as $n): ?>
-                  <a href="index.php?action=viewNotification&id=<?= $n['notification_id'] ?>"
-                     class="flex items-start gap-3 px-4 py-3 text-sm border-b last:border-b-0
-                            <?= $n['is_read'] ? 'bg-white' : 'bg-indigo-50' ?> hover:bg-indigo-100 transition">
+                <?php if (!empty($unreadNotifications)): ?>
+                  <p class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Unread</p>
+                  <?php foreach ($unreadNotifications as $n): ?>
+                    <div class="flex items-start gap-3 px-4 py-3 text-sm border-b last:border-b-0 bg-indigo-50 hover:bg-indigo-100 transition">
+                      <?php
+                          $actorPic = !empty($n['actor_profile_picture'])
+                              ? htmlspecialchars($n['actor_profile_picture'])
+                              : 'uploads/default_avatar.png';
+                      ?>
+                      <img src="<?= $actorPic ?>"
+                           class="w-9 h-9 rounded-full object-cover border" alt="profile">
 
-                    <?php
-                        $actorPic = !empty($n['actor_profile_picture'])
-                            ? htmlspecialchars($n['actor_profile_picture'])
-                            : 'uploads/default_avatar.png';
-                    ?>
-                    <img src="<?= $actorPic ?>"
-                         class="w-9 h-9 rounded-full object-cover border" alt="profile">
+                      <div class="flex-1">
+                        <a href="index.php?action=viewNotification&id=<?= $n['notification_id'] ?>" class="block text-gray-800">
+                          <p>
+                            <span class="font-semibold">@<?= htmlspecialchars($n['actor_username']) ?></span>
+                            <?php if ($n['type'] === 'like'): ?>
+                              liked your post
+                            <?php elseif ($n['type'] === 'comment'): ?>
+                              commented on your post
+                            <?php elseif ($n['type'] === 'reply'): ?>
+                              replied to your comment
+                            <?php elseif ($n['type'] === 'follow'): ?>
+                              started following you
+                            <?php endif; ?>
+                          </p>
+                        </a>
+                        <p class="text-xs text-gray-400 mt-1">
+                          <?= date("M j, H:i", strtotime($n['created_at'])) ?>
+                        </p>
+                      </div>
 
-                    <div class="flex-1">
-                      <p class="text-gray-800">
-                        <span class="font-semibold">@<?= htmlspecialchars($n['actor_username']) ?></span>
-                        <?php if ($n['type'] === 'like'): ?>
-                          liked your post
-                        <?php elseif ($n['type'] === 'comment'): ?>
-                          commented on your post
-                        <?php elseif ($n['type'] === 'reply'): ?>
-                          replied to your comment
-                        <?php elseif ($n['type'] === 'follow'): ?>
-                          started following you
-                        <?php endif; ?>
-                      </p>
-                      <p class="text-xs text-gray-400 mt-1">
-                        <?= date("M j, H:i", strtotime($n['created_at'])) ?>
-                      </p>
+                      <div class="flex flex-col items-end gap-1 ml-2">
+                        <button class="js-mark-read text-[10px] text-indigo-600 hover:underline" data-id="<?= $n['notification_id'] ?>">Mark read</button>
+                        <button class="js-delete text-[10px] text-red-500 hover:underline" data-id="<?= $n['notification_id'] ?>">Delete</button>
+                      </div>
                     </div>
-                  </a>
-                <?php endforeach; ?>
+                  <?php endforeach; ?>
+                <?php endif; ?>
+
+                <?php if (!empty($readNotifications)): ?>
+                  <p class="px-4 pt-3 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Earlier</p>
+                  <?php foreach ($readNotifications as $n): ?>
+                    <div class="flex items-start gap-3 px-4 py-3 text-sm border-b last:border-b-0 bg-white hover:bg-indigo-50 transition">
+                      <?php
+                          $actorPic = !empty($n['actor_profile_picture'])
+                              ? htmlspecialchars($n['actor_profile_picture'])
+                              : 'uploads/default_avatar.png';
+                      ?>
+                      <img src="<?= $actorPic ?>"
+                           class="w-9 h-9 rounded-full object-cover border" alt="profile">
+
+                      <div class="flex-1">
+                        <a href="index.php?action=viewNotification&id=<?= $n['notification_id'] ?>" class="block text-gray-800">
+                          <p>
+                            <span class="font-semibold">@<?= htmlspecialchars($n['actor_username']) ?></span>
+                            <?php if ($n['type'] === 'like'): ?>
+                              liked your post
+                            <?php elseif ($n['type'] === 'comment'): ?>
+                              commented on your post
+                            <?php elseif ($n['type'] === 'reply'): ?>
+                              replied to your comment
+                            <?php elseif ($n['type'] === 'follow'): ?>
+                              started following you
+                            <?php endif; ?>
+                          </p>
+                        </a>
+                        <p class="text-xs text-gray-400 mt-1">
+                          <?= date("M j, H:i", strtotime($n['created_at'])) ?>
+                        </p>
+                      </div>
+
+                      <div class="flex flex-col items-end gap-1 ml-2">
+                        <button class="js-mark-unread text-[10px] text-indigo-600 hover:underline" data-id="<?= $n['notification_id'] ?>">Mark unread</button>
+                        <button class="js-delete text-[10px] text-red-500 hover:underline" data-id="<?= $n['notification_id'] ?>">Delete</button>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </div>
             <?php endif; ?>
           </div>
@@ -153,6 +222,86 @@ window.addEventListener("click", (e) => {
   }
   if (notifBtn && notifDropdown && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
     notifDropdown.classList.add("hidden");
+  }
+});
+
+// --- AJAX Notification Actions ---
+async function notifRequest(url, method = 'GET') {
+  const res = await fetch(url, { method });
+  return res.json();
+}
+
+function updateBadge(count) {
+  const badge = document.querySelector('#notifBtn span');
+  if (!badge && count > 0) {
+    const span = document.createElement('span');
+    span.className = "absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow";
+    span.textContent = count;
+    document.querySelector('#notifBtn').appendChild(span);
+  } else if (badge) {
+    if (count > 0) badge.textContent = count;
+    else badge.remove();
+  }
+}
+
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('js-mark-read')) {
+    const id = e.target.dataset.id;
+    const container = e.target.closest('.flex.items-start');
+    const res = await notifRequest(`index.php?action=markNotificationRead&id=${id}`);
+    if (res.success) {
+      container.style.opacity = 0;
+      setTimeout(() => container.remove(), 200);
+      updateBadge(res.unread);
+    }
+  }
+
+  if (e.target.classList.contains('js-mark-unread')) {
+    const id = e.target.dataset.id;
+    const container = e.target.closest('.flex.items-start');
+    const res = await notifRequest(`index.php?action=markNotificationUnread&id=${id}`);
+    if (res.success) {
+      container.style.opacity = 0;
+      setTimeout(() => container.remove(), 200);
+      updateBadge(res.unread);
+    }
+  }
+
+  if (e.target.classList.contains('js-delete')) {
+    const id = e.target.dataset.id;
+    const container = e.target.closest('.flex.items-start');
+    const res = await notifRequest(`index.php?action=deleteNotification&id=${id}`);
+    if (res.success) {
+      container.style.opacity = 0;
+      setTimeout(() => container.remove(), 200);
+      updateBadge(res.unread);
+    }
+  }
+
+  if (e.target.classList.contains('js-mark-all-read')) {
+    const unreadSection = document.querySelector('#notifDropdown');
+    const res = await notifRequest('index.php?action=markAllNotificationsRead');
+    if (res.success) {
+      document.querySelectorAll('.js-mark-read').forEach(el => {
+        const c = el.closest('.flex.items-start');
+        if (c) {
+          c.style.opacity = 0;
+          setTimeout(() => c.remove(), 200);
+        }
+      });
+      updateBadge(0);
+    }
+  }
+
+  if (e.target.classList.contains('js-clear-all')) {
+    const res = await notifRequest('index.php?action=deleteAllNotifications');
+    if (res.success) {
+      document.querySelectorAll('#notifDropdown .flex.items-start').forEach(c => {
+        c.style.opacity = 0;
+        setTimeout(() => c.remove(), 200);
+      });
+      updateBadge(0);
+    }
   }
 });
 </script>
