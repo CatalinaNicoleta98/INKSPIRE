@@ -228,5 +228,46 @@ class PostController {
             exit;
         }
     }
+    // Full-page single post view (used by notifications)
+    public function showPostPage() {
+        Session::start();
+        $user = Session::get('user');
+        if (!$user) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        $postId = isset($_GET['id']) ? intval($_GET['id']) : null;
+        if (!$postId) {
+            header("Location: index.php?action=home");
+            exit;
+        }
+
+        // Fetch the post with full details
+        require_once __DIR__ . '/../Models/LikeModel.php';
+        require_once __DIR__ . '/../Models/CommentModel.php';
+
+        $post = $this->postModel->getPostById($postId);
+        if (!$post) {
+            header("Location: index.php?action=notifications");
+            exit;
+        }
+
+        // Likes
+        $likeModel = new LikeModel();
+        $post['likes'] = $likeModel->countLikes($postId);
+        $post['liked'] = $likeModel->userLiked($user['user_id'], $postId);
+
+        // Comments
+        $commentModel = new CommentModel();
+        $post['comments'] = $commentModel->getCommentsByPost($postId);
+
+        // Comment highlight (from notifications)
+        $highlightCommentId = isset($_GET['comment_id']) ? intval($_GET['comment_id']) : null;
+
+        // Prepare data exactly as Post.php expects
+        $posts = [$post];
+        include __DIR__ . '/../Views/templates/SinglePost.php';
+    }
 }
 ?>

@@ -60,12 +60,12 @@ class NotificationController
         switch ($notif['type']) {
 
             case 'like':
-                header("Location: index.php?action=viewPost&id=" . $notif['post_id']);
+                header("Location: index.php?action=post&id=" . $notif['post_id']);
                 break;
 
             case 'comment':
             case 'reply':
-                header("Location: index.php?action=viewPost&id=" . $notif['post_id'] . "&comment_id=" . $notif['comment_id']);
+                header("Location: index.php?action=post&id=" . $notif['post_id'] . "&comment_id=" . $notif['comment_id']);
                 break;
 
             case 'follow':

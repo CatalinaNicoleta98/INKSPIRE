@@ -169,6 +169,11 @@ switch ($action) {
         }
         break;
 
+    case 'post':
+        // Full-page single post
+        $postController->showPostPage();
+        break;
+
     // post management: edit, delete, change privacy
     case 'editPost':
         $postController->editPost();
