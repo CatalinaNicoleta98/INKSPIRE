@@ -46,9 +46,10 @@ class PostModel {
 
     // Get one post by ID
     public function getPostById($postId) {
-        $query = "SELECT p.*, u.username 
+        $query = "SELECT p.*, u.username, pr.profile_picture
                   FROM Post p
                   JOIN User u ON p.user_id = u.user_id
+                  LEFT JOIN Profile pr ON pr.user_id = u.user_id
                   WHERE p.post_id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':id' => $postId]);
