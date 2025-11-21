@@ -69,10 +69,24 @@ class CommentModel {
         return $result ? (int)$result['total'] : 0;
     }
 
-    // Delete a comment (only if it belongs to the current user)
-    public function deleteComment($comment_id, $user_id) {
-        $stmt = $this->conn->prepare("DELETE FROM `Comment` WHERE comment_id = ? AND user_id = ?");
-        return $stmt->execute([$comment_id, $user_id]);
+    // Delete a comment (normal user must own it, admin can delete any)
+    public function deleteComment($comment_id, $user_id = null) {
+        try {
+            if ($user_id === null) {
+                // Admin deletion — ignore ownership
+                $stmt = $this->conn->prepare("DELETE FROM `Comment` WHERE comment_id = ?");
+                $stmt->execute([$comment_id]);
+            } else {
+                // Normal user — must own the comment
+                $stmt = $this->conn->prepare("DELETE FROM `Comment` WHERE comment_id = ? AND user_id = ?");
+                $stmt->execute([$comment_id, $user_id]);
+            }
+
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            file_put_contents(__DIR__ . '/../debug_sql.txt', $e->getMessage());
+            return false;
+        }
     }
 
     // Edit a comment (only if it belongs to the current user)

@@ -171,6 +171,9 @@ document.addEventListener('click', (e) => {
 </script>
 
 <script>
+const IS_ADMIN_VIEW = <?= (!empty($_SESSION['admin_view']) && !empty($user['is_admin'])) ? 'true' : 'false' ?>;
+</script>
+<script>
 // Safe global comment renderer (handles missing or flat replies)
 function renderComment(c, postId, level = 0) {
   const repliesCount = Array.isArray(c.replies) ? c.replies.length : 0;
@@ -194,12 +197,12 @@ function renderComment(c, postId, level = 0) {
         </div>
         <div class="replies hidden mt-2 ml-6">${repliesHTML}</div>
       </div>
-      ${c.owned
+      ${(c.owned || IS_ADMIN_VIEW)
         ? `
           <div class="comment-tools absolute top-2 right-2">
             <button class="comment-options text-gray-400 hover:text-gray-600 transition" data-comment-id="${c.comment_id}" data-post-id="${postId}">⋮</button>
             <div class="comment-options-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10">
-              <button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>
+              ${c.owned ? `<button class="edit-comment block w-full text-left px-3 py-1 text-sm hover:bg-indigo-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Edit</button>` : ''}
               <button class="delete-comment block w-full text-left px-3 py-1 text-sm text-red-600 hover:bg-red-50" data-comment-id="${c.comment_id}" data-post-id="${postId}">Delete</button>
             </div>
           </div>

@@ -86,10 +86,33 @@ class CommentController {
         if ($comment_id) {
             $user_id = $user['user_id'];
 
+            // Determine if user is admin (support multiple patterns)
+            $isAdmin = false;
+
+            if (!empty($user['role'])) {
+                $role = strtolower(trim($user['role']));
+                if (in_array($role, ['admin', 'administrator', 'superadmin'])) {
+                    $isAdmin = true;
+                }
+            }
+
+            if (isset($user['is_admin']) && (int)$user['is_admin'] === 1) {
+                $isAdmin = true;
+            }
+            if (isset($user['isAdmin']) && $user['isAdmin']) {
+                $isAdmin = true;
+            }
+
             // Retrieve post_id if not passed (for replies)
             $post_id = $_POST['post_id'] ?? $this->model->getPostIdByComment($comment_id);
 
+            // First try: delete as the comment owner
             $success = $this->model->deleteComment($comment_id, $user_id);
+
+            // If that failed and the user is admin, allow admin override delete
+            if (!$success && $isAdmin) {
+                $success = $this->model->deleteComment($comment_id, null);
+            }
 
             header('Content-Type: application/json');
             if ($success) {
