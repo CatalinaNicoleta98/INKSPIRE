@@ -110,7 +110,32 @@ class PostController {
             exit;
         }
 
+        // Determine if user is admin (support multiple patterns)
+        $isAdmin = false;
+
+        // Check common "role" patterns
+        if (!empty($user['role'])) {
+            $role = strtolower(trim($user['role']));
+            if (in_array($role, ['admin', 'administrator', 'superadmin'])) {
+                $isAdmin = true;
+            }
+        }
+
+        // Check common boolean admin flags
+        if (isset($user['is_admin']) && (int)$user['is_admin'] === 1) {
+            $isAdmin = true;
+        }
+        if (isset($user['isAdmin']) && $user['isAdmin']) {
+            $isAdmin = true;
+        }
+
+        // First try: user can delete their own post
         $success = $this->postModel->deletePost($postId, $user['user_id']);
+
+        // If that failed and user is admin, allow admin override delete
+        if (!$success && $isAdmin) {
+            $success = $this->postModel->deletePost($postId, null);
+        }
 
         header('Content-Type: application/json');
         echo json_encode(['success' => $success]);

@@ -157,7 +157,11 @@
                     </div>
                   </div>
                 </div>
-              <?php if ($post['user_id'] === $currentUser['user_id']): ?>
+              <?php
+                  $isOwner = ($post['user_id'] === $currentUser['user_id']);
+                  $isAdminView = !empty($_SESSION['admin_view']) && !empty($currentUser['is_admin']);
+                  if ($isOwner):
+              ?>
                 <div class="relative">
                   <button class="post-options flex items-center justify-center w-7 h-7 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition"
                           data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>" title="Post settings">⚙️</button>
@@ -170,6 +174,11 @@
                     </button>
                   </div>
                 </div>
+              <?php endif; ?>
+              <?php if (!$isOwner && $isAdminView): ?>
+                  <div class="absolute top-3 right-3 z-20">
+                      <button class="delete-post text-red-600 hover:text-red-800 text-sm" data-post-id="<?= $post['post_id'] ?>">🗑️ Delete</button>
+                  </div>
               <?php endif; ?>
               </div>
 

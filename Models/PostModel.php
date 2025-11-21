@@ -115,11 +115,22 @@ class PostModel {
     }
 
     // Delete a post
-    public function deletePost($postId, $userId) {
+    public function deletePost($postId, $userId = null) {
         try {
-            $query = "DELETE FROM Post WHERE post_id = :post_id AND user_id = :user_id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([':post_id' => $postId, ':user_id' => $userId]);
+            if ($userId === null) {
+                // Admin delete: ignore ownership
+                $query = "DELETE FROM Post WHERE post_id = :post_id";
+                $stmt = $this->conn->prepare($query);
+                $stmt->execute([':post_id' => $postId]);
+            } else {
+                // Normal user: must own the post
+                $query = "DELETE FROM Post WHERE post_id = :post_id AND user_id = :user_id";
+                $stmt = $this->conn->prepare($query);
+                $stmt->execute([
+                    ':post_id' => $postId,
+                    ':user_id' => $userId
+                ]);
+            }
             return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             file_put_contents(__DIR__ . '/../debug_sql.txt', $e->getMessage());
