@@ -252,6 +252,21 @@ switch ($action) {
         $controller->deleteAllNotifications();
         exit;
 
+    case 'toggleAdminView':
+        require_once __DIR__ . '/Controllers/SettingsController.php';
+        $controller = new SettingsController();
+        $controller->toggleAdminView();
+        break;
+
+    case 'adminPanel':
+        // Temporary placeholder — will be implemented later
+        if (isset($_SESSION['user']) && !empty($_SESSION['user']['is_admin']) && !empty($_SESSION['admin_view'])) {
+            include __DIR__ . '/Views/User.php';
+        } else {
+            header("Location: index.php?action=home");
+        }
+        break;
+
     default:
         if (isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=home");

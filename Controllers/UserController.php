@@ -82,12 +82,9 @@ class UserController {
             if ($user) {
                 Session::set('user', $user);
 
-                // ✅ Optional: redirect admins differently
-                if (!empty($user['is_admin'])) {
-                    header("Location: index.php?action=admin");
-                } else {
-                    header("Location: index.php?action=home");
-                }
+                // Admins should NOT be redirected to a special page automatically.
+                // All users (including admins) go to home, and admins can enable admin view from the sidebar.
+                header("Location: index.php?action=home");
                 exit;
             } else {
                 echo "<p>Invalid username or password.</p>";

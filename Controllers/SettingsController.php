@@ -154,5 +154,28 @@ class SettingsController {
             exit();
         }
     }
+    public function toggleAdminView()
+    {
+        Session::start();
+
+        // Only logged-in admins can toggle admin view
+        if (empty($_SESSION['user']) || empty($_SESSION['user']['is_admin'])) {
+            header('Location: index.php?action=home');
+            exit();
+        }
+
+        $mode = $_GET['mode'] ?? 'off';
+
+        if ($mode === 'on') {
+            $_SESSION['admin_view'] = 1;
+        } else {
+            unset($_SESSION['admin_view']);
+        }
+
+        // Redirect back to previous page if available
+        $redirect = $_SERVER['HTTP_REFERER'] ?? 'index.php?action=home';
+        header("Location: " . $redirect);
+        exit();
+    }
 }
 ?>

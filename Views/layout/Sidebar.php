@@ -1,6 +1,9 @@
 <?php
   require_once __DIR__ . '/../../helpers/Session.php';
   $isLoggedIn = Session::isLoggedIn();
+  $loggedInUser = $_SESSION['user'] ?? null;
+  $isAdmin = $loggedInUser && !empty($loggedInUser['is_admin']);
+  $adminViewOn = !empty($_SESSION['admin_view']);
   if (!isset($_SESSION['post_token'])) {
       $_SESSION['post_token'] = bin2hex(random_bytes(32));
   }
@@ -13,6 +16,33 @@
     <button onclick="window.location='index.php?action=profile'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">👤 Profile</button>
     <button onclick="window.location='index.php?action=settings'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">⚙️ Settings</button>
     <button onclick="window.location='index.php?action=logout'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🚪 Logout</button>
+
+    <?php if ($isAdmin): ?>
+      <div class="mt-4 mb-2 p-3 rounded-md bg-purple-100 text-purple-800 text-sm">
+        <?php if ($adminViewOn): ?>
+          <p class="font-semibold mb-2 flex items-center gap-1">
+            👑 <span>Hello admin</span>
+          </p>
+          <button onclick="window.location='index.php?action=toggleAdminView&amp;mode=off'"
+                  class="w-full mb-1 py-1.5 px-2 rounded-md border border-purple-300 text-purple-700 hover:bg-purple-200 transition text-xs">
+            Disable admin view
+          </button>
+          <button onclick="window.location='index.php?action=adminPanel'"
+                  class="w-full py-1.5 px-2 rounded-md bg-purple-500 text-white hover:bg-purple-600 transition text-xs">
+            Open admin panel
+          </button>
+        <?php else: ?>
+          <p class="font-semibold mb-2 flex items-center gap-1">
+            👑 <span>Admin view is off</span>
+          </p>
+          <button onclick="window.location='index.php?action=toggleAdminView&amp;mode=on'"
+                  class="w-full py-1.5 px-2 rounded-md border border-purple-300 text-purple-700 hover:bg-purple-200 transition text-xs">
+            Enable admin view
+          </button>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
+
     <button id="createPostBtn" class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">➕ Create Post</button>
   <?php else: ?>
     <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
