@@ -259,12 +259,21 @@ switch ($action) {
         break;
 
     case 'adminPanel':
-        // Temporary placeholder — will be implemented later
-        if (isset($_SESSION['user']) && !empty($_SESSION['user']['is_admin']) && !empty($_SESSION['admin_view'])) {
-            include __DIR__ . '/Views/User.php';
-        } else {
-            header("Location: index.php?action=home");
-        }
+        require_once __DIR__ . '/Controllers/AdminController.php';
+        $controller = new AdminController();
+        $controller->dashboard();
+        break;
+
+    case 'adminToggleBlock':
+        require_once __DIR__ . '/Controllers/AdminController.php';
+        $controller = new AdminController();
+        $controller->toggleBlock();
+        break;
+
+    case 'adminToggleAdmin':
+        require_once __DIR__ . '/Controllers/AdminController.php';
+        $controller = new AdminController();
+        $controller->toggleAdmin();
         break;
 
     default:

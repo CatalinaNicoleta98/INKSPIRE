@@ -160,6 +160,81 @@ class UserModel {
             return [];
         }
     }
-}
+    /** 
+     * Admin overview: list all users with followers and posts count
+     */
+    public function getAdminUserOverview() {
+        $query = "
+            SELECT 
+                u.user_id,
+                u.username,
+                u.email,
+                u.is_active,
+                u.is_admin,
+                p.profile_picture,
+                p.followers,
+                p.posts
+            FROM User u
+            INNER JOIN Profile p ON u.user_id = p.user_id
+            ORDER BY u.username ASC
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Daily stats using views (must exist in DB):
+     * view_daily_user_stats and view_daily_post_stats
+     */
+    public function getAdminDailyStats() {
+        $stats = [
+            'new_users_today' => 0,
+            'new_posts_today' => 0
+        ];
+
+        try {
+            $q1 = $this->conn->query("SELECT new_users_today FROM view_daily_user_stats LIMIT 1");
+            $row1 = $q1->fetch(PDO::FETCH_ASSOC);
+            if ($row1 && isset($row1['new_users_today'])) {
+                $stats['new_users_today'] = (int)$row1['new_users_today'];
+            }
+        } catch (PDOException $e) {}
+
+        try {
+            $q2 = $this->conn->query("SELECT new_posts_today FROM view_daily_post_stats LIMIT 1");
+            $row2 = $q2->fetch(PDO::FETCH_ASSOC);
+            if ($row2 && isset($row2['new_posts_today'])) {
+                $stats['new_posts_today'] = (int)$row2['new_posts_today'];
+            }
+        } catch (PDOException $e) {}
+
+        return $stats;
+    }
+
+    /**
+     * Toggle global block/unblock
+     */
+    public function setGlobalBlock($userId, $blocked) {
+        $query = "UPDATE User SET is_active = :active WHERE user_id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':active' => $blocked ? 0 : 1,
+            ':user_id' => $userId
+        ]);
+    }
+
+    /**
+     * Promote or demote admin
+     */
+    public function setAdminFlag($userId, $isAdmin) {
+        $query = "UPDATE User SET is_admin = :admin WHERE user_id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':admin' => $isAdmin ? 1 : 0,
+            ':user_id' => $userId
+        ]);
+    }
+    }
 }
 ?>
