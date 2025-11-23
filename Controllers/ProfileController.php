@@ -47,10 +47,11 @@ class ProfileController {
         // If logged-in user is admin-blocked and viewing their own profile
         if (isset($currentUser['is_active']) && (int)$currentUser['is_active'] === 0 && $userId == $viewerId) {
             $profile = $this->profileModel->getUserProfile($userId);
-            $posts = [];
             $followersList = [];
             $followingList = [];
             $isAdminBlocked = true;
+            // Do NOT block posts here — blocked users may see their own posts
+            $posts = $this->postModel->getPostsByUser($userId);
             include __DIR__ . '/../Views/Profile.php';
             return;
         }

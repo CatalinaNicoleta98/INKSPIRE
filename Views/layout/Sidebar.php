@@ -43,7 +43,15 @@
       </div>
     <?php endif; ?>
 
-    <button id="createPostBtn" class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">➕ Create Post</button>
+    <?php if (!empty($loggedInUser) && isset($loggedInUser['is_active']) && (int)$loggedInUser['is_active'] === 0): ?>
+      <button 
+        onclick="alert('You cannot create a post because your account is blocked.'); return false;" 
+        class="mt-auto bg-gray-300 text-gray-500 font-medium py-2 px-3 rounded-md cursor-not-allowed">
+        ➕ Create Post
+      </button>
+    <?php else: ?>
+      <button id="createPostBtn" class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">➕ Create Post</button>
+    <?php endif; ?>
   <?php else: ?>
     <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
     <button onclick="window.location='index.php?action=login'" class="w-full text-left py-2 px-3 mt-auto rounded-md bg-gradient-to-r from-indigo-400 to-purple-400 text-white hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">🔐 Login / Register</button>

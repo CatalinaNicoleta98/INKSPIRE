@@ -176,6 +176,15 @@ class PostController {
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
             exit;
         }
+        // Prevent admin-blocked users from creating posts
+        if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'You have been blocked by an administrator and cannot create posts.'
+            ]);
+            exit;
+        }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // CSRF token validation

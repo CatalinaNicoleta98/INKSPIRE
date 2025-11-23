@@ -155,7 +155,7 @@ $isProfileAdminBlocked = $isProfileAdminBlocked ?? false;
 
       <!-- Posts Feed -->
       <div class="space-y-6">
-        <?php if (!empty($isAdminBlocked) || !empty($isProfileAdminBlocked)): ?>
+        <?php if (!empty($isProfileAdminBlocked)): ?>
           <p class="text-center text-gray-500 italic mt-6">No posts available.</p>
         <?php endif; ?>
         <?php if (!empty($posts)): ?>
@@ -181,7 +181,7 @@ $isProfileAdminBlocked = $isProfileAdminBlocked ?? false;
               <?php
                   $isOwner = ($post['user_id'] === $currentUser['user_id']);
                   $isAdminView = !empty($_SESSION['admin_view']) && !empty($currentUser['is_admin']);
-                  if ($isOwner):
+                  if ($isOwner && !$isAdminBlocked):
               ?>
                 <div class="relative">
                   <button class="post-options flex items-center justify-center w-7 h-7 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition"
