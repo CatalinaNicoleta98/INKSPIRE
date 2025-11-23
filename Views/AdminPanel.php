@@ -52,7 +52,7 @@ $stats = $stats ?? ['new_users_today' => 0, 'new_posts_today' => 0];
                             </td>
 
                             <td class="px-4 py-2">
-                                <a href="index.php?action=profile&amp;id=<?= $u['user_id'] ?>" class="text-indigo-600 hover:underline">
+                                <a href="index.php?action=profile&user_id=<?= htmlspecialchars($u['user_id']) ?>" class="text-indigo-600 hover:underline">
                                     <?= htmlspecialchars($u['username']) ?>
                                 </a>
                             </td>
