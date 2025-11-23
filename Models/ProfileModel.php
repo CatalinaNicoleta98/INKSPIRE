@@ -44,7 +44,7 @@ class ProfileModel {
 
     // Get user profile details
     public function getUserProfile($userId) {
-        $query = "SELECT p.*, u.username, u.email 
+        $query = "SELECT p.*, u.username, u.email, u.is_active 
                   FROM Profile p 
                   JOIN User u ON p.user_id = u.user_id 
                   WHERE p.user_id = :user_id";

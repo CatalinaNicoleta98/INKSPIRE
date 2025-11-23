@@ -20,6 +20,16 @@ class CommentController {
             exit;
         }
 
+        // Prevent comments from admin-blocked users
+        if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'You have been blocked by an administrator and cannot comment.'
+            ]);
+            exit;
+        }
+
         $post_id = $_POST['post_id'] ?? null;
         $content = $_POST['text'] ?? '';
         $parent_id = $_POST['parent_id'] ?? null;

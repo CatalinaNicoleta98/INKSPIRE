@@ -2,6 +2,12 @@
 <?php include __DIR__ . '/layout/Header.php'; ?>
 <?php include __DIR__ . '/layout/Sidebar.php'; ?>
 <?php include __DIR__ . '/layout/Rightbar.php'; ?>
+<?php
+// Ensure block flags always exist to avoid warnings
+$isBlocked = $isBlocked ?? false;
+$isAdminBlocked = $isAdminBlocked ?? false;
+$isProfileAdminBlocked = $isProfileAdminBlocked ?? false;
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -98,7 +104,7 @@
           </div>
         </div>
 
-        <?php if ($profile['user_id'] !== $currentUser['user_id']): ?>
+        <?php if ($profile['user_id'] !== $currentUser['user_id'] && !$isAdminBlocked && !$isProfileAdminBlocked): ?>
           <div class="flex justify-center gap-4 mt-6">
             <!-- Follow / Unfollow Button -->
             <?php if ($isFollowing): ?>
@@ -130,6 +136,18 @@
 
       </div>
 
+      <?php if (!empty($isAdminBlocked)): ?>
+        <p class="text-center text-red-500 font-semibold italic mt-6">
+          You have been blocked by an administrator.
+        </p>
+      <?php endif; ?>
+
+      <?php if (!empty($isProfileAdminBlocked)): ?>
+        <p class="text-center text-red-500 font-semibold italic mt-6">
+          This user has been blocked by an administrator.
+        </p>
+      <?php endif; ?>
+
       <?php if (!empty($showPrivateNotice)): ?>
         <p class="text-gray-500 italic mt-6">This profile is private. Only public posts are visible. Follow to see all posts, followers, and following.</p>
         <p class="text-center text-sm text-gray-500 italic mb-4">Showing public posts only.</p>
@@ -137,6 +155,9 @@
 
       <!-- Posts Feed -->
       <div class="space-y-6">
+        <?php if (!empty($isAdminBlocked) || !empty($isProfileAdminBlocked)): ?>
+          <p class="text-center text-gray-500 italic mt-6">No posts available.</p>
+        <?php endif; ?>
         <?php if (!empty($posts)): ?>
           <?php foreach ($posts as $post): ?>
             <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition relative post-card" data-post-id="<?= $post['post_id'] ?>">

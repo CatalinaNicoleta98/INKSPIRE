@@ -91,5 +91,38 @@ class AdminController
         header('Location: index.php?action=adminPanel');
         exit;
     }
+    /**
+     * Globally block a user (admin-only).
+     */
+    public function globalBlock()
+    {
+        $this->ensureAdmin();
+
+        $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($userId > 0) {
+            $this->userModel->setGlobalBlockStatus($userId, 1);
+        }
+
+        header("Location: index.php?action=adminPanel");
+        exit;
+    }
+
+    /**
+     * Remove global block from a user (admin-only).
+     */
+    public function globalUnblock()
+    {
+        $this->ensureAdmin();
+
+        $userId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($userId > 0) {
+            $this->userModel->setGlobalBlockStatus($userId, 0);
+        }
+
+        header("Location: index.php?action=adminPanel");
+        exit;
+    }
 }
 ?>

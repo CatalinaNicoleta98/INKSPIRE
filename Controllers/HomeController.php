@@ -23,7 +23,22 @@ class HomeController {
         }
 
         $user = Session::get('user');
+        // Ensure session user is a valid array
+        if (!is_array($user)) {
+            // Force logout or redirect to login if session is corrupted
+            header('Location: index.php?action=login');
+            exit();
+        }
+
         $userId = $user['user_id'];
+
+        // If the user is admin-blocked (is_active = 0), show no posts
+        if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+            $posts = [];
+            $isAdminBlocked = true; // Pass to view
+            include __DIR__ . '/../Views/Home.php';
+            return;
+        }
 
         // Fetch posts from followed users
         $posts = $this->postModel->getPostsFromFollowedUsers($userId);

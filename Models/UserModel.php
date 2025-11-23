@@ -71,9 +71,8 @@ class UserModel {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($password, $user['password'])) {
-            if (!$user['is_active']) {
-                return "blocked";
-            }
+            // Allow login for both active and admin-blocked users.
+            // Blocking behavior is enforced across controllers using is_active.
             return $user;
         }
         return false;
@@ -222,6 +221,28 @@ class UserModel {
             ':active' => $blocked ? 0 : 1,
             ':user_id' => $userId
         ]);
+    }
+
+    /**
+     * Set global block status (admin-wide block)
+     */
+    public function setGlobalBlockStatus($userId, $status) {
+        $query = "UPDATE User SET is_globally_blocked = :status WHERE user_id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':status', $status, PDO::PARAM_INT);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    /**
+     * Check if a user is globally blocked
+     */
+    public function isGloballyBlocked($userId) {
+        $query = "SELECT is_globally_blocked FROM User WHERE user_id = :user_id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        return (bool)$stmt->fetchColumn();
     }
 
     /**

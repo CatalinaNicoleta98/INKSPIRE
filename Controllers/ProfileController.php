@@ -34,9 +34,25 @@ class ProfileController {
         $currentUser = Session::get('user');
         $viewerId = $currentUser['user_id'];
 
+        // Ensure flags always exist
+        $isBlocked = false;
+        $isAdminBlocked = false;
+        $isProfileAdminBlocked = false;
+
         // Determine which profile to show
         if ($userId === null) {
             $userId = $viewerId;
+        }
+
+        // If logged-in user is admin-blocked and viewing their own profile
+        if (isset($currentUser['is_active']) && (int)$currentUser['is_active'] === 0 && $userId == $viewerId) {
+            $profile = $this->profileModel->getUserProfile($userId);
+            $posts = [];
+            $followersList = [];
+            $followingList = [];
+            $isAdminBlocked = true;
+            include __DIR__ . '/../Views/Profile.php';
+            return;
         }
 
         // Check if either user has blocked the other
@@ -76,6 +92,16 @@ class ProfileController {
                 'following' => 0,
                 'is_private' => 0
             ];
+        }
+
+        // If profile owner is admin-blocked and viewer is not the owner
+        if (isset($profile['is_active']) && (int)$profile['is_active'] === 0 && $userId != $viewerId) {
+            $posts = [];
+            $followersList = [];
+            $followingList = [];
+            $isProfileAdminBlocked = true;
+            include __DIR__ . '/../Views/Profile.php';
+            return;
         }
 
         // Add follower and following counts

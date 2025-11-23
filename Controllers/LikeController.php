@@ -18,6 +18,15 @@ class LikeController {
             exit;
         }
 
+        // Prevent likes from admin-blocked users
+        if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'You have been blocked by an administrator and cannot like posts.'
+            ]);
+            exit;
+        }
+
         $userId = $user['user_id'];
         $postId = $_POST['post_id'] ?? $_GET['post_id'] ?? null;
         if (!$postId) {

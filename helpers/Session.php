@@ -31,7 +31,40 @@ class Session {
     }
 
     public static function get($key) {
-        return $_SESSION[$key] ?? null;
+        // For all keys except 'user', behave normally
+        if ($key !== 'user') {
+            return $_SESSION[$key] ?? null;
+        }
+
+        // If user not stored, return null
+        if (!isset($_SESSION['user'])) {
+            return null;
+        }
+
+        // Retrieve user_id from session
+        $sessionUser = $_SESSION['user'];
+        if (!isset($sessionUser['user_id'])) {
+            return null;
+        }
+
+        $userId = $sessionUser['user_id'];
+
+        // Refresh the user data from the database
+        require_once __DIR__ . '/../Models/UserModel.php';
+        $userModel = new UserModel();
+        $freshUser = $userModel->getUserById($userId);
+
+        // If user no longer exists, log them out
+        if (!$freshUser) {
+            self::destroy();
+            return null;
+        }
+
+        // Update session and global state
+        $_SESSION['user'] = $freshUser;
+        $GLOBALS['user'] = $freshUser;
+
+        return $freshUser;
     }
 
     public static function destroy() {
