@@ -1,5 +1,3 @@
-
-
 <?php
 
 require_once __DIR__ . '/../helpers/Session.php';
@@ -41,8 +39,26 @@ class AdminController
         // Get all users with aggregated stats for the table
         $users = $this->userModel->getAdminUserOverview();
 
-        // Get simple "today" stats (new users, new posts) via SQL views
-        $stats = $this->userModel->getAdminDailyStats();
+        // Daily statistics (new users today, new posts today)
+        require_once __DIR__ . '/../config.php';
+        $database = new Database();
+        $db = $database->connect();
+
+        // New users today
+        $stmtUsersToday = $db->prepare("SELECT COUNT(*) FROM User WHERE DATE(created_at) = CURDATE()");
+        $stmtUsersToday->execute();
+        $newUsersToday = $stmtUsersToday->fetchColumn();
+
+        // New posts today
+        $stmtPostsToday = $db->prepare("SELECT COUNT(*) FROM Post WHERE DATE(created_at) = CURDATE()");
+        $stmtPostsToday->execute();
+        $newPostsToday = $stmtPostsToday->fetchColumn();
+
+        // Stats array for view
+        $stats = [
+            'new_users_today' => $newUsersToday,
+            'new_posts_today' => $newPostsToday
+        ];
 
         // Reuse existing AdminPanel.php view as admin panel container
         // (this file can be adapted to render $users and $stats)
