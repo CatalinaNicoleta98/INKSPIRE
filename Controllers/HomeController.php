@@ -43,6 +43,11 @@ class HomeController {
         // Fetch posts from followed users
         $posts = $this->postModel->getPostsFromFollowedUsers($userId);
 
+        // Filter out posts from globally blocked users (inactive accounts)
+        $posts = array_filter($posts, function ($post) {
+            return !isset($post['is_active']) || (int)$post['is_active'] === 1;
+        });
+
         // Also fetch the logged‑in user's own posts
         if (method_exists($this->postModel, 'getPostsByUser')) {
             $selfPosts = $this->postModel->getPostsByUser($userId);

@@ -170,7 +170,13 @@ class ProfileController {
     // Follow a user
     public function follow($followedId) {
         Session::start();
-        $followerId = Session::get('user')['user_id'];
+        $currentUser = Session::get('user');
+        // Prevent globally blocked users from performing this action
+        if (isset($currentUser['is_globally_blocked']) && (int)$currentUser['is_globally_blocked'] === 1) {
+            header("Location: index.php?action=profile&user_id=" . $followedId);
+            exit();
+        }
+        $followerId = $currentUser['user_id'];
         if ($followerId == $followedId) return;
 
         $this->followModel->followUser($followerId, $followedId);
@@ -181,7 +187,13 @@ class ProfileController {
     // Unfollow a user
     public function unfollow($followedId) {
         Session::start();
-        $followerId = Session::get('user')['user_id'];
+        $currentUser = Session::get('user');
+        // Prevent globally blocked users from performing this action
+        if (isset($currentUser['is_globally_blocked']) && (int)$currentUser['is_globally_blocked'] === 1) {
+            header("Location: index.php?action=profile&user_id=" . $followedId);
+            exit();
+        }
+        $followerId = $currentUser['user_id'];
         if ($followerId == $followedId) return;
 
         $this->followModel->unfollowUser($followerId, $followedId);
@@ -192,7 +204,13 @@ class ProfileController {
     // Block a user
     public function block($blockedId) {
         Session::start();
-        $blockerId = Session::get('user')['user_id'];
+        $currentUser = Session::get('user');
+        // Prevent globally blocked users from performing this action
+        if (isset($currentUser['is_globally_blocked']) && (int)$currentUser['is_globally_blocked'] === 1) {
+            header("Location: index.php?action=profile&user_id=" . $blockedId);
+            exit();
+        }
+        $blockerId = $currentUser['user_id'];
         if ($blockerId == $blockedId) return;
 
         $this->blockModel->blockUser($blockerId, $blockedId);
@@ -209,7 +227,13 @@ class ProfileController {
     // Unblock a user
     public function unblock($blockedId) {
         Session::start();
-        $blockerId = Session::get('user')['user_id'];
+        $currentUser = Session::get('user');
+        // Prevent globally blocked users from performing this action
+        if (isset($currentUser['is_globally_blocked']) && (int)$currentUser['is_globally_blocked'] === 1) {
+            header("Location: index.php?action=profile&user_id=" . $blockedId);
+            exit();
+        }
+        $blockerId = $currentUser['user_id'];
         if ($blockerId == $blockedId) return;
 
         $this->blockModel->unblockUser($blockerId, $blockedId);

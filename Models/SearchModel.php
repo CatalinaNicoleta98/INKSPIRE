@@ -17,6 +17,7 @@ class SearchModel {
             FROM User u
             JOIN Profile p ON u.user_id = p.user_id
             WHERE u.username LIKE :q
+            AND u.is_active = 1
             LIMIT :limit
         ");
         $stmt->bindValue(':q', '%' . $q . '%', PDO::PARAM_STR);
@@ -71,6 +72,7 @@ class SearchModel {
             JOIN User u ON p.user_id = u.user_id
             JOIN Profile pr ON p.user_id = pr.user_id
             WHERE p.tags LIKE :q
+            AND u.is_active = 1
             LIMIT :limit
         ");
         $stmt->bindValue(':q', '%' . $q . '%', PDO::PARAM_STR);

@@ -39,6 +39,7 @@ class PostModel {
                   FROM Post p
                   JOIN User u ON p.user_id = u.user_id
                   LEFT JOIN Profile pr ON u.user_id = pr.user_id
+                  WHERE u.is_active = 1
                   ORDER BY p.created_at DESC";
         $stmt = $this->conn->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -69,7 +70,8 @@ class PostModel {
                 FROM Post p
                 JOIN User u ON p.user_id = u.user_id
                 LEFT JOIN Profile pr ON u.user_id = pr.user_id
-                WHERE p.user_id IN ($placeholders)
+                WHERE u.is_active = 1
+                AND p.user_id IN ($placeholders)
                 ORDER BY p.created_at DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($userIds);
@@ -79,10 +81,12 @@ class PostModel {
     // Get posts by a specific user (Profile)
     public function getPostsByUser($userId) {
         $query = "SELECT p.*, u.username, pr.profile_picture,
-                         (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
+                         (SELECT COUNT(*) FROM `Like` l JOIN User uu ON l.user_id = uu.user_id WHERE l.post_id = p.post_id AND uu.is_active = 1) AS likes,
                          (SELECT COUNT(*) FROM `Comment` c 
-                          WHERE c.post_id = p.post_id 
-                          OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                          JOIN User uu2 ON c.user_id = uu2.user_id
+                          WHERE (c.post_id = p.post_id 
+                          OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id))
+                          AND uu2.is_active = 1) AS comments
                   FROM Post p
                   JOIN User u ON p.user_id = u.user_id
                   LEFT JOIN Profile pr ON u.user_id = pr.user_id
@@ -166,7 +170,8 @@ class PostModel {
                   FROM Post p
                   JOIN User u ON p.user_id = u.user_id
                   LEFT JOIN Profile pr ON u.user_id = pr.user_id
-                  WHERE p.user_id IN (
+                  WHERE u.is_active = 1
+                  AND p.user_id IN (
                       SELECT CASE 
                           WHEN EXISTS (SELECT 1 FROM Profile WHERE Profile.profile_id = f.following_id)
                           THEN (SELECT user_id FROM Profile WHERE profile_id = f.following_id)
@@ -191,7 +196,7 @@ class PostModel {
         }
 
         $params = [];
-        $where = "p.is_public = 1";
+        $where = "p.is_public = 1 AND u.is_active = 1";
         if ($excludeUserId) {
             $where .= " AND p.user_id != ?";
             $params[] = $excludeUserId;
@@ -200,10 +205,12 @@ class PostModel {
         $params = array_merge($params, $blockedIds);
 
         $sql = "SELECT p.*, u.username, pr.profile_picture,
-                       (SELECT COUNT(*) FROM `Like` l WHERE l.post_id = p.post_id) AS likes,
+                       (SELECT COUNT(*) FROM `Like` l JOIN User uu ON l.user_id = uu.user_id WHERE l.post_id = p.post_id AND uu.is_active = 1) AS likes,
                        (SELECT COUNT(*) FROM `Comment` c 
-                        WHERE c.post_id = p.post_id 
-                        OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id)) AS comments
+                        JOIN User uu2 ON c.user_id = uu2.user_id
+                        WHERE (c.post_id = p.post_id 
+                        OR c.parent_id IN (SELECT comment_id FROM Comment WHERE post_id = p.post_id))
+                        AND uu2.is_active = 1) AS comments
                 FROM Post p
                 JOIN User u ON p.user_id = u.user_id
                 LEFT JOIN Profile pr ON u.user_id = pr.user_id

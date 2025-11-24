@@ -31,7 +31,13 @@ class LikeModel {
 
     // Count likes on a specific post
     public function countLikes($postId) {
-        $stmt = $this->conn->prepare("SELECT COUNT(*) AS total FROM `Like` WHERE post_id = :post_id");
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) AS total 
+            FROM `Like` l
+            JOIN User u ON l.user_id = u.user_id
+            WHERE l.post_id = :post_id
+            AND u.is_active = 1
+        ");
         $stmt->execute([':post_id' => $postId]);
         return (int)$stmt->fetchColumn();
     }

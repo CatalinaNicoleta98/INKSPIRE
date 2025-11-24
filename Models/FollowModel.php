@@ -47,7 +47,8 @@ class FollowModel {
                         SELECT blocked_id FROM Block WHERE blocker_id = :user_id
                         UNION
                         SELECT blocker_id FROM Block WHERE blocked_id = :user_id
-                    )";
+                    )
+                    AND u.is_active = 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
@@ -65,7 +66,8 @@ class FollowModel {
                         SELECT blocked_id FROM Block WHERE blocker_id = :user_id
                         UNION
                         SELECT blocker_id FROM Block WHERE blocked_id = :user_id
-                    )";
+                    )
+                    AND u.is_active = 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
@@ -84,7 +86,8 @@ class FollowModel {
                         SELECT blocked_id FROM Block WHERE blocker_id = :user_id
                         UNION
                         SELECT blocker_id FROM Block WHERE blocked_id = :user_id
-                    )";
+                    )
+                    AND u.is_active = 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
@@ -102,7 +105,8 @@ class FollowModel {
                         SELECT blocked_id FROM Block WHERE blocker_id = :user_id
                         UNION
                         SELECT blocker_id FROM Block WHERE blocked_id = :user_id
-                    )";
+                    )
+                    AND u.is_active = 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();

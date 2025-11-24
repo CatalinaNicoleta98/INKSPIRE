@@ -85,6 +85,13 @@ class CommentController {
         Session::start();
         $user = Session::get('user');
 
+        // Block globally blocked users
+        if (isset($user['is_globally_blocked']) && (int)$user['is_globally_blocked'] === 1) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'You are blocked and cannot delete comments.']);
+            exit;
+        }
+
         if (!$user) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Not logged in']);
@@ -144,6 +151,13 @@ class CommentController {
     // edit an existing comment if it's owned by the user
     public function editComment() {
         global $user;
+
+        // Block globally blocked users
+        if (isset($user['is_globally_blocked']) && (int)$user['is_globally_blocked'] === 1) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'You are blocked and cannot edit comments.']);
+            exit;
+        }
 
         if (!isset($user)) {
             header('Content-Type: application/json');

@@ -7,6 +7,7 @@
 $isBlocked = $isBlocked ?? false;
 $isAdminBlocked = $isAdminBlocked ?? false;
 $isProfileAdminBlocked = $isProfileAdminBlocked ?? false;
+$isCurrentUserBlocked = isset($currentUser['is_active']) && (int)$currentUser['is_active'] === 0;
 ?>
 
 <!DOCTYPE html>
@@ -105,31 +106,58 @@ $isProfileAdminBlocked = $isProfileAdminBlocked ?? false;
         </div>
 
         <?php if ($profile['user_id'] !== $currentUser['user_id'] && !$isAdminBlocked && !$isProfileAdminBlocked): ?>
-          <div class="flex justify-center gap-4 mt-6">
-            <!-- Follow / Unfollow Button -->
-            <?php if ($isFollowing): ?>
-              <a href="index.php?action=unfollow&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
-                 class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition">
-                 Unfollow
-              </a>
-            <?php else: ?>
-              <a href="index.php?action=follow&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
-                 class="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition">
-                 Follow
-              </a>
-            <?php endif; ?>
+          <div class="flex flex-col items-center gap-2 mt-6">
+            <?php if ($isCurrentUserBlocked): ?>
+              <div class="flex justify-center gap-4">
+                <!-- Disabled Follow / Unfollow Button -->
+                <button
+                  class="bg-gray-200 text-gray-400 px-4 py-2 rounded-md cursor-not-allowed"
+                  type="button"
+                  disabled
+                >
+                  <?= $isFollowing ? 'Following' : 'Follow' ?>
+                </button>
 
-            <!-- Block / Unblock Button -->
-            <?php if ($isBlocked): ?>
-              <a href="index.php?action=unblock&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
-                 class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition">
-                 Unblock
-              </a>
+                <!-- Disabled Block / Unblock Button -->
+                <button
+                  class="bg-gray-200 text-gray-400 px-4 py-2 rounded-md cursor-not-allowed"
+                  type="button"
+                  disabled
+                >
+                  <?= $isBlocked ? 'Blocked' : 'Block' ?>
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 italic mt-1">
+                Your account is blocked. You cannot follow or block other users.
+              </p>
             <?php else: ?>
-              <a href="index.php?action=block&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
-                 class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">
-                 Block
-              </a>
+              <div class="flex justify-center gap-4">
+                <!-- Follow / Unfollow Button -->
+                <?php if ($isFollowing): ?>
+                  <a href="index.php?action=unfollow&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                     class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition">
+                     Unfollow
+                  </a>
+                <?php else: ?>
+                  <a href="index.php?action=follow&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                     class="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition">
+                     Follow
+                  </a>
+                <?php endif; ?>
+
+                <!-- Block / Unblock Button -->
+                <?php if ($isBlocked): ?>
+                  <a href="index.php?action=unblock&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                     class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition">
+                     Unblock
+                  </a>
+                <?php else: ?>
+                  <a href="index.php?action=block&user_id=<?= htmlspecialchars($profile['user_id']) ?>"
+                     class="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition">
+                     Block
+                  </a>
+                <?php endif; ?>
+              </div>
             <?php endif; ?>
           </div>
         <?php endif; ?>

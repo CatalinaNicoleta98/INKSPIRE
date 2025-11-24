@@ -25,6 +25,10 @@ class ExploreController {
 
         if ($userId) {
             $allPosts = $this->postModel->getAllPublicPosts($userId);
+            // Filter out posts from globally blocked (inactive) users
+            $allPosts = array_filter($allPosts, function ($post) {
+                return !isset($post['is_active']) || (int)$post['is_active'] === 1;
+            });
             $posts = [];
             foreach ($allPosts as $post) {
                 $postUserId = $post['user_id'];
@@ -34,6 +38,10 @@ class ExploreController {
             }
         } else {
             $posts = $this->postModel->getAllPublicPosts(null);
+            // Filter out posts from globally blocked (inactive) users
+            $posts = array_filter($posts, function ($post) {
+                return !isset($post['is_active']) || (int)$post['is_active'] === 1;
+            });
         }
 
         // Load comments for each post

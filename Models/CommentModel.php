@@ -32,6 +32,7 @@ class CommentModel {
             FROM `Comment` c
             JOIN `User` u ON c.user_id = u.user_id
             WHERE c.post_id = :post_id
+            AND u.is_active = 1
             ORDER BY c.created_at ASC
         ";
         $stmt = $this->conn->prepare($sql);
@@ -63,7 +64,13 @@ class CommentModel {
 
     // Count total comments (including replies) for a specific post
     public function countCommentsByPost($post_id) {
-        $stmt = $this->conn->prepare("SELECT COUNT(*) as total FROM `Comment` WHERE post_id = ?");
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) AS total
+            FROM `Comment` c
+            JOIN User u ON c.user_id = u.user_id
+            WHERE c.post_id = ?
+            AND u.is_active = 1
+        ");
         $stmt->execute([$post_id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? (int)$result['total'] : 0;
