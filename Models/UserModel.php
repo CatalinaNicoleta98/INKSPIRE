@@ -135,14 +135,27 @@ class UserModel {
     public function getSuggestedUsers($currentUserId, $limit = 5) {
         try {
             $query = "
-                SELECT u.user_id, u.username, p.profile_picture
+                SELECT 
+                    u.user_id, 
+                    u.username, 
+                    p.profile_picture
                 FROM User u
                 INNER JOIN Profile p ON u.user_id = p.user_id
                 WHERE u.user_id != :currentUserId
+                  AND u.is_active = 1
                   AND u.user_id NOT IN (
                       SELECT following_id 
                       FROM Follow 
                       WHERE follower_id = :currentUserId
+                  )
+                  AND u.user_id NOT IN (
+                      SELECT blocked_id 
+                      FROM Block 
+                      WHERE blocker_id = :currentUserId
+                      UNION
+                      SELECT blocker_id 
+                      FROM Block 
+                      WHERE blocked_id = :currentUserId
                   )
                 ORDER BY RAND()
                 LIMIT :limit

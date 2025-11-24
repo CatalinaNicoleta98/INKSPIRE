@@ -118,6 +118,11 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           data.users.forEach(user => {
+              // Skip users who are blocked by current user or who blocked current user
+              if (user.is_blocked_between === true) {
+                  return;
+              }
+
               const profilePic = user.profile_picture || 'uploads/default.png';
               const bio = user.bio || '';
               const bioPreview = bio.length > 0 
