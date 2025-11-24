@@ -63,10 +63,11 @@
           <?php endif; ?>
 
           <div class="flex items-center gap-6 mt-3 text-lg text-gray-600">
+            <?php $liked = !empty($post['liked']); ?>
             <span class="like-btn cursor-pointer transition hover:scale-110" 
                   data-id="<?= $post['post_id'] ?>" 
-                  style="<?= !empty($post['liked']) ? 'color:#ef4444;' : '' ?>">
-              ❤️ <?= $post['likes'] ?>
+                  style="<?= $liked ? 'color:#ef4444;' : '#9ca3af;' ?>">
+              <?= $liked ? '❤️' : '🤍' ?> <?= $post['likes'] ?>
             </span>
 
             <span class="comment-toggle cursor-pointer transition hover:scale-110" 
@@ -170,8 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`index.php?action=toggleLike&post_id=${postId}&t=${Date.now()}`);
       const data = await response.json();
       if (data.success) {
-        btn.innerHTML = `❤️ ${data.likes}`;
-        btn.style.color = data.liked ? '#ef4444' : '#6b7280';
+        const icon = data.liked ? '❤️' : '🤍';
+        btn.innerHTML = `${icon} ${data.likes}`;
+        btn.style.color = data.liked ? '#ef4444' : '#9ca3af';
       }
     });
   });

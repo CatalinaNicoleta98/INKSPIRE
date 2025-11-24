@@ -158,6 +158,18 @@ class ProfileController {
             }
         }
         if (!is_array($posts)) { $posts = []; }
+
+        // Attach like information for each post on profile (viewer-based like state)
+        require_once __DIR__ . '/../Models/LikeModel.php';
+        $likeModel = new LikeModel();
+        $likedPosts = $likeModel->getUserLikes($viewerId);
+        $likedSet = array_flip($likedPosts);
+
+        foreach ($posts as &$post) {
+            $post['likes'] = $likeModel->countLikes($post['post_id']);
+            $post['liked'] = isset($likedSet[$post['post_id']]);
+        }
+        unset($post);
         
         // Flags for the view
         // On private profiles, only followers (or the owner) should see followers/following lists.

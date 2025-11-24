@@ -1,5 +1,3 @@
-
-
 <?php
 // Views/templates/PostCard.php
 // Expects: $post, $user (if logged in), $isLoggedIn
@@ -73,10 +71,11 @@
 
     <div class="absolute bottom-3 right-3 bg-black/50 text-white rounded-full px-3 py-1 text-sm flex items-center gap-3">
         <?php if ($isLoggedIn): ?>
+            <?php $liked = !empty($post['liked']); ?>
             <span class="like-btn cursor-pointer transition"
                   data-id="<?= $post['post_id'] ?>"
-                  style="<?= !empty($post['liked']) ? 'color:#f87171;' : '' ?>">
-                  ❤️ <?= $post['likes'] ?>
+                  style="<?= $liked ? 'color:#ef4444;' : '#9ca3af;' ?>">
+                <?= $liked ? '❤️' : '🤍' ?> <?= $post['likes'] ?>
             </span>
 
             <span class="comment-btn cursor-pointer"

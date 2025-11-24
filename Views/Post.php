@@ -27,7 +27,12 @@
               <?php endif; ?>
 
               <div class="absolute bottom-3 right-3 bg-black/50 text-white rounded-full px-3 py-1 text-sm flex items-center gap-3">
-                <span class="like-btn cursor-pointer transition" data-id="<?= $post['post_id'] ?>" style="<?= !empty($post['liked']) ? 'color:#f87171;' : '' ?>">❤️ <?= $post['likes'] ?></span>
+                <?php $liked = !empty($post['liked']); ?>
+                <span class="like-btn cursor-pointer transition"
+                      data-id="<?= $post['post_id'] ?>"
+                      style="<?= $liked ? 'color:#ef4444;' : '#9ca3af;' ?>">
+                  <?= $liked ? '❤️' : '🤍' ?> <?= $post['likes'] ?>
+                </span>
                 <span class="comment-btn cursor-pointer" data-id="<?= $post['post_id'] ?>">💬 <?= $post['comments'] ?? 0 ?></span>
               </div>
 
@@ -164,8 +169,9 @@
           const response = await fetch(`index.php?action=toggleLike&post_id=${postId}&t=${Date.now()}`, { cache: 'no-store' });
           const data = await response.json();
           if (data.success) {
-            btn.innerHTML = `❤️ ${data.likes}`;
-            btn.style.color = data.liked ? '#f87171' : 'white';
+            const icon = data.liked ? '❤️' : '🤍';
+            btn.innerHTML = `${icon} ${data.likes}`;
+            btn.style.color = data.liked ? '#f87171' : '#9ca3af';
           }
         } catch (err) {
           console.error('Like error', err);

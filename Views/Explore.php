@@ -92,8 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(`index.php?action=toggleLike&post_id=${postId}&t=${Date.now()}`, { cache: 'no-store' });
         const data = await response.json();
         if (data.success) {
-          btn.innerHTML = `❤️ ${data.likes}`;
-          btn.style.color = data.liked ? '#f87171' : 'white';
+          const icon = data.liked ? '❤️' : '🤍';
+          btn.innerHTML = `${icon} ${data.likes}`;
+          btn.style.color = data.liked ? '#f87171' : '#9ca3af';
         }
       } catch (err) {
         console.error('Like error', err);

@@ -61,6 +61,18 @@ class HomeController {
             return !$blockModel->isEitherBlocked($userId, $post['user_id']);
         });
 
+        // Attach like information for each post (current user's like state)
+        require_once __DIR__ . '/../Models/LikeModel.php';
+        $likeModel = new LikeModel();
+        $likedPosts = $likeModel->getUserLikes($userId);
+        $likedSet = array_flip($likedPosts);
+
+        foreach ($posts as &$post) {
+            $post['likes'] = $likeModel->countLikes($post['post_id']);
+            $post['liked'] = isset($likedSet[$post['post_id']]);
+        }
+        unset($post);
+
         // Load comments for each post
         require_once __DIR__ . '/../Models/CommentModel.php';
         $commentModel = new CommentModel();

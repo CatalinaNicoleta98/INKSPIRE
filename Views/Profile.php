@@ -260,7 +260,12 @@ $isCurrentUserBlocked = isset($currentUser['is_active']) && (int)$currentUser['i
               <?php endif; ?>
 
               <div class="flex items-center gap-6 mt-3 text-lg text-gray-600">
-                <span class="cursor-pointer transition hover:scale-110" data-action="like">❤️ <?= htmlspecialchars($post['likes'] ?? 0) ?></span>
+                <?php $liked = !empty($post['liked']); ?>
+                <span class="cursor-pointer transition hover:scale-110"
+                      data-action="like"
+                      style="<?= $liked ? 'color:#ef4444;' : '#9ca3af;' ?>">
+                  <?= $liked ? '❤️' : '🤍' ?> <?= htmlspecialchars($post['likes'] ?? 0) ?>
+                </span>
                 <span class="cursor-pointer transition hover:scale-110 comment-toggle" data-id="<?= $post['post_id'] ?>">💬 <?= htmlspecialchars($post['comments'] ?? 0) ?></span>
               </div>
 
@@ -821,7 +826,9 @@ document.addEventListener('click', async (e) => {
     const data = await res.json();
 
     if (data.success) {
-      likeSpan.innerHTML = `❤️ ${data.likes}`;
+      const icon = data.liked ? '❤️' : '🤍';
+      likeSpan.innerHTML = `${icon} ${data.likes}`;
+      likeSpan.style.color = data.liked ? '#ef4444' : '#9ca3af';
     } else {
       alert(data.message || 'Error updating like.');
     }
