@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../helpers/Session.php';
-$action = $_GET['action'] ?? 'login';
+if (!isset($action)) {
+    $action = $_GET['action'] ?? 'login';
+}
 ?>
 
 <!DOCTYPE html>
@@ -70,7 +72,53 @@ $action = $_GET['action'] ?? 'login';
         </div>
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md">Login</button>
       </form>
+      <p class="text-center text-sm text-gray-600 mt-2">
+        <a href="index.php?action=forgotPassword" class="text-indigo-500 hover:underline">Forgot your password?</a>
+      </p>
       <p class="text-center text-sm text-gray-600 mt-4">No account? <a href="index.php?action=register" class="text-indigo-500 hover:underline">Register here</a></p>
+
+    <?php elseif ($action === 'forgotPassword'): ?>
+      <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Reset Your Password</h2>
+
+      <?php if (!empty($_SESSION['error'])): ?>
+        <p class="text-red-500 text-center mb-4 text-sm"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></p>
+      <?php endif; ?>
+
+      <?php if (!empty($_SESSION['success'])): ?>
+        <p class="text-green-600 text-center mb-4 text-sm break-all"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></p>
+      <?php endif; ?>
+
+      <form method="POST" action="index.php?action=sendResetLink" class="space-y-4">
+        <input type="email" name="email" placeholder="Enter your email" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md">Send Reset Link</button>
+      </form>
+
+      <p class="text-center text-sm text-gray-600 mt-4">
+        Remember your password? <a href="index.php?action=login" class="text-indigo-500 hover:underline">Go back</a>
+      </p>
+
+    <?php elseif ($action === 'resetPassword' && isset($_GET['token'])): ?>
+      <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Choose a New Password</h2>
+
+      <form method="POST" action="index.php?action=updatePassword" class="space-y-4">
+        <input type="hidden" name="token" value="<?= htmlspecialchars($_GET['token']) ?>">
+
+        <div class="relative">
+          <input type="password" name="password" id="resetPasswordInput" placeholder="New Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+          <button type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 password-toggle" data-target="resetPasswordInput">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md">Save New Password</button>
+      </form>
+
+      <p class="text-center text-sm text-gray-600 mt-4">
+        Changed your mind? <a href="index.php?action=login" class="text-indigo-500 hover:underline">Go back</a>
+      </p>
 
     <?php elseif ($action === 'home' && isset($user)): ?>
       <div class="text-center">

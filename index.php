@@ -6,6 +6,7 @@ require_once __DIR__ . '/Controllers/PostController.php';
 require_once __DIR__ . '/Controllers/LikeController.php';
 require_once __DIR__ . '/Controllers/CommentController.php';
 require_once __DIR__ . '/Controllers/SearchController.php';
+require_once __DIR__ . '/Controllers/PasswordResetController.php';
 require_once __DIR__ . '/Models/NotificationModel.php';
 require_once __DIR__ . '/Models/ProfileModel.php';
 
@@ -15,6 +16,7 @@ $postController = new PostController();
 $likeController = new LikeController();
 $commentController = new CommentController();
 $searchController = new SearchController();
+$passwordResetController = new PasswordResetController();
 
 // Get the logged-in user from the session
 $user = Session::get('user');
@@ -23,7 +25,7 @@ $user = Session::get('user');
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 // Allow guests to access Explore, Login, and Register
-if (!Session::isLoggedIn() && !in_array($action, ['explore', 'login', 'register', 'notifications', 'viewNotification', ''])) {
+if (!Session::isLoggedIn() && !in_array($action, ['explore', 'login', 'register', 'notifications', 'viewNotification', 'forgotPassword', 'sendResetLink', 'resetPassword', 'updatePassword', ''])) {
     header("Location: index.php?action=login");
     exit;
 }
@@ -274,6 +276,22 @@ switch ($action) {
         require_once __DIR__ . '/Controllers/AdminController.php';
         $controller = new AdminController();
         $controller->toggleAdmin();
+        break;
+
+    case 'forgotPassword':
+        $passwordResetController->showForgotPasswordForm();
+        break;
+
+    case 'sendResetLink':
+        $passwordResetController->sendResetLink();
+        break;
+
+    case 'resetPassword':
+        $passwordResetController->showResetForm();
+        break;
+
+    case 'updatePassword':
+        $passwordResetController->resetPassword();
         break;
 
     default:

@@ -269,6 +269,67 @@ class UserModel {
             ':user_id' => $userId
         ]);
     }
+    /**
+     * Set password reset token and expiration for a user by email.
+     */
+    public function setResetToken($email, $token, $expires) {
+        $query = "UPDATE `User`
+                  SET reset_token = :token, reset_expires = :expires
+                  WHERE email = :email
+                  LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':token' => $token,
+            ':expires' => $expires,
+            ':email' => $email
+        ]);
+    }
+
+    /**
+     * Find a user by reset token (must not be expired).
+     */
+    public function findUserByResetToken($token) {
+        $query = "SELECT *
+                  FROM `User`
+                  WHERE reset_token = :token
+                  AND reset_expires > NOW()
+                  LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':token' => $token]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Update a user's password via reset token.
+     */
+    public function updatePasswordByToken($token, $hashedPassword) {
+        $query = "UPDATE `User`
+                  SET password = :password
+                  WHERE reset_token = :token
+                  LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([
+            ':password' => $hashedPassword,
+            ':token' => $token
+        ]);
+    }
+
+    /**
+     * Clear reset token after successful password change.
+     */
+    public function clearResetToken($token) {
+        $query = "UPDATE `User`
+                  SET reset_token = NULL,
+                      reset_expires = NULL
+                  WHERE reset_token = :token
+                  LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute([':token' => $token]);
+    }
     }
 }
 ?>
