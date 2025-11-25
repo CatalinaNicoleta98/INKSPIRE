@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/../Models/UserModel.php';
-require_once __DIR__ . '/../Helpers/Session.php';
+require_once __DIR__ . '/../helpers/PHPMailer/PHPMailer.php';
+require_once __DIR__ . '/../helpers/PHPMailer/SMTP.php';
+require_once __DIR__ . '/../helpers/PHPMailer/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 class PasswordResetController
 {
@@ -30,10 +35,42 @@ class PasswordResetController
         $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
         if ($this->userModel->setResetToken($email, $token, $expires)) {
-            $resetLink = "http://localhost/INKSPIRE/index.php?action=resetPassword&token=" . $token;
+            $baseUrl = (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false)
+                ? "http://localhost/INKSPIRE"
+                : "https://catalinavrinceanu.com";
 
-            // For now, show link on screen. Later we will send email.
-            Session::set('success', "Password reset link: " . $resetLink);
+            $resetLink = $baseUrl . "/index.php?action=resetPassword&token=" . $token;
+
+            try {
+                $mail = new PHPMailer(true);
+
+                $mail->isSMTP();
+                $mail->Host       = 'websmtp.simply.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'inkspire@catalinavrinceanu.com';
+                $mail->Password   = 'C@talina98!';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+
+                $mail->setFrom('inkspire@catalinavrinceanu.com', 'Inkspire');
+                $mail->addAddress($email);
+
+                $mail->isHTML(true);
+                $mail->Subject = 'Inkspire - Password Reset Request';
+                $mail->Body    = "
+                    <p>Hello,</p>
+                    <p>You requested a password reset. Click the link below to choose a new password:</p>
+                    <p><a href='$resetLink'>$resetLink</a></p>
+                    <p>If you did not request this, please ignore this email.</p>
+                ";
+
+                $mail->send();
+
+                Session::set('success', 'A password reset email has been sent.');
+            } catch (Exception $e) {
+                Session::set('error', 'Mailer Error: ' . $mail->ErrorInfo);
+            }
+
             header("Location: index.php?action=forgotPassword");
             exit;
         }
