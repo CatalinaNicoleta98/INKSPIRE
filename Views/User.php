@@ -88,6 +88,10 @@ if (!isset($action)) {
         <p class="text-green-600 text-center mb-4 text-sm break-all"><?= htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?></p>
       <?php endif; ?>
 
+      <?php if (!empty($_SESSION['info'])): ?>
+        <p class="text-blue-600 text-center mb-4 text-sm"><?= htmlspecialchars($_SESSION['info']); unset($_SESSION['info']); ?></p>
+      <?php endif; ?>
+
       <form method="POST" action="index.php?action=sendResetLink" class="space-y-4">
         <input type="email" name="email" placeholder="Enter your email" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md">Send Reset Link</button>

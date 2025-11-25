@@ -34,7 +34,15 @@ class PasswordResetController
         $token = bin2hex(random_bytes(32));
         $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-        if ($this->userModel->setResetToken($email, $token, $expires)) {
+        $result = $this->userModel->setResetToken($email, $token, $expires);
+
+        if ($result === "existing_token") {
+            Session::set('error', 'A password reset link has already been sent. Please check your email.');
+            header("Location: index.php?action=forgotPassword");
+            exit;
+        }
+
+        if ($result) {
             $baseUrl = (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false)
                 ? "http://localhost/INKSPIRE"
                 : "https://catalinavrinceanu.com";

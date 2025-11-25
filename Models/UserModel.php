@@ -270,9 +270,32 @@ class UserModel {
         ]);
     }
     /**
+     * Get active reset token for a user by email.
+     */
+    public function getActiveResetToken($email) {
+        $query = "SELECT reset_token, reset_expires 
+                  FROM User 
+                  WHERE email = :email 
+                  LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':email' => $email]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row && $row['reset_token'] && $row['reset_expires'] > date("Y-m-d H:i:s")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Set password reset token and expiration for a user by email.
      */
     public function setResetToken($email, $token, $expires) {
+        if ($this->getActiveResetToken($email)) {
+            return "existing_token";
+        }
         $hashedToken = password_hash($token, PASSWORD_DEFAULT);
         $query = "UPDATE `User`
                   SET reset_token = :token, reset_expires = :expires
