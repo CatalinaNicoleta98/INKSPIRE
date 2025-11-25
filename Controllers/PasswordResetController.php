@@ -48,7 +48,7 @@ class PasswordResetController
                 $mail->Host       = 'websmtp.simply.com';
                 $mail->SMTPAuth   = true;
                 $mail->Username   = 'inkspire@catalinavrinceanu.com';
-                $mail->Password   = 'password_placeholder';
+                $mail->Password   = 'password_placeholder'; //add real password here in live
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port       = 587;
 
