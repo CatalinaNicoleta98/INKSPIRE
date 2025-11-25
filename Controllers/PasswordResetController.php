@@ -64,13 +64,61 @@ class PasswordResetController
                 $mail->addAddress($email);
 
                 $mail->isHTML(true);
-                $mail->Subject = 'Inkspire - Password Reset Request';
-                $mail->Body    = "
-                    <p>Hello,</p>
-                    <p>You requested a password reset. Click the link below to choose a new password:</p>
-                    <p><a href='$resetLink'>$resetLink</a></p>
-                    <p>If you did not request this, please ignore this email.</p>
-                ";
+                $mail->Subject = 'Inkspire - Reset Your Password';
+
+                $logoUrl = "https://catalinavrinceanu.com/uploads/logo.png";
+
+                $mail->Body = "
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<title>Reset your Inkspire password</title>
+</head>
+<body style=\"margin:0; padding:0; background-color:#FFF7F4;\">
+  <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='background-color:#FFF7F4; padding:20px 0;'>
+    <tr>
+      <td align='center'>
+        <table role='presentation' width='100%' cellspacing='0' cellpadding='0' style='max-width:520px; background:#FFFFFF; border-radius:16px; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.06);'>
+
+          <tr>
+            <td align='center' style='padding:24px; background:linear-gradient(135deg,#FBE4DA,#F8D2D0);'>
+              <img src='$logoUrl' alt='Inkspire' style='max-width:160px; height:auto; display:block; margin-bottom:8px;' />
+            </td>
+          </tr>
+
+          <tr>
+            <td style='padding:24px; font-family:Arial, sans-serif; color:#4A2C2F;'>
+              <h2 style='margin:0 0 12px; font-size:22px; font-weight:600; color:#4A2C2F;'>Reset Your Password</h2>
+              <p style='font-size:15px; line-height:1.6; margin-bottom:20px;'>
+                You requested a password reset for your Inkspire account. Click the button below to create a new password.
+              </p>
+
+              <div style='text-align:center; margin:30px 0;'>
+                <a href='$resetLink'
+                  style='background-color:#C37B7F; color:#FFFFFF; padding:12px 22px; border-radius:8px; text-decoration:none; font-size:16px; font-weight:600; display:inline-block;'>
+                  Reset Password
+                </a>
+              </div>
+
+              <p style='font-size:14px; line-height:1.5; color:#6A4B4E;'>
+                If the button above doesn't work, copy and paste this link into your browser:<br>
+                <a href='$resetLink' style='color:#C37B7F;'>$resetLink</a>
+              </p>
+
+              <p style='font-size:13px; color:#8B6E70; margin-top:30px;'>
+                If you did not request a password reset, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+";
 
                 $mail->send();
 
