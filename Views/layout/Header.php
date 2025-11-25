@@ -21,9 +21,9 @@ $profilePic = !empty($loggedInUser['profile_picture'])
 <header class="fixed top-0 left-0 w-full bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 shadow-sm z-50">
   <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
     <div class="flex items-center space-x-3">
-      <div class="text-2xl font-bold text-indigo-500 tracking-tight hover:text-indigo-600 transition duration-200 cursor-pointer">
-        Inkspire
-      </div>
+      <a href="index.php?action=home" class="flex items-center cursor-pointer">
+        <img src="uploads/logo.png" alt="Inkspire Logo" class="h-10 w-auto object-contain hover:opacity-90 transition duration-200">
+      </a>
     </div>
 
     <?php if ($loggedInUser): ?>
