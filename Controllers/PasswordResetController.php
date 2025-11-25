@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../Models/UserModel.php';
+require_once __DIR__ . '/../Helpers/Session.php';
 
 class PasswordResetController
 {
@@ -70,6 +71,24 @@ class PasswordResetController
 
         $token = $_POST['token'];
         $password = $_POST['password'];
+
+        $passwordConfirm = $_POST['password_confirm'] ?? '';
+
+        // Check if passwords match
+        if ($password !== $passwordConfirm) {
+            Session::set('error', 'Passwords do not match.');
+            header("Location: index.php?action=resetPassword&token=" . $token);
+            exit;
+        }
+
+        // Password strength validation
+        $valid = preg_match('/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/', $password);
+
+        if (!$valid) {
+            Session::set('error', 'Password does not meet the security requirements.');
+            header("Location: index.php?action=resetPassword&token=" . $token);
+            exit;
+        }
 
         $user = $this->userModel->findUserByResetToken($token);
 

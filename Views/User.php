@@ -112,6 +112,23 @@ if (!isset($action)) {
             </svg>
           </button>
         </div>
+        <ul class="mt-2 text-xs space-y-1">
+          <li id="reset-req-length" class="text-gray-500">• At least 8 characters</li>
+          <li id="reset-req-upper" class="text-gray-500">• At least one uppercase letter</li>
+          <li id="reset-req-lower" class="text-gray-500">• At least one lowercase letter</li>
+          <li id="reset-req-number" class="text-gray-500">• At least one number</li>
+          <li id="reset-req-special" class="text-gray-500">• At least one special character (!@#$%^&*)</li>
+        </ul>
+        <div class="relative mt-3">
+          <input type="password" name="password_confirm" id="resetPasswordConfirm" placeholder="Confirm New Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+          <button type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 password-toggle" data-target="resetPasswordConfirm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p id="resetPasswordMatchHint" class="text-xs mt-1 text-gray-500"></p>
 
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md">Save New Password</button>
       </form>
@@ -239,5 +256,67 @@ if (!isset($action)) {
     registerPasswordConfirmInput.addEventListener('input', updatePasswordMatch);
   }
   updatePasswordRequirements();
+
+  // Reset password validation
+  const resetPasswordInput = document.getElementById('resetPasswordInput');
+  const resetPasswordConfirmInput = document.getElementById('resetPasswordConfirm');
+
+  const resetReqLength = document.getElementById('reset-req-length');
+  const resetReqUpper = document.getElementById('reset-req-upper');
+  const resetReqLower = document.getElementById('reset-req-lower');
+  const resetReqNumber = document.getElementById('reset-req-number');
+  const resetReqSpecial = document.getElementById('reset-req-special');
+  const resetPasswordMatchHint = document.getElementById('resetPasswordMatchHint');
+
+  function updateResetRequirements() {
+    if (!resetPasswordInput) return;
+    const pwd = resetPasswordInput.value || '';
+    const hasMinLength = pwd.length >= 8;
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+
+    setRequirement(resetReqLength, hasMinLength);
+    setRequirement(resetReqUpper, hasUpper);
+    setRequirement(resetReqLower, hasLower);
+    setRequirement(resetReqNumber, hasNumber);
+    setRequirement(resetReqSpecial, hasSpecial);
+  }
+
+  function updateResetMatch() {
+    if (!resetPasswordInput || !resetPasswordConfirmInput || !resetPasswordMatchHint) return;
+
+    const pwd = resetPasswordInput.value || '';
+    const confirmPwd = resetPasswordConfirmInput.value || '';
+
+    if (!confirmPwd && !pwd) {
+      resetPasswordMatchHint.textContent = '';
+      resetPasswordMatchHint.classList.remove('text-red-500', 'text-green-600');
+      resetPasswordMatchHint.classList.add('text-gray-500');
+      return;
+    }
+
+    if (confirmPwd && pwd === confirmPwd) {
+      resetPasswordMatchHint.textContent = 'Passwords match.';
+      resetPasswordMatchHint.classList.remove('text-gray-500', 'text-red-500');
+      resetPasswordMatchHint.classList.add('text-green-600');
+    } else if (confirmPwd) {
+      resetPasswordMatchHint.textContent = 'Passwords do not match.';
+      resetPasswordMatchHint.classList.remove('text-gray-500', 'text-green-600');
+      resetPasswordMatchHint.classList.add('text-red-500');
+    }
+  }
+
+  if (resetPasswordInput) {
+    resetPasswordInput.addEventListener('input', function () {
+      updateResetRequirements();
+      updateResetMatch();
+    });
+  }
+  if (resetPasswordConfirmInput) {
+    resetPasswordConfirmInput.addEventListener('input', updateResetMatch);
+  }
+  updateResetRequirements();
 </script>
 </html>
