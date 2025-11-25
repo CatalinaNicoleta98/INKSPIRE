@@ -273,6 +273,7 @@ class UserModel {
      * Set password reset token and expiration for a user by email.
      */
     public function setResetToken($email, $token, $expires) {
+        $hashedToken = password_hash($token, PASSWORD_DEFAULT);
         $query = "UPDATE `User`
                   SET reset_token = :token, reset_expires = :expires
                   WHERE email = :email
@@ -280,7 +281,7 @@ class UserModel {
 
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([
-            ':token' => $token,
+            ':token' => $hashedToken,
             ':expires' => $expires,
             ':email' => $email
         ]);
@@ -292,28 +293,41 @@ class UserModel {
     public function findUserByResetToken($token) {
         $query = "SELECT *
                   FROM `User`
-                  WHERE reset_token = :token
-                  AND reset_expires > NOW()
+                  WHERE reset_expires > NOW()
                   LIMIT 1";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->execute([':token' => $token]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->execute();
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($users as $user) {
+            if ($user['reset_token'] && password_verify($token, $user['reset_token'])) {
+                return $user;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Update a user's password via reset token.
      */
     public function updatePasswordByToken($token, $hashedPassword) {
+        // First find the matching user using hashed token verification
+        $user = $this->findUserByResetToken($token);
+        if (!$user) {
+            return false;
+        }
+
         $query = "UPDATE `User`
                   SET password = :password
-                  WHERE reset_token = :token
+                  WHERE user_id = :user_id
                   LIMIT 1";
 
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([
             ':password' => $hashedPassword,
-            ':token' => $token
+            ':user_id' => $user['user_id']
         ]);
     }
 
@@ -321,14 +335,19 @@ class UserModel {
      * Clear reset token after successful password change.
      */
     public function clearResetToken($token) {
+        $user = $this->findUserByResetToken($token);
+        if (!$user) {
+            return false;
+        }
+
         $query = "UPDATE `User`
                   SET reset_token = NULL,
                       reset_expires = NULL
-                  WHERE reset_token = :token
+                  WHERE user_id = :user_id
                   LIMIT 1";
 
         $stmt = $this->conn->prepare($query);
-        return $stmt->execute([':token' => $token]);
+        return $stmt->execute([':user_id' => $user['user_id']]);
     }
     }
 }
