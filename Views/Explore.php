@@ -148,6 +148,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   </script>
+</script>
+<script>
+// Submit comment on ENTER (Shift+Enter = newline) inside Explore comments modal
+document.addEventListener('keydown', function(e) {
+  if (!e.target.classList.contains('comment-input')) return;
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const btn = document.getElementById('submitComment');
+    if (btn) btn.click();
+  }
+});
+</script>
 </body>
 </html>
 <script>

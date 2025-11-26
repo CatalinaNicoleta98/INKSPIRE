@@ -112,6 +112,19 @@
     </div>
 </div>
 
+<script>
+// Enable submitting comments with ENTER inside the search results comments modal
+document.addEventListener('keydown', function (e) {
+    const input = e.target.closest('#commentsModal .comment-input');
+    if (!input) return;
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const submit = document.getElementById('submitComment');
+        if (submit) submit.click();
+    }
+});
+</script>
 </body>
 <!-- FULL JS FROM EXPLORE (LIKES, LIGHTBOX, COMMENTS) -->
 <script>

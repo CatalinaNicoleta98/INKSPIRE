@@ -239,20 +239,11 @@ $isCurrentUserBlocked = isset($currentUser['is_active']) && (int)$currentUser['i
                   <p class="text-gray-600 text-sm mt-1 post-desc break-words"></p>
                 <?php endif; ?>
               </div>
-              <!-- Inline edit form (hidden by default) -->
-              <form class="post-edit-form hidden space-y-2" data-post-id="<?= $post['post_id'] ?>">
-                <input type="text" name="title" class="edit-title border border-indigo-300 rounded-md px-2 py-1 w-full font-semibold text-gray-800" value="<?= htmlspecialchars($post['title'] ?? 'Untitled') ?>">
-                <textarea name="description" class="edit-desc border border-indigo-300 rounded-md px-2 py-1 w-full text-sm text-gray-700" rows="3"><?= htmlspecialchars($post['description'] ?? '') ?></textarea>
-                <div class="flex gap-2 justify-end">
-                  <button type="button" class="save-edit-post bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 transition" data-post-id="<?= $post['post_id'] ?>">Save</button>
-                  <button type="button" class="cancel-edit-post bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 transition" data-post-id="<?= $post['post_id'] ?>">Cancel</button>
-                </div>
-              </form>
 
               <?php if (!empty($post['image_url'])): ?>
                 <img src="<?= htmlspecialchars($post['image_url']) ?>"
                      alt="Post Image"
-                     class="w-full max-h-[500px] object-cover object-center rounded-lg mt-4 mb-3 shadow-sm">
+                     class="post-image w-full max-h-[500px] object-cover object-center rounded-lg mt-4 mb-3 shadow-sm">
               <?php endif; ?>
 
               <?php if (!empty($post['tags'])): ?>
@@ -702,40 +693,111 @@ document.addEventListener('click', (e) => {
 document.addEventListener('click', (e) => {
   const editBtn = e.target.closest('.edit-post');
   if (!editBtn) return;
+  const postCard = editBtn.closest('.post-card');
   const postId = editBtn.dataset.postId;
-  const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-  card.querySelector('.post-options-menu').classList.add('hidden');
-  card.querySelector('.post-content-view').classList.add('hidden');
-  card.querySelector('.post-edit-form').classList.remove('hidden');
+
+  const titleEl = postCard.querySelector('.post-title');
+  const descEl = postCard.querySelector('.post-desc');
+  const oldTitle = titleEl ? titleEl.textContent.trim() : '';
+  const oldDesc = descEl ? descEl.textContent.trim() : '';
+
+  const form = document.createElement('div');
+  form.className = 'post-edit-form';
+  form.dataset.originalTitle = oldTitle;
+  form.dataset.originalDesc = oldDesc;
+  const tagElement = postCard.querySelector('.mt-2.text-sm.text-indigo-500');
+  form.dataset.originalTags = tagElement ? tagElement.textContent : '';
+
+  form.innerHTML = `
+    <input type="text" class="edit-title w-full border border-indigo-200 rounded-md p-2 mb-2 font-semibold" value="${oldTitle}">
+    <textarea class="edit-description w-full border border-indigo-200 rounded-md p-2 mb-2 text-sm">${oldDesc}</textarea>
+    <input type="text" class="edit-tags w-full border border-indigo-200 rounded-md p-2 mb-3 text-sm" placeholder="Tags (comma separated)" value="${ tagElement ? tagElement.textContent.replace(/#/g,'').trim().replace(/\s+/g, ', ') : '' }">
+
+    <div class="mb-3">
+      ${postCard.querySelector('img.post-image') ? `
+        <div class="mb-2">
+          <p class="text-sm text-gray-600 mb-1">Current image:</p>
+          <img src="${postCard.querySelector('img.post-image').src}" class="w-32 h-32 object-cover rounded-md shadow border" />
+        </div>
+        <label class="flex items-center gap-2 text-sm text-red-600 mb-2">
+          <input type="checkbox" class="remove-image-checkbox">
+          Remove current image
+        </label>
+      ` : ''}
+
+      <label class="block text-sm text-gray-700 mb-1">Select new image:</label>
+      <input type="file" accept="image/*" class="edit-image w-full text-sm">
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button class="save-edit bg-indigo-500 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-600" data-post-id="${postId}">Save</button>
+      <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-400">Cancel</button>
+    </div>
+  `;
+
+  postCard.querySelector('.post-content-view').classList.add('hidden');
+  const contentView = postCard.querySelector('.post-content-view');
+  contentView.insertAdjacentElement('beforebegin', form);
 });
 
-// Save edit
 document.addEventListener('click', async (e) => {
-  const saveBtn = e.target.closest('.save-edit-post');
-  if (!saveBtn) return;
-  const postId = saveBtn.dataset.postId;
-  const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-  const title = card.querySelector('.edit-title').value.trim();
-  const desc = card.querySelector('.edit-desc').value.trim();
-  if (!title) return alert('Title cannot be empty.');
-  const res = await fetch('index.php?action=editPost', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `post_id=${postId}&title=${encodeURIComponent(title)}&description=${encodeURIComponent(desc)}`
-  });
-  const data = await res.json();
-  if (data.success) location.reload();
-  else alert('Error updating post.');
-});
+  const saveBtn = e.target.closest('.save-edit');
+  const cancelBtn = e.target.closest('.cancel-edit');
 
-// Cancel edit
-document.addEventListener('click', (e) => {
-  const cancelBtn = e.target.closest('.cancel-edit-post');
-  if (!cancelBtn) return;
-  const postId = cancelBtn.dataset.postId;
-  const card = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-  card.querySelector('.post-edit-form').classList.add('hidden');
-  card.querySelector('.post-content-view').classList.remove('hidden');
+  if (cancelBtn) {
+    const form = cancelBtn.closest('.post-edit-form');
+    const postCard = cancelBtn.closest('.post-card');
+    if (!form || !postCard) return;
+    const originalTitle = form.dataset.originalTitle || '';
+    const originalDesc = form.dataset.originalDesc || '';
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'post-title text-lg font-semibold text-gray-800 break-words';
+    titleEl.textContent = originalTitle;
+    const descEl = document.createElement('p');
+    descEl.className = 'post-desc text-gray-600 text-sm mt-1 break-words';
+    descEl.textContent = originalDesc;
+
+    form.remove();
+    postCard.querySelector('.post-content-view').classList.remove('hidden');
+
+    const originalTags = form.dataset.originalTags || '';
+    const tagsEl = postCard.querySelector('.mt-2.text-sm.text-indigo-500');
+    if (tagsEl) tagsEl.textContent = originalTags;
+
+    return;
+  }
+
+  if (saveBtn) {
+    const postId = saveBtn.dataset.postId;
+    const postCard = saveBtn.closest('.post-card');
+    const title = postCard.querySelector('.edit-title').value.trim();
+    const description = postCard.querySelector('.edit-description').value.trim();
+    if (!title || !description) return alert('Please fill all fields.');
+    try {
+      const formData = new FormData();
+      formData.append('post_id', postId);
+      formData.append('title', title);
+      formData.append('description', description);
+      const tagsInput = postCard.querySelector('.edit-tags').value.trim();
+      formData.append('tags', tagsInput);
+
+      const fileInput = postCard.querySelector('.edit-image');
+      if (fileInput && fileInput.files.length > 0) {
+        formData.append('image', fileInput.files[0]);
+      }
+      const removeCheckbox = postCard.querySelector('.remove-image-checkbox');
+      if (removeCheckbox && removeCheckbox.checked) {
+        formData.append('remove_image', '1');
+      }
+
+      const res = await fetch('index.php?action=editPost', { method:'POST', body:formData });
+      const data = await res.json();
+      if (data.success) window.location.reload();
+      else alert('Error updating post.');
+    } catch {
+      alert('Request failed.');
+    }
+  }
 });
 
 // Delete post
@@ -853,6 +915,19 @@ document.addEventListener('DOMContentLoaded', () => {
     lightbox.addEventListener('click', () => {
       lightbox.classList.add('hidden');
     });
+  }
+});
+</script>
+<script>
+// Submit comment on ENTER (Shift+Enter = newline)
+document.addEventListener('keydown', function(e) {
+  if (!e.target.classList.contains('comment-input')) return;
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const postId = e.target.dataset.postId;
+    const btn = document.querySelector(`#submitComment-${postId}`);
+    if (btn) btn.click();
   }
 });
 </script>

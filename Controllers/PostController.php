@@ -77,15 +77,66 @@ class PostController {
         }
 
         $postId = $_POST['post_id'] ?? null;
-        $title = $_POST['title'] ?? '';
-        $description = $_POST['description'] ?? '';
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $tags = trim($_POST['tags'] ?? '');
+        $removeImage = isset($_POST['remove_image']);
 
-        if (!$postId || empty(trim($title)) || empty(trim($description))) {
+        if (!$postId || empty($title) || empty($description)) {
             echo json_encode(['success' => false, 'message' => 'Missing data']);
             exit;
         }
 
-        $success = $this->postModel->updatePost($postId, $user['user_id'], $title, $description);
+        // Fetch existing post to know current image
+        $existing = $this->postModel->getPostById($postId);
+        if (!$existing) {
+            echo json_encode(['success' => false, 'message' => 'Post not found']);
+            exit;
+        }
+        $currentImage = $existing['image_url'] ?? null;
+
+        // Handle image logic
+        $newImagePath = $currentImage;
+
+        // Remove image
+        if ($removeImage && $currentImage) {
+            $file = __DIR__ . '/../' . $currentImage;
+            if (file_exists($file)) unlink($file);
+            $newImagePath = null;
+        }
+
+        // Replace with new upload
+        if (!empty($_FILES['image']['name'])) {
+            $uploadDir = __DIR__ . '/../uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $fileTmp = $_FILES['image']['tmp_name'];
+            $mime = mime_content_type($fileTmp);
+            $allowed = ['image/jpeg','image/png','image/gif'];
+
+            if (!in_array($mime, $allowed) || !@getimagesize($fileTmp)) {
+                echo json_encode(['success' => false, 'message' => 'Invalid image']);
+                exit;
+            }
+
+            $fileName = time() . '_' . basename($_FILES['image']['name']);
+            $target = $uploadDir . $fileName;
+
+            if (move_uploaded_file($fileTmp, $target)) {
+                ImageResizer::resizeImage($target);
+                $newImagePath = 'uploads/' . $fileName;
+
+                if ($currentImage && !$removeImage) {
+                    $old = __DIR__ . '/../' . $currentImage;
+                    if (file_exists($old)) unlink($old);
+                }
+            }
+        }
+
+        // Update DB
+        $success = $this->postModel->updatePostFull($postId, $user['user_id'], $title, $description, $newImagePath, $tags);
 
         header('Content-Type: application/json');
         echo json_encode(['success' => $success]);

@@ -221,5 +221,31 @@ class PostModel {
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    // Update full post (title, description, image, tags)
+    public function updatePostFull($postId, $userId, $title, $description, $imagePath, $tags) {
+        try {
+            $query = "UPDATE Post 
+                      SET title = :title,
+                          description = :description,
+                          image_url = :image_url,
+                          tags = :tags,
+                          updated_at = NOW()
+                      WHERE post_id = :post_id AND user_id = :user_id";
+
+            $stmt = $this->conn->prepare($query);
+            return $stmt->execute([
+                ':title' => htmlspecialchars(trim($title)),
+                ':description' => htmlspecialchars(trim($description)),
+                ':image_url' => $imagePath,
+                ':tags' => $tags,
+                ':post_id' => $postId,
+                ':user_id' => $userId
+            ]);
+        } catch (PDOException $e) {
+            file_put_contents(__DIR__ . '/../debug_sql.txt', $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

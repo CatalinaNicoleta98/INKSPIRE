@@ -43,6 +43,34 @@
             </div>
           </div>
 
+<?php
+    $isOwner = ($post['user_id'] === $user['user_id']);
+    $isAdminView = !empty($_SESSION['admin_view']) && !empty($user['is_admin']);
+    if ($isOwner):
+?>
+  <div class="absolute top-3 right-3 z-20">
+    <div class="relative">
+      <button class="post-options flex items-center justify-center w-8 h-8 rounded-full bg-white/70 text-gray-600 hover:text-gray-900 shadow-sm transition" data-post-id="<?= $post['post_id'] ?>" title="Post settings">
+        ⚙️
+      </button>
+      <div class="post-options-menu hidden absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[150px] overflow-hidden">
+        <button class="edit-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition" data-post-id="<?= $post['post_id'] ?>">✏️ Edit</button>
+        <button class="delete-post block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition" data-post-id="<?= $post['post_id'] ?>">🗑️ Delete</button>
+        <button class="toggle-privacy block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
+                data-post-id="<?= $post['post_id'] ?>"
+                data-public="<?= $post['is_public'] ?? 1 ?>">
+          <?= (!empty($post['is_public']) && $post['is_public']) ? '👥 Make Private' : '🌍 Make Public' ?>
+        </button>
+      </div>
+    </div>
+  </div>
+<?php endif; ?>
+<?php if (!$isOwner && $isAdminView): ?>
+  <div class="absolute top-3 right-3 z-20">
+      <button class="delete-post text-red-600 hover:text-red-800 text-sm" data-post-id="<?= $post['post_id'] ?>">🗑️ Delete</button>
+  </div>
+<?php endif; ?>
+
           <h3 class="text-lg font-semibold text-gray-800 break-words">
             <?= htmlspecialchars($post['title']) ?>
           </h3>
@@ -53,7 +81,7 @@
 
           <?php if (!empty($post['image_url'])): ?>
             <img src="<?= htmlspecialchars($post['image_url']) ?>"
-                 class="w-full max-h-[500px] object-cover object-center rounded-lg mt-4 shadow-sm">
+                 class="post-image w-full max-h-[500px] object-cover object-center rounded-lg mt-4 shadow-sm">
           <?php endif; ?>
 
           <?php if (!empty($post['tags'])): ?>
@@ -582,5 +610,180 @@
   <?php endif; ?>
   </script>
 
+</script>
+<script>
+// Enable the ⚙️ post-options dropdown (same as Home/Profile)
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.post-options');
+
+  // Close any open menus first
+  document.querySelectorAll('.post-options-menu:not(.hidden)').forEach(menu => {
+    menu.classList.add('hidden');
+  });
+
+  // Toggle the clicked one
+  if (btn) {
+    const menu = btn.nextElementSibling;
+    if (menu) menu.classList.toggle('hidden');
+  }
+});
+</script>
+<script>
+// inline edit post (same as Home/Profile)
+document.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.edit-post');
+  if (!editBtn) return;
+
+  const postCard = editBtn.closest('.post');
+  const postId = editBtn.dataset.postId;
+
+  const titleEl = postCard.querySelector('h3');
+  const descEl = postCard.querySelector('p.text-gray-600');
+  const tagElement = postCard.querySelector('.mt-2.text-sm.text-indigo-500');
+
+  const oldTitle = titleEl ? titleEl.textContent.trim() : '';
+  const oldDesc = descEl ? descEl.textContent.trim() : '';
+  const oldTags = tagElement ? tagElement.textContent : '';
+
+  const form = document.createElement('div');
+  form.className = 'post-edit-form';
+  form.dataset.originalTitle = oldTitle;
+  form.dataset.originalDesc = oldDesc;
+  form.dataset.originalTags = oldTags;
+
+  form.innerHTML = `
+    <input type="text" class="edit-title w-full border border-indigo-200 rounded-md p-2 mb-2 font-semibold"
+           value="${oldTitle}">
+    <textarea class="edit-description w-full border border-indigo-200 rounded-md p-2 mb-2 text-sm">${oldDesc}</textarea>
+
+    <input type="text" class="edit-tags w-full border border-indigo-200 rounded-md p-2 mb-3 text-sm"
+           placeholder="Tags (comma separated)"
+           value="${ oldTags ? oldTags.replace(/#/g,'').trim().replace(/\\s+/g, ', ') : '' }">
+
+    <div class="mb-3">
+      ${postCard.querySelector('.post img.post-image') ? `
+        <div class="mb-2">
+          <p class="text-sm text-gray-600 mb-1">Current image:</p>
+          <img src="${postCard.querySelector('.post img.post-image').src}" class="w-32 h-32 object-cover rounded-md shadow border" />
+        </div>
+        <label class="flex items-center gap-2 text-sm text-red-600 mb-2">
+          <input type="checkbox" class="remove-image-checkbox">
+          Remove current image
+        </label>
+      ` : ''}
+
+      <label class="block text-sm text-gray-700 mb-1">Select new image:</label>
+      <input type="file" accept="image/*" class="edit-image w-full text-sm">
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button class="save-edit bg-indigo-500 text-white px-3 py-1 rounded-md text-sm hover:bg-indigo-600"
+              data-post-id="${postId}">Save</button>
+      <button class="cancel-edit bg-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-400">Cancel</button>
+    </div>
+  `;
+
+  // Hide menu
+  const menu = postCard.querySelector('.post-options-menu');
+  if (menu) menu.classList.add('hidden');
+
+  // Hide description text
+  if (descEl) descEl.style.display = 'none';
+
+  // Replace title with the form
+  titleEl.replaceWith(form);
+});
+
+// Handle save + cancel for inline edit
+document.addEventListener('click', async (e) => {
+  const saveBtn = e.target.closest('.save-edit');
+  const cancelBtn = e.target.closest('.cancel-edit');
+
+  if (cancelBtn) {
+    const form = cancelBtn.closest('.post-edit-form');
+    const postCard = cancelBtn.closest('.post');
+    if (!form || !postCard) return;
+
+    const originalTitle = form.dataset.originalTitle || '';
+    const originalDesc = form.dataset.originalDesc || '';
+    const originalTags = form.dataset.originalTags || '';
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'text-lg font-semibold text-gray-800 break-words';
+    titleEl.textContent = originalTitle;
+
+    const descEl = document.createElement('p');
+    descEl.className = 'text-gray-600 text-sm mt-1 break-words';
+    descEl.textContent = originalDesc;
+
+    form.replaceWith(titleEl);
+    titleEl.insertAdjacentElement('afterend', descEl);
+
+    const tagsEl = postCard.querySelector('.mt-2.text-sm.text-indigo-500');
+    if (tagsEl) tagsEl.textContent = originalTags;
+
+    return;
+  }
+
+  if (saveBtn) {
+    const postId = saveBtn.dataset.postId;
+    const postCard = saveBtn.closest('.post');
+
+    const title = postCard.querySelector('.edit-title').value.trim();
+    const description = postCard.querySelector('.edit-description').value.trim();
+    const tags = postCard.querySelector('.edit-tags').value.trim();
+
+    if (!title || !description) {
+      alert('Please fill all fields.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('post_id', postId);
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('tags', tags);
+
+      const fileInput = postCard.querySelector('.edit-image');
+      if (fileInput && fileInput.files.length > 0) {
+        formData.append('image', fileInput.files[0]);
+      }
+
+      const removeCheckbox = postCard.querySelector('.remove-image-checkbox');
+      if (removeCheckbox && removeCheckbox.checked) {
+        formData.append('remove_image', '1');
+      }
+
+      const res = await fetch('index.php?action=editPost', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert('Error updating post.');
+      }
+    } catch {
+      alert('Request failed.');
+    }
+  }
+});
+</script>
+</script>
+<script>
+// Submit comment on ENTER (Shift+Enter = newline)
+document.addEventListener('keydown', function(e) {
+  if (!e.target.classList.contains('comment-input')) return;
+
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const postId = e.target.dataset.postId;
+    const btn = document.querySelector(`#submitComment-${postId}`);
+    if (btn) btn.click();
+  }
+});
+</script>
 </body>
 </html>
