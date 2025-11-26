@@ -14,7 +14,13 @@ if (!isset($action)) {
 </head>
 <body class="bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 min-h-screen flex items-center justify-center">
 
-  <div class="bg-white rounded-2xl shadow-lg w-full max-w-md p-8 mx-4">
+  <div class="absolute top-10 w-full flex justify-center z-50 pointer-events-none">
+    <img src="uploads/logo.png" alt="Inkspire Logo" class="w-32 h-32 object-contain opacity-90 drop-shadow-lg">
+  </div>
+
+  <?php $extraTop = ($action === 'register') ? 'mt-40' : 'mt-12'; ?>
+  <div class="<?php echo $extraTop; ?> w-full flex justify-center">
+  <div class="backdrop-blur-xl bg-white/40 border border-white/30 rounded-2xl shadow-2xl w-full max-w-md p-8 mx-4">
     <!-- show success message if user just registered -->
     <?php if (!empty($_SESSION['success_message'])): ?>
       <p class="text-green-600 text-center mb-4 text-sm font-medium bg-green-50 py-2 rounded-md">
@@ -158,6 +164,7 @@ if (!isset($action)) {
         </form>
       </div>
     <?php endif; ?>
+  </div>
   </div>
 
 </body>
