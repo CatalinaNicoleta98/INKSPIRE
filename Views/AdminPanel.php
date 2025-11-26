@@ -1,4 +1,3 @@
-
 <?php include __DIR__ . '/layout/Header.php'; ?>
 <?php include __DIR__ . '/layout/Sidebar.php'; ?>
 
@@ -8,7 +7,7 @@ $users = $users ?? [];
 $stats = $stats ?? ['new_users_today' => 0, 'new_posts_today' => 0];
 ?>
 
-<div class="ml-[220px] mt-[90px] max-w-5xl p-6">
+<div class="ml-[260px] mt-[90px] max-w-6xl w-full p-6 pr-10">
     <h1 class="text-3xl font-bold mb-6">Admin Panel</h1>
 
     <!-- Daily Stats -->
