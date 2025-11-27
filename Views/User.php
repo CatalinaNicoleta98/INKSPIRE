@@ -1,5 +1,11 @@
 <?php
 require_once __DIR__ . '/../helpers/Session.php';
+require_once __DIR__ . '/../Models/TermsModel.php';
+require_once __DIR__ . '/../config.php';
+$database = new Database();
+$db = $database->connect();
+$termsModel = new TermsModel($db);
+$terms = $termsModel->getTerms();
 if (!isset($action)) {
     $action = $_GET['action'] ?? 'login';
 }
@@ -69,9 +75,9 @@ if (!isset($action)) {
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md mt-2">Register</button>
       </form>
       <div id="termsModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-        <div class="bg-white max-w-lg w-full mx-4 rounded-lg shadow-lg p-6 relative">
+        <div class="bg-white max-w-2xl w-full mx-4 rounded-lg shadow-lg p-6 relative">
           <h2 class="text-xl font-semibold mb-4">Terms & Conditions</h2>
-          <div class="max-h-72 overflow-y-auto text-sm text-gray-700 whitespace-pre-line">
+          <div class="max-h-96 overflow-y-auto text-sm text-gray-700 whitespace-pre-line">
             <?= htmlspecialchars($terms ?? '') ?>
           </div>
           <button type="button" id="closeTermsModal" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Close</button>

@@ -294,6 +294,12 @@ switch ($action) {
         $passwordResetController->resetPassword();
         break;
 
+    case 'updateTerms':
+        require_once __DIR__ . '/Controllers/AdminController.php';
+        $controller = new AdminController();
+        $controller->updateTerms();
+        break;
+
     default:
         if (isset($_SESSION['user']['user_id'])) {
             header("Location: index.php?action=home");

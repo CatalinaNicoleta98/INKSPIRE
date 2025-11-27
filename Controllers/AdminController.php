@@ -66,6 +66,8 @@ class AdminController
             'new_posts_today' => $newPostsToday
         ];
 
+        $terms = $this->termsModel->getTerms();
+
         // Reuse existing AdminPanel.php view as admin panel container
         // (this file can be adapted to render $users and $stats)
         include __DIR__ . '/../Views/AdminPanel.php';
@@ -158,7 +160,7 @@ class AdminController
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['content'])) {
             $this->termsModel->updateTerms($_POST['content']);
         }
-        header('Location: index.php?action=adminTerms');
+        header('Location: index.php?action=adminPanel');
         exit;
     }
 }
