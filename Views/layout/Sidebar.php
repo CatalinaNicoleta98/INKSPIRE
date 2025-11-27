@@ -54,7 +54,29 @@
     <?php endif; ?>
   <?php else: ?>
     <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
-    <button onclick="window.location='index.php?action=login'" class="w-full text-left py-2 px-3 mt-auto rounded-md bg-gradient-to-r from-indigo-400 to-purple-400 text-white hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">🔐 Login / Register</button>
+    <div class="mt-4 p-5 rounded-2xl shadow-lg bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 border border-indigo-100 relative overflow-hidden">
+      <div class="absolute -top-3 -right-3 w-16 h-16 bg-indigo-200 rounded-full opacity-30 blur-xl"></div>
+      <div class="absolute -bottom-4 -left-4 w-20 h-20 bg-purple-200 rounded-full opacity-20 blur-xl"></div>
+
+      <div class="relative z-10">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="text-xl">📚</span>
+          <h4 class="text-sm font-semibold text-indigo-700 tracking-wide drop-shadow-sm">Welcome to Inkspire</h4>
+        </div>
+
+        <p class="text-xs text-gray-700 leading-relaxed mb-3">
+          A warm and inspiring corner for <strong>readers</strong>, <strong>book lovers</strong>,
+          and creative <strong>hobbyists</strong>.  
+          Share your favorite reads, cozy <strong>reading spots</strong>, beautiful <strong>quotes</strong>,
+          impressions, and anything that sparks your imagination.
+        </p>
+
+        <button onclick="window.location='index.php?action=login'"
+          class="w-full py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-400 to-purple-400 text-white shadow-sm hover:from-indigo-500 hover:to-purple-500 transition-all">
+          ✨ Join the Community
+        </button>
+      </div>
+    </div>
   <?php endif; ?>
 </div>
 
