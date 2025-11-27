@@ -19,7 +19,38 @@ $profilePic = !empty($loggedInUser['profile_picture'])
 ?>
 <script src="https://cdn.tailwindcss.com"></script>
 <header class="fixed top-0 left-0 w-full bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 shadow-sm z-50">
-  <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+  <!-- Mobile Header (lg:hidden) -->
+  <div class="lg:hidden flex items-center justify-between px-4 py-3">
+    <!-- Logo centered -->
+    <a href="index.php?action=home" class="flex-1 flex justify-center">
+      <img src="uploads/logo.png" alt="Inkspire Logo" class="h-10 w-auto object-contain">
+    </a>
+
+    <!-- Mobile profile dropdown -->
+    <?php if (!empty($loggedInUser)): ?>
+      <div class="absolute right-4 flex items-center">
+
+        <!-- Profile Button -->
+        <img 
+          src="<?= $profilePic ?>" 
+          alt="Profile" 
+          id="mobileProfileBtn"
+          class="w-9 h-9 rounded-full border-2 border-indigo-400 cursor-pointer object-cover"
+        >
+
+        <!-- Dropdown -->
+        <div 
+          id="mobileDropdownMenu" 
+          class="hidden absolute right-2 top-14 w-48 bg-white rounded-xl shadow-xl ring-1 ring-black ring-opacity-5 overflow-hidden transform translate-y-2 opacity-0 transition-all duration-200 ease-out z-50"
+        >
+          <a href="index.php?action=profile" class="block px-4 py-2 text-gray-700 hover:bg-indigo-50">My Profile</a>
+          <a href="index.php?action=logout" class="block px-4 py-2 text-gray-700 hover:bg-indigo-50">Logout</a>
+        </div>
+
+      </div>
+    <?php endif; ?>
+  </div>
+  <div class="max-w-7xl mx-auto hidden lg:flex items-center justify-between px-6 py-3">
     <div class="flex items-center space-x-3">
       <a href="index.php?action=home" class="flex items-center cursor-pointer">
         <img src="uploads/logo.png" alt="Inkspire Logo" class="h-10 w-auto object-contain hover:opacity-90 transition duration-200">
@@ -205,6 +236,26 @@ if (profileBtn && dropdown) {
   });
 }
 
+const mobileProfileBtn = document.getElementById("mobileProfileBtn");
+const mobileDropdown = document.getElementById("mobileDropdownMenu");
+
+if (mobileProfileBtn && mobileDropdown) {
+  mobileProfileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (mobileDropdown.classList.contains("hidden")) {
+      mobileDropdown.classList.remove("hidden");
+      setTimeout(() => {
+        mobileDropdown.classList.remove("translate-y-2", "opacity-0");
+      }, 10);
+    } else {
+      mobileDropdown.classList.add("translate-y-2", "opacity-0");
+      setTimeout(() => {
+        mobileDropdown.classList.add("hidden");
+      }, 200);
+    }
+  });
+}
+
 // Notifications dropdown
 if (notifBtn && notifDropdown) {
   notifBtn.addEventListener("click", (e) => {
@@ -220,6 +271,12 @@ window.addEventListener("click", (e) => {
   }
   if (notifBtn && notifDropdown && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
     notifDropdown.classList.add("hidden");
+  }
+  if (mobileDropdown && !mobileDropdown.contains(e.target) && !mobileProfileBtn.contains(e.target)) {
+    mobileDropdown.classList.add("translate-y-2", "opacity-0");
+    setTimeout(() => {
+      mobileDropdown.classList.add("hidden");
+    }, 200);
   }
 });
 
