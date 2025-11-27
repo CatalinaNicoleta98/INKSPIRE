@@ -18,10 +18,14 @@
 
   <hr class="my-5 border-indigo-100">
 
+<?php if ($isLoggedIn): ?>
   <h3 class="text-lg font-semibold text-indigo-500 mb-3">Suggested Accounts</h3>
+<?php endif; ?>
+<?php if ($isLoggedIn): ?>
   <div id="suggestedAccounts" class="space-y-3 text-sm text-gray-700">
     <p class="text-gray-400 text-sm">Loading suggestions...</p>
   </div>
+<?php endif; ?>
   <div class="mt-12 pt-5 border-t border-indigo-100 text-[10px] text-gray-500 text-center leading-relaxed">
     <p class="text-[11px] font-medium text-indigo-500">Inkspire · 2025</p>
     <p class="mt-1">
@@ -158,17 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
     <?php else: ?>
-    // Guest users see static suggestions that open the login modal
-    container.innerHTML = `
-        <div class="flex items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-          <img src="uploads/default.png" class="w-10 h-10 rounded-full object-cover mr-3 guest-profile">
-          <strong class="guest-profile text-gray-700 cursor-pointer hover:text-indigo-600">@guest1</strong>
-        </div>
-        <div class="flex items-center bg-white rounded-lg p-2 shadow-sm hover:shadow-md transition duration-200">
-          <img src="uploads/default.png" class="w-10 h-10 rounded-full object-cover mr-3 guest-profile">
-          <strong class="guest-profile text-gray-700 cursor-pointer hover:text-indigo-600">@guest2</strong>
-        </div>
-    `;
+    container.innerHTML = ``;
     <?php endif; ?>
 });
 </script>

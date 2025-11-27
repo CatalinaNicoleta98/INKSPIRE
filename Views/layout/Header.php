@@ -186,9 +186,7 @@ $profilePic = !empty($loggedInUser['profile_picture'])
         </div>
       </div>
     <?php else: ?>
-      <button onclick="window.location='index.php?action=login'" class="bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-4 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">
-        🔐 Login / Register
-      </button>
+      <!-- Guest: no header button -->
     <?php endif; ?>
   </div>
 </header>

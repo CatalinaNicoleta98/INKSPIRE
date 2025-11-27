@@ -53,7 +53,6 @@
       <button id="createPostBtn" class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200">➕ Create Post</button>
     <?php endif; ?>
   <?php else: ?>
-    <button onclick="window.location='index.php?action=explore'" class="w-full text-left py-2 px-3 mb-2 rounded-md bg-indigo-200 text-indigo-800 hover:bg-indigo-300 transition">🔥 Explore</button>
     <div class="mt-4 p-5 rounded-2xl shadow-lg bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50 border border-indigo-100 relative overflow-hidden">
       <div class="absolute -top-3 -right-3 w-16 h-16 bg-indigo-200 rounded-full opacity-30 blur-xl"></div>
       <div class="absolute -bottom-4 -left-4 w-20 h-20 bg-purple-200 rounded-full opacity-20 blur-xl"></div>
