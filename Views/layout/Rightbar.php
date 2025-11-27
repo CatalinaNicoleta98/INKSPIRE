@@ -22,6 +22,17 @@
   <div id="suggestedAccounts" class="space-y-3 text-sm text-gray-700">
     <p class="text-gray-400 text-sm">Loading suggestions...</p>
   </div>
+  <div class="mt-12 pt-5 border-t border-indigo-100 text-[10px] text-gray-500 text-center leading-relaxed">
+    <p class="text-[11px] font-medium text-indigo-500">Inkspire · 2025</p>
+    <p class="mt-1">
+      Crafted with care by 
+      <a href="https://www.linkedin.com/in/catalinavrinceanu/"
+         target="_blank"
+         class="text-indigo-600 font-semibold hover:underline">
+         Catalina Vrinceanu
+      </a>
+    </p>
+  </div>
 </div>
 
 <script>
