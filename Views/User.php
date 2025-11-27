@@ -59,8 +59,24 @@ if (!isset($action)) {
         <p id="passwordMatchHint" class="text-xs mt-1 text-gray-500"></p>
         <label class="block text-gray-700 text-sm mt-2">Date of Birth</label>
         <input type="date" name="dob" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <div class="flex items-center mt-2">
+          <input type="checkbox" id="acceptTerms" name="accept_terms" required class="mr-2">
+          <label for="acceptTerms" class="text-sm text-gray-700">
+            I agree to the 
+            <button type="button" id="openTermsModal" class="text-indigo-600 underline">Terms & Conditions</button>
+          </label>
+        </div>
         <button type="submit" class="w-full bg-gradient-to-r from-indigo-400 to-purple-400 text-white py-2 rounded-md hover:from-indigo-500 hover:to-purple-500 transition shadow-md mt-2">Register</button>
       </form>
+      <div id="termsModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+        <div class="bg-white max-w-lg w-full mx-4 rounded-lg shadow-lg p-6 relative">
+          <h2 class="text-xl font-semibold mb-4">Terms & Conditions</h2>
+          <div class="max-h-72 overflow-y-auto text-sm text-gray-700 whitespace-pre-line">
+            <?= htmlspecialchars($terms ?? '') ?>
+          </div>
+          <button type="button" id="closeTermsModal" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Close</button>
+        </div>
+      </div>
       <p class="text-center text-sm text-gray-600 mt-4">Already have an account? <a href="index.php?action=login" class="text-indigo-500 hover:underline">Login here</a></p>
 
     <?php elseif ($action === 'login'): ?>
@@ -329,5 +345,23 @@ if (!isset($action)) {
     resetPasswordConfirmInput.addEventListener('input', updateResetMatch);
   }
   updateResetRequirements();
+</script>
+<script>
+const termsModal = document.getElementById('termsModal');
+const openTermsModal = document.getElementById('openTermsModal');
+const closeTermsModal = document.getElementById('closeTermsModal');
+
+if (openTermsModal) {
+  openTermsModal.addEventListener('click', () => {
+    termsModal.classList.remove('hidden');
+    termsModal.classList.add('flex');
+  });
+}
+if (closeTermsModal) {
+  closeTermsModal.addEventListener('click', () => {
+    termsModal.classList.add('hidden');
+    termsModal.classList.remove('flex');
+  });
+}
 </script>
 </html>

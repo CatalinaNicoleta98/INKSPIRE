@@ -24,6 +24,13 @@ class UserController {
             // Confirm password
             $passwordConfirm = $_POST['password_confirm'] ?? '';
 
+            // Terms & Conditions acceptance validation
+            if (!isset($_POST['accept_terms'])) {
+                $error = "You must accept the Terms & Conditions to register.";
+                include __DIR__ . '/../Views/User.php';
+                return;
+            }
+
             // Backend password match validation
             if ($password !== $passwordConfirm) {
                 $error = "Passwords do not match.";

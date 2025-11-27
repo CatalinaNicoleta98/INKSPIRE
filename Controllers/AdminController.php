@@ -2,14 +2,20 @@
 
 require_once __DIR__ . '/../helpers/Session.php';
 require_once __DIR__ . '/../Models/UserModel.php';
+require_once __DIR__ . '/../Models/TermsModel.php';
 
 class AdminController
 {
     private $userModel;
+    private $termsModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
+        require_once __DIR__ . '/../config.php';
+        $database = new Database();
+        $db = $database->connect();
+        $this->termsModel = new TermsModel($db);
     }
 
     /**
@@ -138,6 +144,21 @@ class AdminController
         }
 
         header("Location: index.php?action=adminPanel");
+        exit;
+    }
+
+    public function terms() {
+        $this->ensureAdmin();
+        $terms = $this->termsModel->getTerms();
+        include __DIR__ . '/../Views/AdminTerms.php';
+    }
+
+    public function updateTerms() {
+        $this->ensureAdmin();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['content'])) {
+            $this->termsModel->updateTerms($_POST['content']);
+        }
+        header('Location: index.php?action=adminTerms');
         exit;
     }
 }
