@@ -85,14 +85,8 @@ class ProfileController {
         // Get profile info
         $profile = $this->profileModel->getUserProfile($userId);
         if (!$profile) {
-            $profile = [
-                'username' => 'Unknown User',
-                'bio' => '',
-                'profile_picture' => 'uploads/default.png',
-                'followers' => 0,
-                'following' => 0,
-                'is_private' => 0
-            ];
+            include __DIR__ . '/../Views/404.php';
+            exit();
         }
 
         // If profile owner is admin-blocked and viewer is not the owner

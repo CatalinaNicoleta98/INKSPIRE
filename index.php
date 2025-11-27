@@ -306,11 +306,8 @@ switch ($action) {
         break;
 
     default:
-        if (isset($_SESSION['user']['user_id'])) {
-            header("Location: index.php?action=home");
-        } else {
-            header("Location: index.php?action=explore");
-        }
+        include __DIR__ . '/Views/404.php';
+        exit;
         break;
 }
 ?>
