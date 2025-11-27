@@ -354,5 +354,50 @@ class PostController {
         $posts = [$post];
         include __DIR__ . '/../Views/templates/SinglePost.php';
     }
+    // Toggle sticky / pinned state for a post
+    public function toggleSticky() {
+        Session::start();
+        $user = Session::get('user');
+        if (!$user) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Not logged in']);
+            exit;
+        }
+
+        $postId = $_POST['post_id'] ?? null;
+        if (!$postId) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid post ID']);
+            exit;
+        }
+
+        // Fetch post to ensure ownership
+        $post = $this->postModel->getPostById($postId);
+        if (!$post || $post['user_id'] != $user['user_id']) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        // Determine the new sticky state
+        $newSticky = ($post['is_sticky'] == 1) ? 0 : 1;
+
+        // Optional: enforce a maximum number of pinned posts
+        // Example: limit to 3 pinned posts
+        if ($newSticky == 1) {
+            $countSticky = $this->postModel->countStickyPosts($user['user_id']);
+            if ($countSticky >= 3) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'You can only pin up to 3 posts.']);
+                exit;
+            }
+        }
+
+        $success = $this->postModel->setSticky($postId, $newSticky);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success, 'sticky' => $newSticky]);
+        exit;
+    }
 }
 ?>

@@ -189,6 +189,11 @@ $isCurrentUserBlocked = isset($currentUser['is_active']) && (int)$currentUser['i
         <?php if (!empty($posts)): ?>
           <?php foreach ($posts as $post): ?>
             <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition relative post-card" data-post-id="<?= $post['post_id'] ?>">
+              <?php if (!empty($post['is_sticky']) && $post['is_sticky'] == 1): ?>
+                <div class="absolute top-1 right-3 bg-indigo-300/80 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-sm z-20">
+  📌 Pinned
+</div>
+              <?php endif; ?>
               <!-- User Header -->
               <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-3">
@@ -220,6 +225,11 @@ $isCurrentUserBlocked = isset($currentUser['is_active']) && (int)$currentUser['i
                     <button class="privacy-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
                             data-post-id="<?= $post['post_id'] ?>" data-public="<?= $post['is_public'] ?? 1 ?>">
                       <?= ($post['is_public'] ?? 1) ? '👥 Make Private' : '🌍 Make Public' ?>
+                    </button>
+                    <button class="sticky-post block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
+                            data-post-id="<?= $post['post_id'] ?>"
+                            data-sticky="<?= $post['is_sticky'] ?? 0 ?>">
+                      <?= ($post['is_sticky'] ?? 0) ? '📌 Unpin from profile' : '📌 Pin on profile' ?>
                     </button>
                   </div>
                 </div>
@@ -861,6 +871,39 @@ document.getElementById('cancelBlockBtn').addEventListener('click', () => {
 document.getElementById('confirmBlockBtn').addEventListener('click', () => {
   if (window.userToBlock) {
     window.location.href = window.userToBlock;
+  }
+});
+</script>
+<script>
+// Toggle Sticky / Pinned Post
+document.addEventListener('click', async (e) => {
+  const stickyBtn = e.target.closest('.sticky-post');
+  if (!stickyBtn) return;
+
+  const postId = stickyBtn.dataset.postId;
+  const isSticky = stickyBtn.dataset.sticky === '1';
+
+  try {
+    const res = await fetch('index.php?action=toggleSticky', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `post_id=${encodeURIComponent(postId)}`
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      // Update button label instantly
+      stickyBtn.dataset.sticky = data.sticky ? '1' : '0';
+      stickyBtn.innerHTML = data.sticky ? '📌 Unpin from profile' : '📌 Pin on profile';
+
+      // Reload to reorder posts (sticky appear at top)
+      location.reload();
+    } else {
+      alert(data.message || 'Failed to update pinned state.');
+    }
+  } catch (err) {
+    alert('Error sending request.');
   }
 });
 </script>

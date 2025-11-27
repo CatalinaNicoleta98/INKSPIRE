@@ -212,6 +212,11 @@ switch ($action) {
         $commentController->editComment();
         break;
 
+    case 'toggleSticky':
+        $postController->toggleSticky();
+        exit;
+        break;
+
     case 'notifications':
         require_once __DIR__ . '/Controllers/NotificationController.php';
         $controller = new NotificationController($pdo);

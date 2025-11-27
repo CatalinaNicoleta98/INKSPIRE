@@ -91,7 +91,7 @@ class PostModel {
                   JOIN User u ON p.user_id = u.user_id
                   LEFT JOIN Profile pr ON u.user_id = pr.user_id
                   WHERE p.user_id = :user_id
-                  ORDER BY p.created_at DESC";
+                  ORDER BY p.is_sticky DESC, p.created_at DESC";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':user_id', $userId);
         $stmt->execute();
@@ -245,6 +245,33 @@ class PostModel {
         } catch (PDOException $e) {
             file_put_contents(__DIR__ . '/../debug_sql.txt', $e->getMessage());
             return false;
+        }
+    }
+    // Toggle sticky state for a post (pin/unpin)
+    public function setSticky($postId, $value) {
+        try {
+            $query = "UPDATE Post SET is_sticky = :sticky WHERE post_id = :post_id";
+            $stmt = $this->conn->prepare($query);
+            return $stmt->execute([
+                ':sticky' => $value,
+                ':post_id' => $postId
+            ]);
+        } catch (PDOException $e) {
+            file_put_contents(__DIR__ . '/../debug_sql.txt', $e->getMessage());
+            return false;
+        }
+    }
+
+    // Count how many sticky posts a user currently has (optional limit)
+    public function countStickyPosts($userId) {
+        try {
+            $query = "SELECT COUNT(*) FROM Post WHERE user_id = :user_id AND is_sticky = 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([':user_id' => $userId]);
+            return $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            file_put_contents(__DIR__ . '/../debug_sql.txt', $e->getMessage());
+            return 0;
         }
     }
 }
