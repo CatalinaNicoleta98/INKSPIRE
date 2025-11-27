@@ -41,10 +41,10 @@ if (!isset($action)) {
     <?php if ($action === 'register'): ?>
       <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Create Account</h2>
       <form method="POST" action="index.php?action=register" class="space-y-4">
-        <input type="text" name="first_name" placeholder="First Name" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-        <input type="text" name="last_name" placeholder="Last Name" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-        <input type="email" name="email" placeholder="Email" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
-        <input type="text" name="username" placeholder="Username" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <input type="text" name="first_name" placeholder="First Name" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none" value="<?= htmlspecialchars($old['first_name'] ?? '') ?>">
+        <input type="text" name="last_name" placeholder="Last Name" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none" value="<?= htmlspecialchars($old['last_name'] ?? '') ?>">
+        <input type="email" name="email" placeholder="Email" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none" value="<?= htmlspecialchars($old['email'] ?? '') ?>">
+        <input type="text" name="username" placeholder="Username" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none" value="<?= htmlspecialchars($old['username'] ?? '') ?>">
         <div class="relative">
           <input type="password" name="password" id="registerPassword" placeholder="Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
           <button type="button" class="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 password-toggle" data-target="registerPassword">
@@ -64,7 +64,28 @@ if (!isset($action)) {
         <input type="password" name="password_confirm" id="registerPasswordConfirm" placeholder="Confirm Password" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none mt-3">
         <p id="passwordMatchHint" class="text-xs mt-1 text-gray-500"></p>
         <label class="block text-gray-700 text-sm mt-2">Date of Birth</label>
-        <input type="date" name="dob" required class="w-full border border-indigo-200 rounded-md px-3 py-2 focus:ring-2 focus:ring-indigo-300 focus:outline-none">
+        <div class="flex space-x-2">
+        <select name="dob_day" required class="border border-indigo-200 rounded-md px-3 py-2">
+        <option value="">Day</option>
+        <?php for($d=1;$d<=31;$d++): ?>
+        <option value="<?= $d ?>" <?= isset($old['dob_day']) && $old['dob_day']==$d?'selected':'' ?>><?= $d ?></option>
+        <?php endfor; ?>
+        </select>
+
+        <select name="dob_month" required class="border border-indigo-200 rounded-md px-3 py-2">
+        <option value="">Month</option>
+        <?php for($m=1;$m<=12;$m++): ?>
+        <option value="<?= $m ?>" <?= isset($old['dob_month']) && $old['dob_month']==$m?'selected':'' ?>><?= $m ?></option>
+        <?php endfor; ?>
+        </select>
+
+        <select name="dob_year" required class="border border-indigo-200 rounded-md px-3 py-2">
+        <option value="">Year</option>
+        <?php for($y=date('Y')-14;$y>=1900;$y--): ?>
+        <option value="<?= $y ?>" <?= isset($old['dob_year']) && $old['dob_year']==$y?'selected':'' ?>><?= $y ?></option>
+        <?php endfor; ?>
+        </select>
+        </div>
         <div class="flex items-center mt-2">
           <input type="checkbox" id="acceptTerms" name="accept_terms" required class="mr-2">
           <label for="acceptTerms" class="text-sm text-gray-700">

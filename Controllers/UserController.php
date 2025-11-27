@@ -19,7 +19,18 @@ class UserController {
             $email = $_POST['email'] ?? '';
             $username = $_POST['username'] ?? '';
             $password = $_POST['password'] ?? '';
-            $dob = $_POST['dob'] ?? ''; // date of birth from the form
+            $dobDay = $_POST['dob_day'] ?? null;
+            $dobMonth = $_POST['dob_month'] ?? null;
+            $dobYear = $_POST['dob_year'] ?? null;
+
+            if ($dobDay && $dobMonth && $dobYear && checkdate($dobMonth, $dobDay, $dobYear)) {
+                $dob = "$dobYear-$dobMonth-$dobDay";
+            } else {
+                $error = "Please select a valid date of birth.";
+                $old = $_POST;
+                include __DIR__ . '/../Views/User.php';
+                return;
+            }
 
             // Confirm password
             $passwordConfirm = $_POST['password_confirm'] ?? '';
@@ -27,6 +38,7 @@ class UserController {
             // Terms & Conditions acceptance validation
             if (!isset($_POST['accept_terms'])) {
                 $error = "You must accept the Terms & Conditions to register.";
+                $old = $_POST;
                 include __DIR__ . '/../Views/User.php';
                 return;
             }
@@ -34,6 +46,7 @@ class UserController {
             // Backend password match validation
             if ($password !== $passwordConfirm) {
                 $error = "Passwords do not match.";
+                $old = $_POST;
                 include __DIR__ . '/../Views/User.php';
                 return;
             }
@@ -47,6 +60,7 @@ class UserController {
 
             if (!($hasMinLength && $hasUpper && $hasLower && $hasNumber && $hasSpecial)) {
                 $error = "Password must be at least 8 characters long and include upper, lower, number and special character.";
+                $old = $_POST;
                 include __DIR__ . '/../Views/User.php';
                 return;
             }
@@ -74,6 +88,7 @@ class UserController {
             }
 
             // if we reach here, registration failed — show the user page with error message
+            $old = $_POST;
             include __DIR__ . '/../Views/User.php';
             return;
         }
