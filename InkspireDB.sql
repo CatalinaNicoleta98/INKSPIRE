@@ -120,6 +120,22 @@ CREATE TABLE terms (
 ) ENGINE=InnoDB;
 
 -- ==============================
+-- Indexes
+-- ==============================
+
+-- Speed up fetching posts by user and date (used in feeds and profiles)
+CREATE INDEX idx_post_user_created_at
+    ON Post (user_id, created_at);
+
+-- Speed up loading notifications for a user and unread filtering
+CREATE INDEX idx_notification_user_is_read_created_at
+    ON Notification (user_id, is_read, created_at);
+
+-- Speed up loading comments under a post in chronological order
+CREATE INDEX idx_comment_post_created_at
+    ON Comment (post_id, created_at);
+
+-- ==============================
 -- Views
 -- ==============================
 
