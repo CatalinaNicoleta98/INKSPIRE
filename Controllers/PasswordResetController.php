@@ -31,6 +31,15 @@ class PasswordResetController
         }
 
         $email = trim($_POST['email']);
+        // Check if user exists
+        $user = $this->userModel->getUserByEmail($email);
+        if (!$user) {
+            Session::set('error', 'No account found with that email.');
+            header("Location: index.php?action=forgotPassword");
+            exit;
+        }
+        $username = $user['username'];
+
         $token = bin2hex(random_bytes(32));
         $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
@@ -91,8 +100,9 @@ class PasswordResetController
             <td style='padding:24px; font-family:Arial, sans-serif; color:#3E3266;'>
               <h2 style='margin:0 0 12px; font-size:22px; font-weight:600; color:#3E3266;'>Reset Your Password</h2>
               <p style='font-size:15px; line-height:1.6; margin-bottom:20px;'>
-                You requested a password reset for your Inkspire account. Click the button below to create a new password.
-              </p>
+                  Hello <strong>$username</strong>,<br><br>
+                  You requested a password reset for your Inkspire account. Click the button below to create a new password.
+                </p>
 
               <div style='text-align:center; margin:30px 0;'>
                 <a href='$resetLink'

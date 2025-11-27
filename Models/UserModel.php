@@ -372,6 +372,12 @@ class UserModel {
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([':user_id' => $user['user_id']]);
     }
+    public function getUserByEmail($email) {
+        $query = "SELECT * FROM User WHERE email = :email LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':email' => $email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
     }
 }
 ?>
