@@ -305,6 +305,12 @@ switch ($action) {
         $controller->updateTerms();
         break;
 
+    case 'updateAbout':
+        require_once __DIR__ . '/Controllers/AdminController.php';
+        $controller = new AdminController();
+        $controller->updateAbout();
+        break;
+
     default:
         include __DIR__ . '/Views/404.php';
         exit;

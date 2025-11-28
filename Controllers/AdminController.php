@@ -3,11 +3,13 @@
 require_once __DIR__ . '/../helpers/Session.php';
 require_once __DIR__ . '/../Models/UserModel.php';
 require_once __DIR__ . '/../Models/TermsModel.php';
+require_once __DIR__ . '/../Models/AboutModel.php';
 
 class AdminController
 {
     private $userModel;
     private $termsModel;
+    private $aboutModel;
 
     public function __construct()
     {
@@ -16,6 +18,7 @@ class AdminController
         $database = new Database();
         $db = $database->connect();
         $this->termsModel = new TermsModel($db);
+        $this->aboutModel = new AboutModel($db);
     }
 
     /**
@@ -67,6 +70,7 @@ class AdminController
         ];
 
         $terms = $this->termsModel->getTerms();
+        $about = $this->aboutModel->getAbout();
 
         // Reuse existing AdminPanel.php view as admin panel container
         // (this file can be adapted to render $users and $stats)
@@ -159,6 +163,15 @@ class AdminController
         $this->ensureAdmin();
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['content'])) {
             $this->termsModel->updateTerms($_POST['content']);
+        }
+        header('Location: index.php?action=adminPanel');
+        exit;
+    }
+
+    public function updateAbout() {
+        $this->ensureAdmin();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['about_content'])) {
+            $this->aboutModel->updateAbout($_POST['about_content']);
         }
         header('Location: index.php?action=adminPanel');
         exit;

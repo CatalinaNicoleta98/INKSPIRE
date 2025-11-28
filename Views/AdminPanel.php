@@ -23,7 +23,9 @@ $stats = $stats ?? ['new_users_today' => 0, 'new_posts_today' => 0];
                 <p class="text-3xl font-bold text-indigo-600"><?= $stats['new_posts_today'] ?></p>
             </div>
         </div>
-    </section>
+</section>
+
+    
 
     <!-- Users Table -->
     <section>
@@ -115,6 +117,25 @@ $stats = $stats ?? ['new_users_today' => 0, 'new_posts_today' => 0];
                 name="content" 
                 class="w-full h-64 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
             ><?= htmlspecialchars($terms ?? '') ?></textarea>
+
+            <button 
+                type="submit" 
+                class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            >
+                Save Changes
+            </button>
+        </form>
+    </section>
+
+    <!-- Edit About Section -->
+    <section class="mt-10">
+        <h2 class="text-xl font-semibold mb-3">Edit About Section</h2>
+
+        <form action="index.php?action=updateAbout" method="POST" class="bg-white shadow rounded-lg p-4">
+            <textarea 
+                name="about_content" 
+                class="w-full h-64 p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+            ><?= htmlspecialchars($about ?? '') ?></textarea>
 
             <button 
                 type="submit" 

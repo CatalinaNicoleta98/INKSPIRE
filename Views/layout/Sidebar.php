@@ -1,5 +1,13 @@
 <?php
   require_once __DIR__ . '/../../helpers/Session.php';
+  require_once __DIR__ . '/../../config.php';
+  require_once __DIR__ . '/../../Models/AboutModel.php';
+
+  $database = new Database();
+  $db = $database->connect();
+  $aboutModel = new AboutModel($db);
+  $aboutText = $aboutModel->getAbout();
+
   $isLoggedIn = Session::isLoggedIn();
   $loggedInUser = $_SESSION['user'] ?? null;
   $isAdmin = $loggedInUser && !empty($loggedInUser['is_admin']);
@@ -59,15 +67,11 @@
 
       <div class="relative z-10">
         <div class="flex items-center gap-3 mb-3">
-          <span class="text-xl">📚</span>
           <h4 class="text-sm font-semibold text-indigo-700 tracking-wide drop-shadow-sm">Welcome to Inkspire</h4>
         </div>
 
         <p class="text-xs text-gray-700 leading-relaxed mb-3">
-          A warm and inspiring corner for <strong>readers</strong>, <strong>book lovers</strong>,
-          and creative <strong>hobbyists</strong>.  
-          Share your favorite reads, cozy <strong>reading spots</strong>, beautiful <strong>quotes</strong>,
-          impressions, and anything that sparks your imagination.
+            <?= nl2br(htmlspecialchars($aboutText)) ?>
         </p>
 
         <button onclick="window.location='index.php?action=login'"
