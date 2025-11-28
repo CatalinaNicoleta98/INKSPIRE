@@ -49,9 +49,11 @@ class Session {
 
         $userId = $sessionUser['user_id'];
 
-        // Refresh the user data from the database
-        require_once __DIR__ . '/../Models/UserModel.php';
-        $userModel = new UserModel();
+        // Load UserModel through autoloader with DB injection
+        require_once __DIR__ . '/../config.php';
+        $database = new Database();
+        $db = $database->connect();
+        $userModel = new UserModel($db);
         $freshUser = $userModel->getUserById($userId);
 
         // If user no longer exists, log them out

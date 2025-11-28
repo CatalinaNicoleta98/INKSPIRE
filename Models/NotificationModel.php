@@ -4,30 +4,14 @@ class NotificationModel
 {
     private $db;
 
-    public function __construct($db = null)
+    public function __construct($db)
     {
-        if ($db !== null) {
-            // Standard usage: controller passes in the PDO/DB connection
-            $this->db = $db;
-        } else {
-            // Fallback usage: try to use a global DB connection already created (from config.php)
-            // This allows calling new NotificationModel() inside views like Header.php
-            if (isset($GLOBALS['db'])) {
-                $this->db = $GLOBALS['db'];
-            } elseif (isset($GLOBALS['pdo'])) {
-                $this->db = $GLOBALS['pdo'];
-            } else {
-                // As an absolute fallback, try importing $db from global scope
-                global $db, $pdo;
-                if (isset($db)) {
-                    $this->db = $db;
-                } elseif (isset($pdo)) {
-                    $this->db = $pdo;
-                } else {
-                    throw new Exception('Database connection not available for NotificationModel.');
-                }
-            }
-        }
+        $this->db = $db;
+    }
+
+    public function getDb()
+    {
+        return $this->db;
     }
 
     /* Get all notifications for a user, newest first */

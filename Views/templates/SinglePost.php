@@ -1,4 +1,3 @@
-<?php require_once __DIR__ . '/../../helpers/Session.php'; ?>
 <?php include __DIR__ . '/../layout/Header.php'; ?>
 <?php include __DIR__ . '/../layout/Sidebar.php'; ?>
 <?php include __DIR__ . '/../layout/Rightbar.php'; ?>

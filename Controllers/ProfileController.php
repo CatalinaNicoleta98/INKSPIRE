@@ -1,11 +1,4 @@
 <?php
-require_once __DIR__ . '/../helpers/Session.php';
-require_once __DIR__ . '/../Models/ProfileModel.php';
-require_once __DIR__ . '/../Models/PostModel.php';
-require_once __DIR__ . '/../Models/FollowModel.php';
-require_once __DIR__ . '/../Models/BlockModel.php';
-require_once __DIR__ . '/../Models/LikeModel.php';
-require_once __DIR__ . '/../Models/CommentModel.php';
 
 class ProfileController {
     private $profileModel;
@@ -15,13 +8,13 @@ class ProfileController {
     private $likeModel;
     private $commentModel;
 
-    public function __construct() {
-        $this->profileModel = new ProfileModel();
-        $this->postModel = new PostModel();
-        $this->followModel = new FollowModel();
-        $this->blockModel = new BlockModel();
-        $this->likeModel = new LikeModel();
-        $this->commentModel = new CommentModel();
+    public function __construct($db) {
+        $this->profileModel = new ProfileModel($db);
+        $this->postModel = new PostModel($db);
+        $this->followModel = new FollowModel($db);
+        $this->blockModel = new BlockModel($db);
+        $this->likeModel = new LikeModel($db);
+        $this->commentModel = new CommentModel($db);
     }
 
     public function view($userId = null) {
@@ -154,8 +147,7 @@ class ProfileController {
         if (!is_array($posts)) { $posts = []; }
 
         // Attach like information for each post on profile (viewer-based like state)
-        require_once __DIR__ . '/../Models/LikeModel.php';
-        $likeModel = new LikeModel();
+        $likeModel = new LikeModel($this->postModel->getDb());
         $likedPosts = $likeModel->getUserLikes($viewerId);
         $likedSet = array_flip($likedPosts);
 

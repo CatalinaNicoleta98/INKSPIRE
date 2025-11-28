@@ -1,18 +1,14 @@
 <?php
-require_once __DIR__ . '/../helpers/Session.php';
-require_once __DIR__ . '/../Models/PostModel.php';
-require_once __DIR__ . '/../Models/ProfileModel.php';
-require_once __DIR__ . '/../Models/BlockModel.php';
 
 class HomeController {
     private $postModel;
     private $profileModel;
     private $blockModel;
 
-    public function __construct() {
-        $this->postModel = new PostModel();
-        $this->profileModel = new ProfileModel();
-        $this->blockModel = new BlockModel();
+    public function __construct($db) {
+        $this->postModel = new PostModel($db);
+        $this->profileModel = new ProfileModel($db);
+        $this->blockModel = new BlockModel($db);
     }
 
     public function index() {
@@ -57,13 +53,11 @@ class HomeController {
 
         // Filter out posts from blocked or blocking users
         $posts = array_filter($posts, function ($post) use ($userId) {
-            $blockModel = new BlockModel();
-            return !$blockModel->isEitherBlocked($userId, $post['user_id']);
+            return !$this->blockModel->isEitherBlocked($userId, $post['user_id']);
         });
 
         // Attach like information for each post (current user's like state)
-        require_once __DIR__ . '/../Models/LikeModel.php';
-        $likeModel = new LikeModel();
+        $likeModel = new LikeModel($this->postModel->getDb());
         $likedPosts = $likeModel->getUserLikes($userId);
         $likedSet = array_flip($likedPosts);
 
@@ -74,8 +68,7 @@ class HomeController {
         unset($post);
 
         // Load comments for each post
-        require_once __DIR__ . '/../Models/CommentModel.php';
-        $commentModel = new CommentModel();
+        $commentModel = new CommentModel($this->postModel->getDb());
 
         foreach ($posts as &$post) {
             $post['comments'] = $commentModel->getCommentsByPost($post['post_id']);

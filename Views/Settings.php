@@ -1,14 +1,14 @@
 <?php 
-require_once __DIR__ . '/../Models/ProfileModel.php';
-require_once __DIR__ . '/../Models/BlockModel.php';
 Session::start();
 $user = Session::get('user');
+$database = new Database();
+$db = $database->connect();
 
-$profileModel = new ProfileModel();
+$profileModel = new ProfileModel($db);
 $profile = $profileModel->getProfileByUserId($user['user_id']);
 
 $section = $_GET['section'] ?? 'account';
-$blockModel = new BlockModel();
+$blockModel = new BlockModel($db);
 $blockedUsers = ($section === 'blocked') ? $blockModel->getBlockedUsers($user['user_id']) : [];
 
 $currentPic = !empty($profile['profile_picture']) ? htmlspecialchars($profile['profile_picture']) : 'uploads/default.png';

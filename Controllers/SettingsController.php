@@ -1,16 +1,12 @@
 <?php
-require_once __DIR__ . '/../helpers/Session.php';
-require_once __DIR__ . '/../helpers/ImageResizer.php';
-require_once __DIR__ . '/../Models/UserModel.php';
-require_once __DIR__ . '/../Models/ProfileModel.php';
 
 class SettingsController {
     private $userModel;
     private $profileModel;
 
-    public function __construct() {
-        $this->userModel = new UserModel();
-        $this->profileModel = new ProfileModel();
+    public function __construct($db) {
+        $this->userModel = new UserModel($db);
+        $this->profileModel = new ProfileModel($db);
     }
 
     public function update() {

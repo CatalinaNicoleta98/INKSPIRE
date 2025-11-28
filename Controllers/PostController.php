@@ -1,14 +1,10 @@
 <?php
-require_once __DIR__ . "/../Models/PostModel.php";
-require_once __DIR__ . "/../helpers/Session.php";
-require_once __DIR__ . '/../helpers/ImageResizer.php';
-
 
 class PostController {
     private $postModel;
 
-    public function __construct() {
-        $this->postModel = new PostModel();
+    public function __construct($db) {
+        $this->postModel = new PostModel($db);
     }
 
     // Show all posts (feed)
@@ -20,8 +16,7 @@ class PostController {
             exit;
         }
 
-        require_once __DIR__ . '/../Models/LikeModel.php';
-        $likeModel = new LikeModel();
+        $likeModel = new LikeModel($this->postModel->getDb());
 
         $posts = $this->postModel->getAllPosts();
 
@@ -36,8 +31,7 @@ class PostController {
         }
 
         // Load comments for each post
-        require_once __DIR__ . '/../Models/CommentModel.php';
-        $commentModel = new CommentModel();
+        $commentModel = new CommentModel($this->postModel->getDb());
         // Fetch comments for each post
         foreach ($posts as &$post) {
             $post['comments'] = $commentModel->getCommentsByPost($post['post_id']);
@@ -56,8 +50,7 @@ class PostController {
 
         $post = $this->postModel->getPostById($postId);
 
-        require_once __DIR__ . '/../Models/LikeModel.php';
-        $likeModel = new LikeModel();
+        $likeModel = new LikeModel($this->postModel->getDb());
         $post['likes'] = $likeModel->countLikes($postId);
         $post['liked'] = $likeModel->userLiked($user['user_id'], $postId);
 
@@ -329,8 +322,6 @@ class PostController {
         }
 
         // Fetch the post with full details
-        require_once __DIR__ . '/../Models/LikeModel.php';
-        require_once __DIR__ . '/../Models/CommentModel.php';
 
         $post = $this->postModel->getPostById($postId);
         if (!$post) {
@@ -339,12 +330,12 @@ class PostController {
         }
 
         // Likes
-        $likeModel = new LikeModel();
+        $likeModel = new LikeModel($this->postModel->getDb());
         $post['likes'] = $likeModel->countLikes($postId);
         $post['liked'] = $likeModel->userLiked($user['user_id'], $postId);
 
         // Comments
-        $commentModel = new CommentModel();
+        $commentModel = new CommentModel($this->postModel->getDb());
         $post['comments'] = $commentModel->getCommentsByPost($postId);
 
         // Comment highlight (from notifications)

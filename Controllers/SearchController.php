@@ -1,19 +1,15 @@
 <?php
-require_once __DIR__ . '/../Models/SearchModel.php';
-require_once __DIR__ . '/../helpers/Session.php';
-require_once __DIR__ . '/../Models/LikeModel.php';
-require_once __DIR__ . '/../Models/CommentModel.php';
 
 class SearchController {
     private $searchModel;
     private $likeModel;
     private $commentModel;
 
-    public function __construct() {
+    public function __construct($db) {
         Session::start();
-        $this->searchModel = new SearchModel();
-        $this->likeModel = new LikeModel();
-        $this->commentModel = new CommentModel();
+        $this->searchModel = new SearchModel($db);
+        $this->likeModel = new LikeModel($db);
+        $this->commentModel = new CommentModel($db);
     }
 
     // JSON suggestions for the dropdown
@@ -68,6 +64,6 @@ class SearchController {
 
         $activeType = $type;
 
-        require_once __DIR__ . '/../Views/SearchResults.php';
+        include __DIR__ . '/../Views/SearchResults.php';
     }
 }

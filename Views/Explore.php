@@ -1,4 +1,3 @@
-<?php require_once __DIR__ . '/../helpers/Session.php'; ?>
 <?php $user = Session::get('user'); ?>
 <?php $isLoggedIn = !empty($user) && isset($user['user_id']); ?>
 <?php include __DIR__ . '/layout/Header.php'; ?>

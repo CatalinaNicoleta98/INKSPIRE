@@ -1,12 +1,10 @@
 <?php
-require_once __DIR__ . '/../Models/CommentModel.php';
-require_once __DIR__ . '/../helpers/Session.php';
 
 class CommentController {
     private $model;
 
-    public function __construct() {
-        $this->model = new CommentModel();
+    public function __construct($db) {
+        $this->model = new CommentModel($db);
     }
 
     // Add a comment (supports replies)

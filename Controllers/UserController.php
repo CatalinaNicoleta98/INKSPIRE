@@ -1,15 +1,12 @@
 <?php
-require_once __DIR__ . "/../Models/UserModel.php";
-require_once __DIR__ . "/../helpers/Session.php";
-require_once __DIR__ . "/../Models/BlockModel.php";
 
 class UserController {
     private $userModel;
     private $blockModel;
 
-    public function __construct() {
-        $this->userModel = new UserModel();
-        $this->blockModel = new BlockModel();
+    public function __construct($db) {
+        $this->userModel = new UserModel($db);
+        $this->blockModel = new BlockModel($db);
     }
 
     public function register() {
@@ -109,7 +106,9 @@ class UserController {
                 header("Location: index.php?action=home");
                 exit;
             } else {
-                echo "<p>Invalid username or password.</p>";
+                $error = "Invalid username or password.";
+                include __DIR__ . '/../Views/User.php';
+                return;
             }
         }
         include __DIR__ . '/../Views/User.php';

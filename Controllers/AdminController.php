@@ -1,22 +1,14 @@
 <?php
 
-require_once __DIR__ . '/../helpers/Session.php';
-require_once __DIR__ . '/../Models/UserModel.php';
-require_once __DIR__ . '/../Models/TermsModel.php';
-require_once __DIR__ . '/../Models/AboutModel.php';
-
 class AdminController
 {
     private $userModel;
     private $termsModel;
     private $aboutModel;
 
-    public function __construct()
+    public function __construct($db)
     {
-        $this->userModel = new UserModel();
-        require_once __DIR__ . '/../config.php';
-        $database = new Database();
-        $db = $database->connect();
+        $this->userModel = new UserModel($db);
         $this->termsModel = new TermsModel($db);
         $this->aboutModel = new AboutModel($db);
     }
@@ -48,17 +40,11 @@ class AdminController
         // Get all users with aggregated stats for the table
         $users = $this->userModel->getAdminUserOverview();
 
-        // Daily statistics (new users today, new posts today)
-        require_once __DIR__ . '/../config.php';
-        $database = new Database();
-        $db = $database->connect();
-
-        // New users today
+        $db = $this->userModel->getDb();
         $stmtUsersToday = $db->prepare("SELECT COUNT(*) FROM User WHERE DATE(created_at) = CURDATE()");
         $stmtUsersToday->execute();
         $newUsersToday = $stmtUsersToday->fetchColumn();
 
-        // New posts today
         $stmtPostsToday = $db->prepare("SELECT COUNT(*) FROM Post WHERE DATE(created_at) = CURDATE()");
         $stmtPostsToday->execute();
         $newPostsToday = $stmtPostsToday->fetchColumn();

@@ -1,7 +1,4 @@
 <?php
-  require_once __DIR__ . '/../../helpers/Session.php';
-  require_once __DIR__ . '/../../config.php';
-  require_once __DIR__ . '/../../Models/AboutModel.php';
 
   $database = new Database();
   $db = $database->connect();

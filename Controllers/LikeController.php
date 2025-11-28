@@ -1,12 +1,9 @@
 <?php
-require_once __DIR__ . '/../Models/LikeModel.php';
-require_once __DIR__ . '/../helpers/Session.php';
-
 class LikeController {
     private $likeModel;
 
-    public function __construct() {
-        $this->likeModel = new LikeModel();
+    public function __construct($db) {
+        $this->likeModel = new LikeModel($db);
     }
 
     public function toggle() {

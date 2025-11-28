@@ -1,5 +1,4 @@
 <?php
-  require_once __DIR__ . '/../../helpers/Session.php';
   $isLoggedIn = Session::isLoggedIn();
 ?>
 <div class="hidden lg:block fixed top-[70px] right-0 w-[280px] h-[calc(100%-70px)] bg-gradient-to-b from-purple-50 to-pink-50 border-l border-purple-100 p-6 shadow-inner overflow-y-auto z-10 box-border">

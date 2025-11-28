@@ -27,7 +27,7 @@ class NotificationController
         // Mark all notifications as read when viewing the page
         $this->notificationModel->markAllAsRead($user_id);
 
-        include 'Views/Notifications.php';
+        include __DIR__ . '/../Views/Notifications.php';
     }
 
     /* Process click on notification */

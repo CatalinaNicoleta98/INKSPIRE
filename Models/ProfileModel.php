@@ -1,12 +1,14 @@
 <?php
-require_once __DIR__ . '/../config.php';
 
 class ProfileModel {
     private $conn;
 
-    public function __construct() {
-        $database = new Database();
-        $this->conn = $database->connect();
+    public function __construct($db) {
+        $this->conn = $db;
+    }
+
+    public function getDb() {
+        return $this->conn;
     }
 
     // Update profile bio, picture, and privacy setting

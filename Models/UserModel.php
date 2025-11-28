@@ -1,13 +1,15 @@
 <?php
-require_once __DIR__ . '/../config.php';
 
 if (!class_exists('UserModel')) {
 class UserModel {
     private $conn;
 
-    public function __construct() {
-        $database = new Database();
-        $this->conn = $database->connect();
+    public function __construct($db) {
+        $this->conn = $db;
+    }
+
+    public function getDb() {
+        return $this->conn;
     }
 
     public function register($firstName, $lastName, $email, $username, $password, $dob) {

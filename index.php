@@ -1,22 +1,16 @@
 <?php
-header('Content-Type: text/html; charset=utf-8');
-require_once __DIR__ . '/helpers/Session.php';
-require_once __DIR__ . '/Controllers/UserController.php';
-require_once __DIR__ . '/Controllers/PostController.php';
-require_once __DIR__ . '/Controllers/LikeController.php';
-require_once __DIR__ . '/Controllers/CommentController.php';
-require_once __DIR__ . '/Controllers/SearchController.php';
-require_once __DIR__ . '/Controllers/PasswordResetController.php';
-require_once __DIR__ . '/Models/NotificationModel.php';
-require_once __DIR__ . '/Models/ProfileModel.php';
+require_once __DIR__ . '/autoloader.php';
+
+$database = new Database();
+$db = $database->connect();
 
 // Create controllers
-$userController = new UserController();
-$postController = new PostController();
-$likeController = new LikeController();
-$commentController = new CommentController();
-$searchController = new SearchController();
-$passwordResetController = new PasswordResetController();
+$userController = new UserController($db);
+$postController = new PostController($db);
+$likeController = new LikeController($db);
+$commentController = new CommentController($db);
+$searchController = new SearchController($db);
+$passwordResetController = new PasswordResetController($db);
 
 // Get the logged-in user from the session
 $user = Session::get('user');
@@ -49,35 +43,30 @@ switch ($action) {
         $searchController->results();
         break;
     case 'home':
-        require_once __DIR__ . '/Controllers/HomeController.php';
-        $controller = new HomeController();
+        $controller = new HomeController($db);
         $controller->index();
         break;
 
     case 'explore':
-        require_once 'Controllers/ExploreController.php';
-        $controller = new ExploreController();
+        $controller = new ExploreController($db);
         $controller->index();
         break;
 
     case 'profile':
-        require_once __DIR__ . '/Controllers/ProfileController.php';
-        $controller = new ProfileController();
+        $controller = new ProfileController($db);
         $userId = isset($_GET['user_id']) ? intval($_GET['user_id']) : null;
         $controller->view($userId);
         break;
 
     case 'follow':
-        require_once __DIR__ . '/Controllers/ProfileController.php';
-        $controller = new ProfileController();
+        $controller = new ProfileController($db);
         if (isset($_GET['user_id'])) {
             $controller->follow(intval($_GET['user_id']));
         }
         break;
 
     case 'unfollow':
-        require_once __DIR__ . '/Controllers/ProfileController.php';
-        $controller = new ProfileController();
+        $controller = new ProfileController($db);
         if (isset($_GET['user_id'])) {
             $controller->unfollow(intval($_GET['user_id']));
         }
@@ -92,24 +81,21 @@ switch ($action) {
         break;
 
     case 'block':
-        require_once __DIR__ . '/Controllers/ProfileController.php';
-        $controller = new ProfileController();
+        $controller = new ProfileController($db);
         if (isset($_GET['user_id'])) {
             $controller->block(intval($_GET['user_id']));
         }
         break;
 
     case 'unblock':
-        require_once __DIR__ . '/Controllers/ProfileController.php';
-        $controller = new ProfileController();
+        $controller = new ProfileController($db);
         if (isset($_GET['user_id'])) {
             $controller->unblock(intval($_GET['user_id']));
         }
         break;
 
     case 'settings':
-        require_once __DIR__ . '/Controllers/SettingsController.php';
-        $controller = new SettingsController();
+        $controller = new SettingsController($db);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();
         } else {
@@ -118,20 +104,17 @@ switch ($action) {
         break;
 
     case 'updateSettings':
-        require_once __DIR__ . '/Controllers/SettingsController.php';
-        $controller = new SettingsController();
+        $controller = new SettingsController($db);
         $controller->update();
         break;
 
     case 'deleteProfilePicture':
-        require_once __DIR__ . '/Controllers/SettingsController.php';
-        $controller = new SettingsController();
+        $controller = new SettingsController($db);
         $controller->deleteProfilePicture();
         break;
 
     case 'deleteAccount':
-        require_once __DIR__ . '/Controllers/SettingsController.php';
-        $controller = new SettingsController();
+        $controller = new SettingsController($db);
         $controller->deleteAccount();
         break;
 
@@ -218,68 +201,57 @@ switch ($action) {
         break;
 
     case 'notifications':
-        require_once __DIR__ . '/Controllers/NotificationController.php';
-        $controller = new NotificationController($pdo);
+        $controller = new NotificationController($db);
         $controller->index();
         break;
 
     case 'viewNotification':
-        require_once __DIR__ . '/Controllers/NotificationController.php';
-        $controller = new NotificationController($pdo);
+        $controller = new NotificationController($db);
         $controller->view();
         break;
 
     case 'markNotificationRead':
-        require_once __DIR__ . '/Controllers/NotificationController.php';
-        $controller = new NotificationController($pdo);
+        $controller = new NotificationController($db);
         $controller->markNotificationRead();
         exit;
 
     case 'markNotificationUnread':
-        require_once __DIR__ . '/Controllers/NotificationController.php';
-        $controller = new NotificationController($pdo);
+        $controller = new NotificationController($db);
         $controller->markNotificationUnread();
         exit;
 
     case 'markAllNotificationsRead':
-        require_once __DIR__ . '/Controllers/NotificationController.php';
-        $controller = new NotificationController($pdo);
+        $controller = new NotificationController($db);
         $controller->markAllNotificationsRead();
         exit;
 
     case 'deleteNotification':
-        require_once __DIR__ . '/Controllers/NotificationController.php';
-        $controller = new NotificationController($pdo);
+        $controller = new NotificationController($db);
         $controller->deleteNotification();
         exit;
 
     case 'deleteAllNotifications':
-        require_once __DIR__ . '/Controllers/NotificationController.php';
-        $controller = new NotificationController($pdo);
+        $controller = new NotificationController($db);
         $controller->deleteAllNotifications();
         exit;
 
     case 'toggleAdminView':
-        require_once __DIR__ . '/Controllers/SettingsController.php';
-        $controller = new SettingsController();
+        $controller = new SettingsController($db);
         $controller->toggleAdminView();
         break;
 
     case 'adminPanel':
-        require_once __DIR__ . '/Controllers/AdminController.php';
-        $controller = new AdminController();
+        $controller = new AdminController($db);
         $controller->dashboard();
         break;
 
     case 'adminToggleBlock':
-        require_once __DIR__ . '/Controllers/AdminController.php';
-        $controller = new AdminController();
+        $controller = new AdminController($db);
         $controller->toggleBlock();
         break;
 
     case 'adminToggleAdmin':
-        require_once __DIR__ . '/Controllers/AdminController.php';
-        $controller = new AdminController();
+        $controller = new AdminController($db);
         $controller->toggleAdmin();
         break;
 
@@ -300,14 +272,12 @@ switch ($action) {
         break;
 
     case 'updateTerms':
-        require_once __DIR__ . '/Controllers/AdminController.php';
-        $controller = new AdminController();
+        $controller = new AdminController($db);
         $controller->updateTerms();
         break;
 
     case 'updateAbout':
-        require_once __DIR__ . '/Controllers/AdminController.php';
-        $controller = new AdminController();
+        $controller = new AdminController($db);
         $controller->updateAbout();
         break;
 

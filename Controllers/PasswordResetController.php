@@ -1,8 +1,4 @@
 <?php
-require_once __DIR__ . '/../Models/UserModel.php';
-require_once __DIR__ . '/../helpers/PHPMailer/PHPMailer.php';
-require_once __DIR__ . '/../helpers/PHPMailer/SMTP.php';
-require_once __DIR__ . '/../helpers/PHPMailer/Exception.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -11,9 +7,9 @@ class PasswordResetController
 {
     private $userModel;
 
-    public function __construct()
+    public function __construct($db)
     {
-        $this->userModel = new UserModel();
+        $this->userModel = new UserModel($db);
     }
 
     public function showForgotPasswordForm()

@@ -1,12 +1,10 @@
 <?php
-require_once __DIR__ . '/../config.php';
 
 class ExploreModel {
     private $db;
 
-    public function __construct() {
-        require __DIR__ . '/../config.php';
-        $this->db = $pdo; // or $conn if your config defines that variable
+    public function __construct($db) {
+        $this->db = $db;
     }
 
     public function getExplorePosts() {

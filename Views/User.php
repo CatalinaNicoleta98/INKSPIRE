@@ -1,7 +1,4 @@
 <?php
-require_once __DIR__ . '/../helpers/Session.php';
-require_once __DIR__ . '/../Models/TermsModel.php';
-require_once __DIR__ . '/../config.php';
 $database = new Database();
 $db = $database->connect();
 $termsModel = new TermsModel($db);

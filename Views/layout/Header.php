@@ -1,12 +1,12 @@
 <?php
-require_once __DIR__ . '/../../helpers/Session.php';
-require_once __DIR__ . '/../../Models/ProfileModel.php';
 
 Session::start();
+$database = new Database();
+$db = $database->connect();
 $loggedInUser = Session::get('user'); // use a distinct variable to avoid overwriting $user used by ProfileController
 
 if ($loggedInUser) {
-    $profileModel = new ProfileModel();
+    $profileModel = new ProfileModel($db);
     $loggedProfile = $profileModel->getProfileByUserId($loggedInUser['user_id']);
     if ($loggedProfile) {
         $loggedInUser['profile_picture'] = $loggedProfile['profile_picture'];
@@ -59,9 +59,8 @@ $profilePic = !empty($loggedInUser['profile_picture'])
 
     <?php if ($loggedInUser): ?>
       <?php
-          require_once __DIR__ . '/../../Models/NotificationModel.php';
+          $notifModel = new NotificationModel($db);
           if ($loggedInUser) {
-              $notifModel = new NotificationModel();
               $unread = $notifModel->getUnreadCount($loggedInUser['user_id']);
               $notifications = $notifModel->getNotificationsByUser($loggedInUser['user_id']);
           }
