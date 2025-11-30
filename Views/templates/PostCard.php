@@ -72,8 +72,9 @@
     <div class="absolute bottom-3 right-3 bg-black/50 text-white rounded-full px-3 py-1 text-sm flex items-center gap-3">
         <?php if ($isLoggedIn): ?>
             <?php $liked = !empty($post['liked']); ?>
-            <span class="like-btn cursor-pointer transition"
-                  data-id="<?= $post['post_id'] ?>"
+            <span class="cursor-pointer transition"
+                  data-action="like"
+                  data-post-id="<?= htmlspecialchars($post['post_id']) ?>"
                   style="<?= $liked ? 'color:#ef4444;' : '#9ca3af;' ?>">
                 <?= $liked ? '❤️' : '🤍' ?> <?= $post['likes'] ?>
             </span>

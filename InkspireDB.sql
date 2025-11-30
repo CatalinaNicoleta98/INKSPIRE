@@ -90,10 +90,14 @@ CREATE TABLE Notification (
     actor_id        INT NOT NULL,
     is_read         TINYINT(1) DEFAULT 0,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (post_id)    REFERENCES Post(post_id) ON DELETE CASCADE,
-    FOREIGN KEY (comment_id) REFERENCES Comment(comment_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id)    REFERENCES User(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (actor_id)   REFERENCES User(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_notification_post
+      FOREIGN KEY (post_id)    REFERENCES Post(post_id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_comment
+      FOREIGN KEY (comment_id) REFERENCES Comment(comment_id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_user
+      FOREIGN KEY (user_id)    REFERENCES User(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_actor
+      FOREIGN KEY (actor_id)   REFERENCES User(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE Follow (

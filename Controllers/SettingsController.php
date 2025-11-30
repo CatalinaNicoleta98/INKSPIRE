@@ -31,7 +31,7 @@ class SettingsController {
         $username = !empty($_POST['username']) ? trim($_POST['username']) : ($user['username'] ?? '');
         $email = !empty($_POST['email']) ? trim($_POST['email']) : ($user['email'] ?? '');
         $bio = isset($_POST['bio']) ? trim($_POST['bio']) : ($existingProfile['bio'] ?? '');
-        $isPrivate = isset($_POST['is_private']) ? 1 : ($existingProfile['is_private'] ?? 0);
+        $isPrivate = isset($_POST['is_private']) ? 1 : 0;
         $profilePicture = $existingProfile['profile_picture'] ?? '';
 
         // Handle new profile picture upload if one is provided
