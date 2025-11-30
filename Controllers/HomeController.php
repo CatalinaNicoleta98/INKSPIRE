@@ -46,8 +46,16 @@ class HomeController {
 
         // Also fetch the logged‑in user's own posts
         if (method_exists($this->postModel, 'getPostsByUser')) {
-            $selfPosts = $this->postModel->getPostsByUser($userId);
-            // Merge and sort by newest first
+            $selfPostsAll = $this->postModel->getPostsByUser($userId);
+            $selfPosts = [];
+            if (!empty($selfPostsAll)) {
+                // Only keep latest post by logged‑in user
+                usort($selfPostsAll, function($a, $b) {
+                    return strtotime($b['created_at']) - strtotime($a['created_at']);
+                });
+                $selfPosts = [$selfPostsAll[0]];
+            }
+            // Merge: latest self post first, then followed users
             $posts = array_merge($selfPosts, $posts);
         }
 
