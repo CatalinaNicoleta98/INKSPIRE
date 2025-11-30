@@ -105,44 +105,33 @@ class ProfileController {
         $isBlocked = $this->blockModel->isBlocked($userId, $viewerId); // viewer blocked by profile owner
 
         // Handle privacy
-        $canViewPosts = false;
+        $canViewAllPosts = false;
+        $canViewPublicPosts = false;
+
         if ($userId == $viewerId) {
-            $canViewPosts = true;
-        } elseif ($profile['is_private'] == 0 && !$isBlocked) {
-            $canViewPosts = true;
+            $canViewAllPosts = true;
         } elseif ($isFollowing && !$isBlocked) {
-            $canViewPosts = true;
+            $canViewAllPosts = true;
+        } elseif ($profile['is_private'] == 0 && !$isBlocked) {
+            // Public profile but non-follower
+            $canViewPublicPosts = true;
         }
 
         // Load posts conditionally:
-        // - If viewer can view posts (owner, public profile, or follower), show all posts.
-        // - Otherwise (private profile, non-follower), show only public posts.
-        if ($canViewPosts) {
+        if ($canViewAllPosts) {
             $posts = $this->postModel->getPostsByUser($userId);
-        } else {
-            // Fallback to public posts only (so private profiles still show public content)
+        } elseif ($canViewPublicPosts) {
             if (method_exists($this->postModel, 'getPublicPostsByUser')) {
                 $posts = $this->postModel->getPublicPostsByUser($userId);
             } else {
-                // If the method does not exist, load all and filter to public on the PHP side.
                 $allPosts = $this->postModel->getPostsByUser($userId);
                 $posts = array_values(array_filter($allPosts, function($p) {
-                    // Support multiple schema variations:
-                    // - boolean/int flag: is_public == 1
-                    // - string flags: visibility == 'public' or privacy == 'public'
-                    if (isset($p['is_public'])) {
-                        return (int)$p['is_public'] === 1;
-                    }
-                    if (isset($p['visibility'])) {
-                        return strtolower((string)$p['visibility']) === 'public';
-                    }
-                    if (isset($p['privacy'])) {
-                        return strtolower((string)$p['privacy']) === 'public';
-                    }
-                    // If no visibility field exists, be conservative and hide it
-                    return false;
+                    return isset($p['is_public']) ? (int)$p['is_public'] === 1 : false;
                 }));
             }
+        } else {
+            // Private profile, non-follower → see nothing
+            $posts = [];
         }
         if (!is_array($posts)) { $posts = []; }
 
