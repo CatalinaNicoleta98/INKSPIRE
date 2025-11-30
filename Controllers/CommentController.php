@@ -32,6 +32,23 @@ class CommentController {
         $content = $_POST['text'] ?? '';
         $parent_id = $_POST['parent_id'] ?? null;
 
+        // --- Anti-spam: simple cooldown (10 second) ---
+        if (!isset($_SESSION['last_comment_time'])) {
+            $_SESSION['last_comment_time'] = 0;
+        }
+
+        if (time() - $_SESSION['last_comment_time'] < 10) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'You are commenting too fast.'
+            ]);
+            exit;
+        }
+
+        $_SESSION['last_comment_time'] = time();
+        // ---------------------------------------------
+
         if ($post_id && !empty(trim($content))) {
             $user_id = $user['user_id'];
             $success = $this->model->addComment($post_id, $user_id, $content, $parent_id);
