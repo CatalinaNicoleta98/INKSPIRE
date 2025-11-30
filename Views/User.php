@@ -166,6 +166,12 @@ if (!isset($action)) {
 
       <h2 class="text-2xl font-semibold text-indigo-600 text-center mb-6">Choose a New Password</h2>
 
+      <?php if (!empty($_SESSION['error'])): ?>
+        <p class="text-red-500 text-center mb-4 text-sm bg-red-50 py-2 rounded-md">
+          <?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+        </p>
+      <?php endif; ?>
+
       <form method="POST" action="index.php?action=updatePassword" class="space-y-4">
         <input type="hidden" name="token" value="<?= htmlspecialchars($_GET['token']) ?>">
 
