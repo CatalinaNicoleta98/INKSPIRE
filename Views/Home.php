@@ -119,7 +119,11 @@
           </div>
         <?php endforeach; ?>
       <?php else: ?>
-        <p class="text-center text-gray-500 italic mt-10">No posts yet.</p>
+        <?php if (!empty($isAdminBlocked) && $isAdminBlocked): ?>
+          <p class="text-center text-red-500 italic mt-10">You have been blocked by an administrator.</p>
+        <?php else: ?>
+          <p class="text-center text-gray-500 italic mt-10">No posts yet.</p>
+        <?php endif; ?>
       <?php endif; ?>
 
     </div>
