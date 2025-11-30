@@ -77,9 +77,13 @@
           <?= nl2br(htmlspecialchars($aboutText)) ?>
         </p>
 
-        <button onclick="window.location='index.php?action=login'"
+        <button onclick="window.location='index.php?action=register'"
           class="w-full py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-400 to-purple-400 text-white shadow-sm hover:from-indigo-500 hover:to-purple-500 transition-all">
           ✨ Join the Community
+        </button>
+        <button onclick="window.location='index.php?action=login'"
+          class="w-full mt-3 py-2 text-xs font-semibold rounded-lg bg-white text-indigo-600 border border-indigo-300 shadow-sm hover:bg-indigo-50 transition-all">
+          🔑 Already have an account? Log in
         </button>
       </div>
     </div>
