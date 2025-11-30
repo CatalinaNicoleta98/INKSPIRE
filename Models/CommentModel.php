@@ -124,5 +124,11 @@ class CommentModel {
         $stmt->bindParam(':userB', $userB);
         return $stmt->execute();
     }
+    // Get single comment by ID (used for notification validation)
+    public function getCommentById($comment_id) {
+        $stmt = $this->conn->prepare("SELECT * FROM `Comment` WHERE comment_id = ?");
+        $stmt->execute([$comment_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
 ?>

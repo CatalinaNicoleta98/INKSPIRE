@@ -340,6 +340,15 @@ class PostController {
 
         // Comment highlight (from notifications)
         $highlightCommentId = isset($_GET['comment_id']) ? intval($_GET['comment_id']) : null;
+        if ($highlightCommentId) {
+            $commentModelCheck = new CommentModel($this->postModel->getDb());
+            $commentCheck = $commentModelCheck->getCommentById($highlightCommentId);
+            if (!$commentCheck || intval($commentCheck['post_id']) !== intval($postId)) {
+                // Invalid or unrelated comment → show 404
+                include __DIR__ . '/../Views/404.php';
+                exit;
+            }
+        }
 
         // Prepare data exactly as Post.php expects
         $posts = [$post];
