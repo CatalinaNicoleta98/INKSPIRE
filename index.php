@@ -281,6 +281,11 @@ switch ($action) {
         $controller->updateAbout();
         break;
 
+    case 'feed':
+        header("Location: index.php?action=home");
+        exit;
+        break;
+
     default:
         include __DIR__ . '/Views/404.php';
         exit;
