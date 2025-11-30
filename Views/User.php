@@ -88,7 +88,7 @@ if (!isset($action)) {
 
           <select name="dob_year" class="border border-indigo-200 rounded-md px-3 py-2">
             <option value="">Year</option>
-            <?php for($y=date('Y')-14;$y>=1900;$y--): ?>
+            <?php for($y=date('Y')-14;$y>=1950;$y--): ?>
               <option value="<?= $y ?>" <?= isset($old['dob_year']) && $old['dob_year']==$y?'selected':'' ?>><?= $y ?></option>
             <?php endfor; ?>
           </select>
