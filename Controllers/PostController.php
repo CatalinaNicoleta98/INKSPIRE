@@ -371,6 +371,11 @@ class PostController {
         $sidebar = SidebarController::data($db);
         extract($sidebar);
 
+        // Header variables
+        $loggedInUser = $user;
+        $header = HeaderController::data($db, $loggedInUser);
+        extract($header);
+
         include __DIR__ . '/../Views/templates/SinglePost.php';
     }
 

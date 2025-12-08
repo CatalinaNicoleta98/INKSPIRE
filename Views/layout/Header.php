@@ -1,20 +1,12 @@
 <?php
-Session::start();
-$database = new Database();
-$db = $database->connect();
-$loggedInUser = Session::get('user');
-
-if ($loggedInUser) {
-    $profileModel = new ProfileModel($db);
-    $loggedProfile = $profileModel->getProfileByUserId($loggedInUser['user_id']);
-    if ($loggedProfile) {
-        $loggedInUser['profile_picture'] = $loggedProfile['profile_picture'];
-    }
-}
-
-$profilePic = !empty($loggedInUser['profile_picture'])
-    ? htmlspecialchars($loggedInUser['profile_picture'])
-    : 'uploads/default_avatar.png';
+// Variables now provided by HeaderController::data():
+//
+// $loggedInUser          - array|null, current user
+// $profilePic            - escaped profile picture path
+// $unread                - number of unread notifications
+// $notifications         - all notifications
+// $unreadNotifications   - array of unread notifications
+// $readNotifications     - array of read notifications
 ?>
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -58,26 +50,6 @@ $profilePic = !empty($loggedInUser['profile_picture'])
     </div>
 
     <?php if ($loggedInUser): ?>
-      <?php
-          $notifModel = new NotificationModel($db);
-          if ($loggedInUser) {
-              $unread = $notifModel->getUnreadCount($loggedInUser['user_id']);
-              $notifications = $notifModel->getNotificationsByUser($loggedInUser['user_id']);
-          }
-
-          $unreadNotifications = [];
-          $readNotifications = [];
-          if (!empty($notifications)) {
-              foreach ($notifications as $n) {
-                  if (empty($n['is_read'])) {
-                      $unreadNotifications[] = $n;
-                  } else {
-                      $readNotifications[] = $n;
-                  }
-              }
-          }
-      ?>
-
       <div class="flex items-center gap-4">
         <div class="relative">
           <button id="notifBtn" type="button" class="relative flex items-center focus:outline-none">

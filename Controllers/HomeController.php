@@ -37,6 +37,11 @@ class HomeController {
             $sidebar = SidebarController::data($db);
             extract($sidebar);
 
+            // Header variables
+            $loggedInUser = $user;
+            $header = HeaderController::data($db, $loggedInUser);
+            extract($header);
+
             include __DIR__ . '/../Views/Home.php';
             return;
         }
@@ -93,6 +98,11 @@ class HomeController {
         $db = $this->postModel->getDb();
         $sidebar = SidebarController::data($db);
         extract($sidebar);
+
+        // Header variables
+        $loggedInUser = $user;
+        $header = HeaderController::data($db, $loggedInUser);
+        extract($header);
 
         include __DIR__ . '/../Views/Home.php';
     }

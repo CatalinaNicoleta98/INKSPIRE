@@ -5,9 +5,11 @@ class NotificationController
     private $notificationModel;
     private $postModel;
     private $profileModel;
+    private $db;
 
     public function __construct($db)
     {
+        $this->db = $db;
         $this->notificationModel = new NotificationModel($db);
         $this->postModel = new PostModel($db);
         $this->profileModel = new ProfileModel($db);
@@ -26,6 +28,16 @@ class NotificationController
 
         // Mark all notifications as read when viewing the page
         $this->notificationModel->markAllAsRead($user_id);
+
+        // Sidebar variables
+        $db = $this->db;
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
+
+        // Header variables
+        $loggedInUser = $_SESSION['user'];
+        $header = HeaderController::data($db, $loggedInUser);
+        extract($header);
 
         include __DIR__ . '/../Views/Notifications.php';
     }

@@ -63,8 +63,11 @@ class AdminController
         $sidebar = SidebarController::data($db);
         extract($sidebar);
 
-        // Reuse existing AdminPanel.php view as admin panel container
-        // (this file can be adapted to render $users and $stats)
+        // Header variables
+        $header = HeaderController::data($db, $loggedInUser);
+        extract($header);
+
+        // Render
         include __DIR__ . '/../Views/AdminPanel.php';
     }
 
@@ -152,6 +155,10 @@ class AdminController
         $db = $this->userModel->getDb();
         $sidebar = SidebarController::data($db);
         extract($sidebar);
+
+        // Header variables
+        $header = HeaderController::data($db, $loggedInUser);
+        extract($header);
 
         include __DIR__ . '/../Views/AdminTerms.php';
     }

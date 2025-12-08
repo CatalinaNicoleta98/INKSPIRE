@@ -50,6 +50,11 @@ class ProfileController {
             $sidebar = SidebarController::data($db);
             extract($sidebar);
 
+            // Header variables
+            $loggedInUser = $currentUser;
+            $header = HeaderController::data($db, $loggedInUser);
+            extract($header);
+
             include __DIR__ . '/../Views/Profile.php';
             return;
         }
@@ -97,6 +102,11 @@ class ProfileController {
             $db = $this->profileModel->getDb();
             $sidebar = SidebarController::data($db);
             extract($sidebar);
+
+            // Header variables
+            $loggedInUser = $currentUser;
+            $header = HeaderController::data($db, $loggedInUser);
+            extract($header);
 
             include __DIR__ . '/../Views/Profile.php';
             return;
@@ -165,6 +175,11 @@ class ProfileController {
         $db = $this->profileModel->getDb();
         $sidebar = SidebarController::data($db);
         extract($sidebar);
+
+        // Header variables
+        $loggedInUser = $currentUser;
+        $header = HeaderController::data($db, $loggedInUser);
+        extract($header);
 
         include __DIR__ . '/../Views/Profile.php';
     }

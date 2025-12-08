@@ -69,6 +69,11 @@ class SearchController {
         $sidebar = SidebarController::data($db);
         extract($sidebar);
 
+        // Header variables
+        $loggedInUser = $_SESSION['user'] ?? null;
+        $header = HeaderController::data($db, $loggedInUser);
+        extract($header);
+
         include __DIR__ . '/../Views/SearchResults.php';
     }
 }
