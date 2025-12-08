@@ -3,8 +3,12 @@
 class UserController {
     private $userModel;
     private $blockModel;
+    private $db;
+    private $error = null;
+    private $old = [];
 
     public function __construct($db) {
+        $this->db = $db;
         $this->userModel = new UserModel($db);
         $this->blockModel = new BlockModel($db);
     }
@@ -23,9 +27,9 @@ class UserController {
             if ($dobDay && $dobMonth && $dobYear && checkdate($dobMonth, $dobDay, $dobYear)) {
                 $dob = "$dobYear-$dobMonth-$dobDay";
             } else {
-                $error = "Please select a valid date of birth.";
-                $old = $_POST;
-                include __DIR__ . '/../Views/User.php';
+                $this->error = "Please select a valid date of birth.";
+                $this->old = $_POST;
+                $this->show();
                 return;
             }
 
@@ -34,17 +38,17 @@ class UserController {
 
             // Terms & Conditions acceptance validation
             if (!isset($_POST['accept_terms'])) {
-                $error = "You must accept the Terms & Conditions to register.";
-                $old = $_POST;
-                include __DIR__ . '/../Views/User.php';
+                $this->error = "You must accept the Terms & Conditions to register.";
+                $this->old = $_POST;
+                $this->show();
                 return;
             }
 
             // Backend password match validation
             if ($password !== $passwordConfirm) {
-                $error = "Passwords do not match.";
-                $old = $_POST;
-                include __DIR__ . '/../Views/User.php';
+                $this->error = "Passwords do not match.";
+                $this->old = $_POST;
+                $this->show();
                 return;
             }
 
@@ -56,9 +60,9 @@ class UserController {
             $hasSpecial = preg_match('/[^A-Za-z0-9]/', $password);
 
             if (!($hasMinLength && $hasUpper && $hasLower && $hasNumber && $hasSpecial)) {
-                $error = "Password must be at least 8 characters long and include upper, lower, number and special character.";
-                $old = $_POST;
-                include __DIR__ . '/../Views/User.php';
+                $this->error = "Password must be at least 8 characters long and include upper, lower, number and special character.";
+                $this->old = $_POST;
+                $this->show();
                 return;
             }
 
@@ -85,11 +89,12 @@ class UserController {
             }
 
             // if we reach here, registration failed — show the user page with error message
-            $old = $_POST;
-            include __DIR__ . '/../Views/User.php';
+            $this->error = $error;
+            $this->old = $_POST;
+            $this->show();
             return;
         }
-        include __DIR__ . '/../Views/User.php';
+        $this->show();
     }
 
     public function login() {
@@ -106,12 +111,13 @@ class UserController {
                 header("Location: index.php?action=home");
                 exit;
             } else {
-                $error = "Invalid username or password.";
-                include __DIR__ . '/../Views/User.php';
+                $this->error = "Invalid username or password.";
+                $this->old = $_POST;
+                $this->show();
                 return;
             }
         }
-        include __DIR__ . '/../Views/User.php';
+        $this->show();
     }
 
     public function logout() {
@@ -182,6 +188,21 @@ class UserController {
         header('Content-Type: application/json');
         echo json_encode(['users' => $suggested]);
         exit;
+    }
+
+    public function show() {
+        // Determine which subview to show: login or register
+        $action = $_GET['action'] ?? 'login';
+
+        // Load Terms & Conditions text
+        $termsModel = new TermsModel($this->db);
+        $terms = $termsModel->getTerms();
+
+        // Expose optional variables
+        $error = $this->error;
+        $old = $this->old;
+
+        include __DIR__ . '/../Views/User.php';
     }
 }
 ?>

@@ -1,13 +1,3 @@
-<?php
-$database = new Database();
-$db = $database->connect();
-$termsModel = new TermsModel($db);
-$terms = $termsModel->getTerms();
-if (!isset($action)) {
-    $action = $_GET['action'] ?? 'login';
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
