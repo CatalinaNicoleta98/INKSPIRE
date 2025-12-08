@@ -173,5 +173,41 @@ class SettingsController {
         header("Location: " . $redirect);
         exit();
     }
+    public function show() {
+        Session::start();
+        if (!Session::isLoggedIn()) {
+            header('Location: index.php?action=login');
+            exit();
+        }
+
+        $user = Session::get('user');
+        $userId = $user['user_id'];
+
+        // Load profile
+        $profile = $this->profileModel->getProfileByUserId($userId);
+
+        // If profile somehow does not exist, create it
+        if (!$profile) {
+            $this->profileModel->createProfile($userId);
+            $profile = $this->profileModel->getProfileByUserId($userId);
+        }
+
+        // Determine section
+        $section = $_GET['section'] ?? 'account';
+
+        // Blocked users list (only relevant when viewing "blocked" section)
+        $blockedUsers = [];
+        if ($section === 'blocked') {
+            $blockModel = new BlockModel($this->profileModel->getDb());
+            $blockedUsers = $blockModel->getBlockedUsers($userId);
+        }
+
+        // Prepare view variables
+        $currentPic = !empty($profile['profile_picture']) ? htmlspecialchars($profile['profile_picture']) : 'uploads/default.png';
+        $currentBio = htmlspecialchars($profile['bio'] ?? '');
+        $isPrivate = (!empty($profile['is_private']) && $profile['is_private'] == 1) ? 'checked' : '';
+
+        include __DIR__ . '/../Views/Settings.php';
+    }
 }
 ?>

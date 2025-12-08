@@ -99,7 +99,7 @@ switch ($action) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();
         } else {
-            include __DIR__ . '/Views/Settings.php';
+            $controller->show();
         }
         break;
 
