@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/autoloader.php';
+header('Content-Type: text/html; charset=utf-8');
 
 $database = new Database();
 $db = $database->connect();

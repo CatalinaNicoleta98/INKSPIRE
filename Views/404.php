@@ -39,17 +39,33 @@
       <!-- Floating moon icon -->
       <div class="text-6xl mb-4 animate-[float_4s_ease-in-out_infinite]">🌙</div>
 
-      <h1 class="text-4xl font-bold text-gray-800 mb-2 animate-[shimmer_4s_ease-in-out_infinite]">404</h1>
+      <?php if (!empty($blockedProfile)) : ?>
+        <h1 class="text-3xl font-semibold text-gray-800 mb-3">🚫 Profile Unavailable</h1>
 
-      <p class="text-gray-600 mb-6 text-sm leading-relaxed">
-        The page you're looking for doesn't exist or has been moved.<br>
-        Let’s guide you back to something inspiring.
-      </p>
+        <p class="text-gray-600 mb-6 text-sm leading-relaxed">
+          You cannot view this profile.
+        </p>
 
-      <a href="index.php?action=home"
-         class="inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-600 transition shadow-sm">
-         ⬅ Go back home
-      </a>
+        <a href="index.php?action=home"
+           class="inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-600 transition shadow-sm">
+           ⬅ Go back home
+        </a>
+
+      <?php else : ?>
+
+        <h1 class="text-4xl font-bold text-gray-800 mb-2 animate-[shimmer_4s_ease-in-out_infinite]">404</h1>
+
+        <p class="text-gray-600 mb-6 text-sm leading-relaxed">
+          The page you're looking for doesn't exist or has been moved.<br>
+          Let’s guide you back to something inspiring.
+        </p>
+
+        <a href="index.php?action=home"
+           class="inline-block bg-indigo-500 text-white px-6 py-2 rounded-lg hover:bg-indigo-600 transition shadow-sm">
+           ⬅ Go back home
+        </a>
+
+      <?php endif; ?>
 
       <div class="mt-6 text-xs text-gray-400">
         Inkspire · Created with care ✨
