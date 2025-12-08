@@ -68,6 +68,11 @@ class ExploreController {
         }
         unset($post);
 
+        // Sidebar variables
+        $db = $this->postModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
+
         include __DIR__ . '/../Views/Explore.php';
     }
 }

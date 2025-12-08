@@ -45,6 +45,11 @@ class ProfileController {
             $isAdminBlocked = true;
             // Do NOT block posts here — blocked users may see their own posts
             $posts = $this->postModel->getPostsByUser($userId);
+            /* Sidebar variables */
+            $db = $this->profileModel->getDb();
+            $sidebar = SidebarController::data($db);
+            extract($sidebar);
+
             include __DIR__ . '/../Views/Profile.php';
             return;
         }
@@ -88,6 +93,11 @@ class ProfileController {
             $followersList = [];
             $followingList = [];
             $isProfileAdminBlocked = true;
+            /* Sidebar variables */
+            $db = $this->profileModel->getDb();
+            $sidebar = SidebarController::data($db);
+            extract($sidebar);
+
             include __DIR__ . '/../Views/Profile.php';
             return;
         }
@@ -150,6 +160,11 @@ class ProfileController {
         // On private profiles, only followers (or the owner) should see followers/following lists.
         $canSeeSocialLists = ($profile['is_private'] == 0) || ($userId == $viewerId) || ($isFollowing && !$isBlocked);
         $showPrivateNotice = ($profile['is_private'] == 1) && !$isFollowing && ($userId != $viewerId);
+
+        /* Sidebar variables */
+        $db = $this->profileModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
 
         include __DIR__ . '/../Views/Profile.php';
     }

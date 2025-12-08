@@ -1,18 +1,3 @@
-<?php
-  $database = new Database();
-  $db = $database->connect();
-  $aboutModel = new AboutModel($db);
-  $aboutText = $aboutModel->getAbout();
-
-  $isLoggedIn = Session::isLoggedIn();
-  $loggedInUser = $_SESSION['user'] ?? null;
-  $isAdmin = $loggedInUser && !empty($loggedInUser['is_admin']);
-  $adminViewOn = !empty($_SESSION['admin_view']);
-
-  if (!isset($_SESSION['post_token'])) {
-      $_SESSION['post_token'] = bin2hex(random_bytes(32));
-  }
-?>
 <div class="hidden md:flex flex-col fixed top-[70px] left-0 w-[220px] h-[calc(100%-70px)] bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50 border-r border-purple-100 shadow-md p-4 z-20 sidebar">
   <h3 class="text-lg font-semibold text-indigo-500 mb-4">Navigation</h3>
 
@@ -58,7 +43,7 @@
     <?php else: ?>
       <button 
   id="createPostBtn" 
-  data-token="<?= $_SESSION['post_token'] ?>"
+  data-token="<?= $postToken ?>"
   class="mt-auto bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-medium py-2 px-3 rounded-md hover:from-indigo-500 hover:to-purple-500 transition-all duration-200"
 >
   ➕ Create Post

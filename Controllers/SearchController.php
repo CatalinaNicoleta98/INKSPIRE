@@ -64,6 +64,11 @@ class SearchController {
 
         $activeType = $type;
 
+        // Sidebar variables
+        $db = $this->searchModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
+
         include __DIR__ . '/../Views/SearchResults.php';
     }
 }

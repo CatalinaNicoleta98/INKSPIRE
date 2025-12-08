@@ -58,6 +58,11 @@ class AdminController
         $terms = $this->termsModel->getTerms();
         $about = $this->aboutModel->getAbout();
 
+        // Sidebar variables
+        $db = $this->userModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
+
         // Reuse existing AdminPanel.php view as admin panel container
         // (this file can be adapted to render $users and $stats)
         include __DIR__ . '/../Views/AdminPanel.php';
@@ -142,6 +147,12 @@ class AdminController
     public function terms() {
         $this->ensureAdmin();
         $terms = $this->termsModel->getTerms();
+
+        // Sidebar variables
+        $db = $this->userModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
+
         include __DIR__ . '/../Views/AdminTerms.php';
     }
 

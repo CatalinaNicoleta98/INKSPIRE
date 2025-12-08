@@ -207,6 +207,11 @@ class SettingsController {
         $currentBio = htmlspecialchars($profile['bio'] ?? '');
         $isPrivate = (!empty($profile['is_private']) && $profile['is_private'] == 1) ? 'checked' : '';
 
+        // Sidebar variables
+        $db = $this->profileModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
+
         include __DIR__ . '/../Views/Settings.php';
     }
 }

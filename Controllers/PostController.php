@@ -365,6 +365,12 @@ class PostController {
 
         // Prepare data exactly as Post.php expects
         $posts = [$post];
+
+        // Sidebar variables
+        $db = $this->postModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
+
         include __DIR__ . '/../Views/templates/SinglePost.php';
     }
 

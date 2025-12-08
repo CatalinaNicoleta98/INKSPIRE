@@ -32,6 +32,11 @@ class HomeController {
         if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
             $posts = [];
             $isAdminBlocked = true; // Pass to view
+            // Sidebar variables
+            $db = $this->postModel->getDb();
+            $sidebar = SidebarController::data($db);
+            extract($sidebar);
+
             include __DIR__ . '/../Views/Home.php';
             return;
         }
@@ -83,6 +88,11 @@ class HomeController {
             $post['comment_count'] = $commentModel->countCommentsByPost($post['post_id']); // includes replies
         }
         unset($post);
+
+        // Sidebar variables
+        $db = $this->postModel->getDb();
+        $sidebar = SidebarController::data($db);
+        extract($sidebar);
 
         include __DIR__ . '/../Views/Home.php';
     }
