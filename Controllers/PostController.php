@@ -154,6 +154,10 @@ class PostController {
             exit;
         }
 
+        // Fetch post to know current image before deletion
+        $post = $this->postModel->getPostById($postId);
+        $imageToDelete = $post['image_url'] ?? null;
+
         // Determine if user is admin (support multiple patterns)
         $isAdmin = false;
 
@@ -179,6 +183,14 @@ class PostController {
         // If that failed and user is admin, allow admin override delete
         if (!$success && $isAdmin) {
             $success = $this->postModel->deletePost($postId, null);
+        }
+
+        // If delete succeeded and there was an image, remove the file
+        if ($success && $imageToDelete) {
+            $file = __DIR__ . '/../' . $imageToDelete;
+            if (file_exists($file)) {
+                unlink($file);
+            }
         }
 
         header('Content-Type: application/json');
@@ -211,6 +223,7 @@ class PostController {
         echo json_encode(['success' => $success]);
         exit;
     }
+
     // Handle new post submission
     public function create() {
         Session::start();
@@ -306,6 +319,7 @@ class PostController {
             exit;
         }
     }
+
     // Full-page single post view (used by notifications)
     public function showPostPage() {
         Session::start();
@@ -322,7 +336,6 @@ class PostController {
         }
 
         // Fetch the post with full details
-
         $post = $this->postModel->getPostById($postId);
         if (!$post) {
             header("Location: index.php?action=notifications");
@@ -354,6 +367,7 @@ class PostController {
         $posts = [$post];
         include __DIR__ . '/../Views/templates/SinglePost.php';
     }
+
     // Toggle sticky / pinned state for a post
     public function toggleSticky() {
         Session::start();
@@ -400,4 +414,5 @@ class PostController {
         exit;
     }
 }
+
 ?>
