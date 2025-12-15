@@ -326,7 +326,7 @@ DELIMITER ;
 
 
 -- ==============================
--- Test data
+-- Test data - find password inside login credentials in the report, test data users will not be admins
 -- ==============================
 
 
