@@ -333,8 +333,8 @@ DELIMITER ;
 -- Insert test users
 INSERT INTO User (first_name, last_name, email, username, password, DOB, is_admin)
 VALUES
-('Kim', 'Thøisen', 'KT@easv.dk', 'kim', '$2y$10$tYjZxyu7ECIErPmuo0v35.8zib7eky6iXxs8W2ht.YxyejAPpJptm', '1980-05-05', 0),
-('Søren', 'Jørgensen', 'SMSJ@easv.dk', 'søren', '$2y$10$.1qikTFoimHRXrhEm16JPOuaC8LlGqVF1lzorVMlL/SucBkI5f7nW', '1978-03-12', 0);
+('Kim', 'Thøisen', 'KT@easv.dk', 'kim', '$2y$10$LCcUVxlEYkZo2DALFDzKM.mpFUzlOWlTSOsnAFIxDxRMzLDGUYzYO', '1980-05-05', 0),
+('Søren', 'Jørgensen', 'SMSJ@easv.dk', 'søren', '$2y$10$KrKGdVTDZuyM2SizDmSuAe9qoFZ13ZeXZz6v1pqevThllVMrWCGji', '1978-03-12', 0);
 
 -- Insert matching profiles
 INSERT INTO Profile (display_name, profile_picture, bio, user_id)
