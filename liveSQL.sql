@@ -343,20 +343,6 @@ INSERT INTO `Profile` (`profile_id`, `display_name`, `profile_picture`, `bio`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `Reaction`
---
-
-CREATE TABLE `Reaction` (
-  `reaction_id` int NOT NULL,
-  `reaction_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'LIKE or DISLIKE',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `user_id` int NOT NULL,
-  `comment_id` int NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `terms`
 --
 

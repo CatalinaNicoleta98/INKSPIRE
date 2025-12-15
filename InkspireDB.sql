@@ -71,15 +71,6 @@ CREATE TABLE `Like` (
     FOREIGN KEY (post_id) REFERENCES Post(post_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
-CREATE TABLE Reaction (
-    reaction_id   INT AUTO_INCREMENT PRIMARY KEY,
-    reaction_type VARCHAR(20) NOT NULL COMMENT 'LIKE or DISLIKE',
-    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-    user_id       INT NOT NULL,
-    comment_id    INT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (comment_id) REFERENCES Comment(comment_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
 
 CREATE TABLE Notification (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -121,6 +112,13 @@ CREATE TABLE terms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     content LONGTEXT NOT NULL,
     updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE About (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content LONGTEXT NOT NULL,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ==============================
@@ -326,3 +324,56 @@ BEGIN
 END$$
 DELIMITER ;
 
+
+-- ==============================
+-- Test data
+-- ==============================
+
+
+-- Insert test users
+INSERT INTO User (first_name, last_name, email, username, password, DOB, is_admin)
+VALUES
+('Kim', 'Thøisen', 'KT@easv.dk', 'kim', '$2y$10$tYjZxyu7ECIErPmuo0v35.8zib7eky6iXxs8W2ht.YxyejAPpJptm', '1980-05-05', 0),
+('Søren', 'Jørgensen', 'SMSJ@easv.dk', 'søren', '$2y$10$.1qikTFoimHRXrhEm16JPOuaC8LlGqVF1lzorVMlL/SucBkI5f7nW', '1978-03-12', 0);
+
+-- Insert matching profiles
+INSERT INTO Profile (display_name, profile_picture, bio, user_id)
+VALUES
+('kim', 'uploads/default.png', 'Welcome to my profile!',  (SELECT user_id FROM User WHERE username = 'kim')),
+('søren', 'uploads/default.png', 'Greetings!', (SELECT user_id FROM User WHERE username = 'søren'));
+
+-- Insert posts (one public and one private per teacher)
+INSERT INTO Post (title, description, image_url, is_public, user_id)
+VALUES
+('Kim Public Post', 'This is a public test post by Kim.', 'uploads/kim_test.png', 1,  (SELECT user_id FROM User WHERE username = 'kim')),
+('Kim Private Post', 'Private post by Kim.', 'uploads/kim_test2.png', 0, (SELECT user_id FROM User WHERE username = 'kim')),
+('Søren Public Post', 'This is a public test post by Søren.', 'uploads/søren_test1.jpg', 1, (SELECT user_id FROM User WHERE username = 'søren')),
+('Søren Private Post', 'Private post by Søren.', 'uploads/søren_test2.jpg', 0, (SELECT user_id FROM User WHERE username = 'søren'));
+
+-- Insert comments
+INSERT INTO Comment (text, user_id, post_id)
+VALUES
+('Nice post Kim!', 
+    (SELECT user_id FROM User WHERE username = 'søren'),
+    (SELECT post_id FROM Post WHERE title = 'Kim Public Post')),
+
+('Thank you, Søren!', 
+    (SELECT user_id FROM User WHERE username = 'kim'),
+    (SELECT post_id FROM Post WHERE title = 'Kim Public Post')),
+
+('Interesting thoughts, Kim!', 
+    (SELECT user_id FROM User WHERE username = 'søren'),
+    (SELECT post_id FROM Post WHERE title = 'Kim Private Post')),
+
+('Good post Søren!',  
+    (SELECT user_id FROM User WHERE username = 'kim'),
+    (SELECT post_id FROM Post WHERE title = 'Søren Public Post'));
+
+-- Insert likes
+INSERT INTO `Like` (user_id, post_id)
+VALUES
+((SELECT user_id FROM User WHERE username = 'søren'),
+ (SELECT post_id FROM Post WHERE title = 'Kim Public Post')),
+
+((SELECT user_id FROM User WHERE username = 'kim'),
+ (SELECT post_id FROM Post WHERE title = 'Søren Public Post'));
