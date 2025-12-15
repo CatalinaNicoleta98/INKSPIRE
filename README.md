@@ -70,10 +70,6 @@ autoloader.php → Class autoloading
 
 ---
 
-## 📸 Screenshots
-_Add screenshots here once uploaded_
-
----
 
 ## 🚀 Getting Started
 
